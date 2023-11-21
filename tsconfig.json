@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+
+  "compilerOptions": {
+    /* Emit */
+    "noEmit": true,
+    "noPropertyAccessFromIndexSignature": false
+  },
+
+  "include": ["lib/**/*", "src/**/*"],
+
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}
