@@ -20,5 +20,13 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react(), linaria(), dts({ entryRoot: "lib", include: ["lib"] })],
+  plugins: [
+    react(),
+    linaria({
+      babelOptions: {
+        presets: ["@babel/preset-typescript", "@babel/preset-react"],
+      },
+    }),
+    dts({ entryRoot: "lib", include: ["lib"] }),
+  ],
 });

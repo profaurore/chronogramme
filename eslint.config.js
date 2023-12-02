@@ -31,7 +31,7 @@ const tsxFiles = ["**/*.tsx"];
 const tsFiles = ["**/*.ts", ...tsxFiles];
 const jsLikeFiles = ["**/*.js", ...tsFiles];
 
-export default [
+const config = [
   {
     ignores: ["dist"],
   },
@@ -60,10 +60,8 @@ export default [
       // Ignore JSON and JS configuration files.
       plugin.files = tsFiles;
 
-      /*
-       * `languageOptions.parserOptions.project` is required for
-       * @typescript-eslint/await-thenable.
-       */
+      // `languageOptions.parserOptions.project` is required for
+      // `@typescript-eslint/await-thenable`.
       plugin.languageOptions = {
         ...plugin.languageOptions,
         parserOptions: {
@@ -110,6 +108,7 @@ export default [
         "arrow-body-style": "error",
         "camelcase": "error",
         "class-methods-use-this": "error",
+        "curly": "error",
         "default-case-last": "error",
         "dot-notation": "warn",
         "eqeqeq": "warn",
@@ -118,7 +117,7 @@ export default [
         "func-style": "error",
         "grouped-accessor-pairs": "error",
         "logical-assignment-operators": "warn",
-        "multiline-comment-style": "warn",
+        "multiline-comment-style": ["warn", "separate-lines"],
         "no-alert": "error",
         "no-array-constructor": "error",
         "no-bitwise": "error",
@@ -205,7 +204,7 @@ export default [
         ],
         "@stylistic/lines-between-class-members": "warn",
         "@stylistic/max-len": [
-          "error",
+          "warn",
           {
             code: 80,
             ignoreComments: false,
@@ -404,6 +403,13 @@ export default [
     })(),
   },
 
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "@typescript-eslint/no-magic-numbers": "off",
+    },
+  },
+
   // JSON
   {
     files: ["**/*.json"],
@@ -428,5 +434,15 @@ export default [
   },
 
   // Prettier via ESLint
-  eslintConfigPrettier,
+  (() => {
+    const config = eslintConfigPrettier;
+
+    // The selected configuration for the `curly` rule does not conflict with
+    // prettier.
+    delete config.rules.curly;
+
+    return config;
+  })(),
 ];
+
+export default config;

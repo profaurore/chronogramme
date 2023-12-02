@@ -4,11 +4,21 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type UIEvent,
+  useEffect,
   useRef,
   useState,
 } from "react";
 
-import { mean } from "./math";
+import { clamp, half, mean, unit, unitPercent } from "./math";
+import {
+  clampTimeEndProperty,
+  clampTimeRange,
+  clampTimeStartProperty,
+  TIME_MAX,
+  TIME_MIN,
+} from "./time";
+
+const contentToViewportRatio = 3;
 
 const containerClass = css`
   /* Defaults */
@@ -16,7 +26,6 @@ const containerClass = css`
   --left-bar-width: 0px;
   --right-bar-width: 0px;
   --timeline-height: 1000px;
-  --timeline-width: 1000px;
   --top-bar-height: 0px;
 
   display: flex;
@@ -30,14 +39,14 @@ const contentClass = css`
     "top-left top top-right"
     "left center right"
     "bottom-left bottom bottom-right";
-  grid-template-columns: var(--left-bar-width) var(--timeline-width) var(
-      --right-bar-width
-    );
-  grid-template-rows: var(--top-bar-height) var(--timeline-height) var(
+  grid-template-columns: var(--left-bar-width) 300% var(--right-bar-width);
+  grid-template-rows: var(--top-bar-height) minmax(var(--timeline-height), 1fr) var(
       --bottom-bar-height
     );
+  height: 100%;
   overflow: auto;
   position: relative;
+  width: ${contentToViewportRatio * unitPercent}%;
 
   /* Hide the scrollbars */
   scrollbar-width: none;
@@ -427,19 +436,17 @@ const ResizeDivider = ({
       clientY >= top &&
       clientY <= bottom;
 
-    /*
-     * The element may have pseudo-elements that are rendered outside of its
-     * bounding rectangle. Only start dragging if the event started inside of
-     * the rectangle.
-     */
-    if (!isInsideBoundingRect) return;
+    // The element may have pseudo-elements that are rendered outside of its
+    // bounding rectangle. Only start dragging if the event started inside of
+    // the rectangle.
+    if (!isInsideBoundingRect) {
+      return;
+    }
 
-    /*
-     * Determine the distance from the centerline of the divider so that the
-     * relative position can be maintained while dragging. This avoids jumping
-     * caused by the center of the divider jumping to the location of the
-     * cursor.
-     */
+    // Determine the distance from the centerline of the divider so that the
+    // relative position can be maintained while dragging. This avoids jumping
+    // caused by the center of the divider jumping to the location of the
+    // cursor.
     const centerX = mean(left, right);
     const centerY = mean(bottom, top);
     const offsetX = centerX - clientX;
@@ -492,10 +499,8 @@ const calcNewBarsDimensions = (
 
   let otherBarSize: number;
 
-  /*
-   * The target size is defined as the distance from the outer edge of the bar
-   * to the target position of the inner edge.
-   */
+  // The target size is defined as the distance from the outer edge of the bar
+  // to the target position of the inner edge.
   let targetSize: number;
 
   let timelineMinSize: number;
@@ -536,24 +541,18 @@ const calcNewBarsDimensions = (
       break;
   }
 
-  /*
-   * The maximum width is defined by the maximum available size assuming the
-   * timeline shrinks to its minimum size.
-   */
+  // The maximum width is defined by the maximum available size assuming the
+  // timeline shrinks to its minimum size.
   const barMaxSize = containerSize - timelineMinSize - otherBarSize;
 
-  /*
-   * If the minimum possible size of the bar exceeds its maximum possible size,
-   * do not update its dimensions.
-   */
+  // If the minimum possible size of the bar exceeds its maximum possible size,
+  // do not update its dimensions.
   if (barMinSize > barMaxSize) {
     return;
   }
 
-  /*
-   * The resulting width is clamped between the minimum width of the bar and
-   * the maximum available width if the timeline shrank as much as it can.
-   */
+  // The resulting width is clamped between the minimum width of the bar and
+  // the maximum available width if the timeline shrank as much as it can.
   const newBarSize = Math.min(Math.max(targetSize, barMinSize), barMaxSize);
 
   return {
@@ -567,7 +566,6 @@ export interface DimensionCSSProperties extends CSSProperties {
   "--left-bar-width": string;
   "--right-bar-width": string;
   "--timeline-height": string;
-  "--timeline-width": string;
   "--top-bar-height": string;
 }
 
@@ -575,33 +573,142 @@ type BarsDimensions = {
   [key in BarSide]: number;
 };
 
+export type TimeChangeHandler = (times: {
+  lastTimeEnd: number;
+  lastTimeStart: number;
+  timeEnd: number;
+  timeStart: number;
+}) => void;
+
+const updateScroll = (
+  content: Element,
+  barsDimensions: BarsDimensions,
+  minVisibleTime: number,
+  maxVisibleTime: number,
+  minTime: number,
+  maxTime: number,
+): number => {
+  const { scrollLeft, scrollWidth, clientWidth } = content;
+
+  // The width of the timeline is the content width minus both vertical bars.
+  const timelineWidth =
+    clientWidth - barsDimensions.left - barsDimensions.right;
+
+  // Horizontally center the scroll viewport on the content.
+  const scrollCenter = half * (scrollWidth - clientWidth);
+
+  // Determine the ratio of pixels per second.
+  //
+  // In the extreme case of
+  // - a timeline of width 1px and
+  // - a visible range of all possible time,
+  // the ratio will have an approximate value of 1.15e-16, far from the smallest
+  // representable value of 5e-324.
+  const visibleRange = maxVisibleTime - minVisibleTime;
+  const pixelPerSecond = timelineWidth / visibleRange;
+
+  // The distance from the viewport bounds to the timeline bounds.
+  const minTimeDistance = (minVisibleTime - minTime) * pixelPerSecond;
+  const maxTimeDistance = (maxTime - maxVisibleTime) * pixelPerSecond;
+
+  // The scrolling bounds for the content, given the size of the viewport.
+  const minContentScroll = 0;
+  const maxContentScroll = scrollWidth - clientWidth;
+
+  // Clamp the value to the permitted time range. There is a case where the
+  // values of `minTime` and `maxTime` could conflict. The caller must ensure
+  // that `visibleTimeEnd - visibleTimeStart <= maxTime - minTime`.
+  //
+  // The value is rounded to the nearest integer to align with the behavior of
+  // browser scrolling.
+  const scrollTarget = Math.round(
+    clamp(
+      scrollCenter,
+      maxContentScroll - maxTimeDistance,
+      minContentScroll + minTimeDistance,
+    ),
+  );
+
+  // Update the viewport.
+  if (scrollTarget !== scrollLeft) {
+    console.log(scrollLeft, scrollTarget, scrollTarget - content.scrollLeft);
+
+    content.scrollTo({ left: scrollTarget });
+  }
+
+  // Return the scroll position.
+  return scrollTarget;
+};
+
 export const Timeline = ({
   className,
-  timeEnd,
-  timeStart,
+  onTimeChange,
+  timeEnd: initTimeEnd,
+  timeStart: initTimeStart,
 }: Readonly<{
   className?: string;
+  onTimeChange?: TimeChangeHandler;
   timeEnd: number;
   timeStart: number;
 }>): ReactNode => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const lastScrollPositionRef = useRef<Coordinates>({ x: 0, y: 0 });
 
-  const [barDimensions, setBarDimensions] = useState<BarsDimensions>({
+  const [barsDimensions, setBarsDimensions] = useState<BarsDimensions>({
     bottom: verticalBarMinHeight,
     left: horizontalBarMinWidth,
     right: horizontalBarMinWidth,
     top: verticalBarMinHeight,
   });
 
-  const [visibleTime, setVisibleTime] = useState<{
-    end: number;
-    start: number;
-  }>({
-    end: timeEnd,
-    start: timeStart,
-  });
+  const [timeStart, setTimeStart] = useState<number>(() =>
+    clampTimeStartProperty(initTimeStart, TIME_MIN, TIME_MAX),
+  );
+  const [timeEnd, setTimeEnd] = useState<number>(() =>
+    clampTimeEndProperty(initTimeEnd, TIME_MIN, TIME_MAX),
+  );
 
-  const onResizeBar = (
+  useEffect(() => {
+    // Determine the new start and end times based on the initial values.
+    const newTimeStart = clampTimeStartProperty(
+      initTimeStart,
+      TIME_MIN,
+      TIME_MAX,
+    );
+    const newTimeEnd = clampTimeEndProperty(initTimeEnd, TIME_MIN, TIME_MAX);
+
+    // If the new times differ from the old times, trigger the appropriate
+    // actions for an update.
+    if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
+      setTimeStart(newTimeStart);
+      setTimeEnd(newTimeEnd);
+
+      onTimeChange?.({
+        lastTimeEnd: timeEnd,
+        lastTimeStart: timeStart,
+        timeEnd: newTimeEnd,
+        timeStart: newTimeStart,
+      });
+
+      // Update the scroll position in case the new times are near the
+      // timeline boundaries.
+      const content = contentRef.current;
+
+      if (content) {
+        lastScrollPositionRef.current.x = updateScroll(
+          content,
+          barsDimensions,
+          newTimeStart,
+          newTimeEnd,
+          TIME_MIN,
+          TIME_MAX,
+        );
+      }
+    }
+  }, [initTimeEnd, initTimeStart]);
+
+  const onBarResizeHandler = (
     targetCoordinates: Coordinates,
     dimension: BarSide,
   ): void => {
@@ -609,60 +716,133 @@ export const Timeline = ({
 
     const newBarDimensions = calcNewBarsDimensions(
       containerBar,
-      barDimensions,
+      barsDimensions,
       dimension,
       targetCoordinates,
     );
 
     if (newBarDimensions) {
-      setBarDimensions(newBarDimensions);
+      setBarsDimensions(newBarDimensions);
     }
   };
 
-  const lastScrollPositionRef = useRef<Coordinates>({ x: 0, y: 0 });
-  const onScrollHandler = (event: Readonly<UIEvent<HTMLDivElement>>): void => {
+  const onContentScrollHandler = (
+    event: Readonly<UIEvent<HTMLDivElement>>,
+  ): void => {
     const { target } = event;
 
     if (target instanceof Element) {
-      const { clientWidth, scrollLeft, scrollTop } = target;
+      const { clientWidth: viewportWidth, scrollLeft, scrollTop } = target;
 
-      const timelineWidth =
-        clientWidth - barDimensions.left - barDimensions.right;
-
+      // Update the last scroll position.
       const { x: lastX, y: lastY } = lastScrollPositionRef.current;
+      lastScrollPositionRef.current = { x: scrollLeft, y: scrollTop };
 
+      // Determine the change in pixels due to scrolling.
       const deltaX = scrollLeft - lastX;
       const deltaY = scrollTop - lastY;
-      console.log(deltaX, deltaY);
 
-      // numerical stability + overflow
-      const { start: lastVisibleStart, end: lastVisibleEnd } = visibleTime;
-      const dateRange = lastVisibleEnd - lastVisibleStart;
-      const deltaDate = dateRange * (deltaX / timelineWidth);
-      const newVisibleTimeStart = lastVisibleStart + deltaDate;
-      const newVisibleTimeEnd = newVisibleTimeStart + dateRange;
+      if (deltaX) {
+        const lastTimeStart = timeStart;
+        const lastTimeEnd = timeEnd;
+        const visibleRange = lastTimeEnd - lastTimeStart;
 
-      setVisibleTime({ end: newVisibleTimeEnd, start: newVisibleTimeStart });
+        const timelineWidth =
+          viewportWidth - barsDimensions.left - barsDimensions.right;
+        const secondPerPixel = visibleRange / timelineWidth;
 
-      lastScrollPositionRef.current = { x: scrollLeft, y: scrollTop };
+        const deltaDate = deltaX * secondPerPixel;
+        const unclampedTimeStart = lastTimeStart + deltaDate;
+        const unclampedTimeEnd = unclampedTimeStart + visibleRange;
+
+        const [newTimeStart, newTimeEnd] = clampTimeRange(
+          unclampedTimeStart,
+          unclampedTimeEnd,
+          TIME_MIN,
+          TIME_MAX,
+        );
+
+        // Update and report the new times.
+        setTimeStart(newTimeStart);
+        setTimeEnd(newTimeEnd);
+        onTimeChange?.({
+          lastTimeEnd,
+          lastTimeStart,
+          timeEnd: newTimeEnd,
+          timeStart: newTimeStart,
+        });
+
+        // Adjust the alignment of the scroll viewport if it is nearing either
+        // extremity. The thresholds are a half viewport from the content
+        // bounds.
+        //
+        // The viewport width is subtracted from the right threshold because the
+        // left side of the viewport is used to perform the check.
+        // ```
+        // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
+        // ```
+        const leftScrollUpdateThreshold = half;
+        const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
+
+        if (
+          scrollLeft < leftScrollUpdateThreshold * viewportWidth ||
+          scrollLeft > rightScrollUpdateThreshold * viewportWidth
+        ) {
+          lastScrollPositionRef.current.x = updateScroll(
+            target,
+            barsDimensions,
+            newTimeStart,
+            newTimeEnd,
+            TIME_MIN,
+            TIME_MAX,
+          );
+        }
+      }
+
+      if (deltaY) {
+        console.log("Vertical scroll", deltaY);
+      }
     }
   };
 
+  // Configure component on mount.
+  useEffect(() => {
+    const content = contentRef.current;
+
+    if (content) {
+      // Set the initial scroll position.
+      lastScrollPositionRef.current.x = updateScroll(
+        content,
+        barsDimensions,
+        timeStart,
+        timeEnd,
+        TIME_MIN,
+        TIME_MAX,
+      );
+
+      // Detect changes to the size of the timeline.
+      const observer = new ResizeObserver(([entry]) => {
+        if (entry) {
+          console.log("Resize", entry.contentRect);
+        }
+      });
+      observer.observe(content);
+
+      return () => {
+        observer.disconnect();
+      };
+    }
+
+    return undefined;
+  }, []);
+
   const dimensionStyles: DimensionCSSProperties = {
-    "--bottom-bar-height": `${barDimensions.bottom}px`,
-    "--left-bar-width": `${barDimensions.left}px`,
-    "--right-bar-width": `${barDimensions.right}px`,
+    "--bottom-bar-height": `${barsDimensions.bottom}px`,
+    "--left-bar-width": `${barsDimensions.left}px`,
+    "--right-bar-width": `${barsDimensions.right}px`,
     "--timeline-height": "500px",
-    "--timeline-width": "1000px",
-    "--top-bar-height": `${barDimensions.top}px`,
+    "--top-bar-height": `${barsDimensions.top}px`,
   };
-
-  const start = new Date(visibleTime.start);
-  const dateStartString = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}T${start.getHours()}:${start.getMinutes()}:${start.getSeconds()}Z`;
-  const end = new Date(visibleTime.end);
-  const dateEndString = `${end.getFullYear()}-${end.getMonth()}-${end.getDate()}T${end.getHours()}:${end.getMinutes()}:${end.getSeconds()}Z`;
-
-  console.log(`${dateStartString} - ${dateEndString}`);
 
   return (
     <div
@@ -670,7 +850,11 @@ export const Timeline = ({
       ref={containerRef}
       style={dimensionStyles}
     >
-      <div className={contentClass} onScroll={onScrollHandler}>
+      <div
+        className={contentClass}
+        onScroll={onContentScrollHandler}
+        ref={contentRef}
+      >
         {/* Center */}
         <div className={timelineClass}>timeline</div>
 
@@ -690,22 +874,22 @@ export const Timeline = ({
       {/* Resize handles */}
       <ResizeDivider
         className={topDividerClass}
-        onResize={onResizeBar}
+        onResize={onBarResizeHandler}
         side={BarSide.Top}
       />
       <ResizeDivider
         className={leftDividerClass}
-        onResize={onResizeBar}
+        onResize={onBarResizeHandler}
         side={BarSide.Left}
       />
       <ResizeDivider
         className={rightDividerClass}
-        onResize={onResizeBar}
+        onResize={onBarResizeHandler}
         side={BarSide.Right}
       />
       <ResizeDivider
         className={bottomDividerClass}
-        onResize={onResizeBar}
+        onResize={onBarResizeHandler}
         side={BarSide.Bottom}
       />
     </div>

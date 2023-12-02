@@ -1,9 +1,10 @@
 import "./App.css";
 
 import { css } from "@linaria/core";
-import type { ReactNode } from "react";
+import { type MouseEventHandler, type ReactNode, useState } from "react";
 
-import { Timeline } from "../lib/Timeline";
+import { TIME_MAX, TIME_MIN } from "../lib/time";
+import { type TimeChangeHandler, Timeline } from "../lib/Timeline";
 
 const timelineClass = css`
   height: 400px;
@@ -13,20 +14,70 @@ const timelineClass = css`
   width: 800px;
 `;
 
+const buttonsClass = css`
+  display: flex;
+  gap: 5px;
+`;
+
 const daysInWeek = 7;
 
-export const App = (): ReactNode => {
-  const now = new Date();
-  const nowPlusSevenDays = new Date();
+const formatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "short",
+  timeStyle: "medium",
+});
+const formatDate = (time: number): string => formatter.format(new Date(time));
 
-  const timeStart = now.valueOf();
-  const timeEnd = nowPlusSevenDays.setDate(now.getDate() + daysInWeek);
+const formatDateRange = (start: number, end: number): string =>
+  `${formatDate(start)} - ${formatDate(end)}`;
+
+const datesFromStartDate = (start: number): { end: number; start: number } => ({
+  end: new Date(start).setDate(new Date(start).getDate() + daysInWeek),
+  start,
+});
+
+export const App = (): ReactNode => {
+  const [dates, setDates] = useState<{ end: number; start: number }>(() =>
+    datesFromStartDate(Date.now()),
+  );
+
+  const [datesString, setDatesString] = useState<string>(() =>
+    formatDateRange(dates.start, dates.end),
+  );
+
+  const onTimeChangeHandler: TimeChangeHandler = ({ timeEnd, timeStart }) => {
+    setDatesString(formatDateRange(timeStart, timeEnd));
+  };
+
+  const onStartOfTimeClickHandler: MouseEventHandler = () => {
+    setDates(datesFromStartDate(TIME_MIN));
+  };
+
+  const onNowClickHandler: MouseEventHandler = () => {
+    setDates(datesFromStartDate(Date.now()));
+  };
+
+  const onEndOfTimeClickHandler: MouseEventHandler = () => {
+    setDates(
+      datesFromStartDate(
+        new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
+      ),
+    );
+  };
 
   return (
-    <Timeline
-      className={timelineClass}
-      timeEnd={timeEnd}
-      timeStart={timeStart}
-    />
+    <>
+      <Timeline
+        className={timelineClass}
+        onTimeChange={onTimeChangeHandler}
+        timeEnd={dates.end}
+        timeStart={dates.start}
+      />
+      <div>{datesString}</div>
+      <div className={buttonsClass}>
+        <button onClick={onStartOfTimeClickHandler}>Start of time</button>
+        <button onClick={onNowClickHandler}>Now</button>
+        <button onClick={onEndOfTimeClickHandler}>End of time</button>
+      </div>
+    </>
   );
 };
