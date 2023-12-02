@@ -640,6 +640,89 @@ const updateScroll = (
   return scrollTarget;
 };
 
+interface ScrollState {
+  scrollX: number;
+  scrollY: number;
+  timeEnd: number;
+  timeStart: number;
+}
+
+const timelineScrollHandler = (
+  timeline: Element,
+  scrollState: ScrollState,
+  barsDimensions: BarsDimensions,
+): ScrollState => {
+  const { scrollX, scrollY, timeEnd, timeStart } = scrollState;
+  const { clientWidth: viewportWidth, scrollLeft, scrollTop } = timeline;
+
+  let newTimeStart = timeStart;
+  let newTimeEnd = timeEnd;
+  let newScrollX = scrollLeft;
+  const newScrollY = scrollTop;
+
+  // Determine the change in pixels due to scrolling.
+  const deltaX = newScrollX - scrollX;
+  const deltaY = newScrollY - scrollY;
+
+  if (deltaX) {
+    const lastTimeStart = timeStart;
+    const lastTimeEnd = timeEnd;
+    const visibleRange = lastTimeEnd - lastTimeStart;
+
+    const timelineWidth =
+      viewportWidth - barsDimensions.left - barsDimensions.right;
+    const secondPerPixel = visibleRange / timelineWidth;
+
+    const deltaDate = deltaX * secondPerPixel;
+    const unclampedTimeStart = lastTimeStart + deltaDate;
+    const unclampedTimeEnd = unclampedTimeStart + visibleRange;
+
+    [newTimeStart, newTimeEnd] = clampTimeRange(
+      unclampedTimeStart,
+      unclampedTimeEnd,
+      TIME_MIN,
+      TIME_MAX,
+    );
+
+    // Adjust the alignment of the scroll viewport if it is nearing either
+    // extremity. The thresholds are a half viewport from the content
+    // bounds.
+    //
+    // The viewport width is subtracted from the right threshold because the
+    // left side of the viewport is used to perform the check.
+    // ```
+    // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
+    // ```
+    const leftScrollUpdateThreshold = half;
+    const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
+
+    if (
+      scrollLeft < leftScrollUpdateThreshold * viewportWidth ||
+      scrollLeft > rightScrollUpdateThreshold * viewportWidth
+    ) {
+      newScrollX = updateScroll(
+        timeline,
+        barsDimensions,
+        newTimeStart,
+        newTimeEnd,
+        TIME_MIN,
+        TIME_MAX,
+      );
+    }
+  }
+
+  if (deltaY) {
+    console.log("Vertical scroll", deltaY);
+  }
+
+  return {
+    scrollX: newScrollX,
+    scrollY: newScrollY,
+    timeEnd: newTimeEnd,
+    timeStart: newTimeStart,
+  };
+};
+
 export const Timeline = ({
   className,
   onTimeChange,
@@ -732,76 +815,38 @@ export const Timeline = ({
     const { target } = event;
 
     if (target instanceof Element) {
-      const { clientWidth: viewportWidth, scrollLeft, scrollTop } = target;
+      const { x: lastX, y: lastY } = lastScrollPositionRef.current;
+
+      const newScrollState = timelineScrollHandler(
+        target,
+        {
+          scrollX: lastX,
+          scrollY: lastY,
+          timeEnd,
+          timeStart,
+        },
+        barsDimensions,
+      );
+
+      const {
+        scrollX: newScrollX,
+        scrollY: newScrollY,
+        timeEnd: newTimeEnd,
+        timeStart: newTimeStart,
+      } = newScrollState;
 
       // Update the last scroll position.
-      const { x: lastX, y: lastY } = lastScrollPositionRef.current;
-      lastScrollPositionRef.current = { x: scrollLeft, y: scrollTop };
+      lastScrollPositionRef.current = { x: newScrollX, y: newScrollY };
 
-      // Determine the change in pixels due to scrolling.
-      const deltaX = scrollLeft - lastX;
-      const deltaY = scrollTop - lastY;
-
-      if (deltaX) {
-        const lastTimeStart = timeStart;
-        const lastTimeEnd = timeEnd;
-        const visibleRange = lastTimeEnd - lastTimeStart;
-
-        const timelineWidth =
-          viewportWidth - barsDimensions.left - barsDimensions.right;
-        const secondPerPixel = visibleRange / timelineWidth;
-
-        const deltaDate = deltaX * secondPerPixel;
-        const unclampedTimeStart = lastTimeStart + deltaDate;
-        const unclampedTimeEnd = unclampedTimeStart + visibleRange;
-
-        const [newTimeStart, newTimeEnd] = clampTimeRange(
-          unclampedTimeStart,
-          unclampedTimeEnd,
-          TIME_MIN,
-          TIME_MAX,
-        );
-
-        // Update and report the new times.
-        setTimeStart(newTimeStart);
-        setTimeEnd(newTimeEnd);
-        onTimeChange?.({
-          lastTimeEnd,
-          lastTimeStart,
-          timeEnd: newTimeEnd,
-          timeStart: newTimeStart,
-        });
-
-        // Adjust the alignment of the scroll viewport if it is nearing either
-        // extremity. The thresholds are a half viewport from the content
-        // bounds.
-        //
-        // The viewport width is subtracted from the right threshold because the
-        // left side of the viewport is used to perform the check.
-        // ```
-        // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
-        // ```
-        const leftScrollUpdateThreshold = half;
-        const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
-
-        if (
-          scrollLeft < leftScrollUpdateThreshold * viewportWidth ||
-          scrollLeft > rightScrollUpdateThreshold * viewportWidth
-        ) {
-          lastScrollPositionRef.current.x = updateScroll(
-            target,
-            barsDimensions,
-            newTimeStart,
-            newTimeEnd,
-            TIME_MIN,
-            TIME_MAX,
-          );
-        }
-      }
-
-      if (deltaY) {
-        console.log("Vertical scroll", deltaY);
-      }
+      // Update and report the new times.
+      setTimeStart(newTimeStart);
+      setTimeEnd(newTimeEnd);
+      onTimeChange?.({
+        lastTimeEnd: timeEnd,
+        lastTimeStart: timeStart,
+        timeEnd: newTimeEnd,
+        timeStart: newTimeStart,
+      });
     }
   };
 
