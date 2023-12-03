@@ -2,9 +2,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   clampTime,
-  clampTimeEndProperty,
   clampTimeRange,
-  clampTimeStartProperty,
+  clampTimeRangeProperties,
   TIME_MAX,
   TIME_MIN,
 } from "./time";
@@ -14,22 +13,7 @@ test("Time constants are valid", () => {
   expect(TIME_MAX).toEqual(8.64e15);
 });
 
-describe.each([
-  [clampTime.name, clampTime, null],
-  [clampTimeStartProperty.name, clampTimeStartProperty, "timeStart"],
-  [clampTimeEndProperty.name, clampTimeEndProperty, "timeEnd"],
-])("%s", (_clampTimeName, fn, checkName) => {
-  // Test the functions that check the input value.
-  if (checkName !== null) {
-    test("NaN time throws an error", () => {
-      const test = (): void => {
-        fn(NaN, TIME_MIN, TIME_MAX);
-      };
-
-      expect(test).toThrowError(new Error(`${checkName} must not be NaN.`));
-    });
-  }
-
+describe(clampTime.name, () => {
   const timeMin = 1000;
   const timeMax = 2000;
   const timeBeforeRange = 500;
@@ -61,12 +45,36 @@ describe.each([
   ])(
     "%s the range returns %s",
     (_positionDescription, _resultDescription, time, result) => {
-      expect(fn(time, timeMin, timeMax)).toEqual(result);
+      expect(clampTime(time, timeMin, timeMax)).toEqual(result);
     },
   );
 });
 
-describe(clampTimeRange.name, () => {
+describe.each([
+  [clampTimeRange.name, clampTimeRange, false],
+  [clampTimeRangeProperties.name, clampTimeRangeProperties, true],
+])("%s", (_clampTimeName, fn, isChecked) => {
+  // Test the functions that check the input value.
+  if (isChecked) {
+    test("NaN start time throws an error", () => {
+      const test = (): void => {
+        fn(NaN, TIME_MAX, TIME_MIN, TIME_MAX);
+      };
+
+      expect(test).toThrowError(
+        new Error("timeStart must be a finite number."),
+      );
+    });
+
+    test("NaN end time throws an error", () => {
+      const test = (): void => {
+        fn(TIME_MIN, NaN, TIME_MIN, TIME_MAX);
+      };
+
+      expect(test).toThrowError(new Error("timeEnd must be a finite number."));
+    });
+  }
+
   const timeMin = 1000;
   const timeMax = 2000;
   const timeBeforeRange = 500;
@@ -124,7 +132,7 @@ describe(clampTimeRange.name, () => {
       resultStart,
       resultEnd,
     ) => {
-      expect(clampTimeRange(start, end, timeMin, timeMax)).toEqual([
+      expect(fn(start, end, timeMin, timeMax)).toEqual([
         resultStart,
         resultEnd,
       ]);

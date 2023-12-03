@@ -6,30 +6,6 @@ export const TIME_MAX = 8.64e15;
 
 export const clampTime = clamp;
 
-export const clampTimeStartProperty = (
-  time: number,
-  min: number,
-  max: number,
-): number => {
-  if (Number.isNaN(time)) {
-    throw new Error("timeStart must not be NaN.");
-  }
-
-  return clampTime(time, min, max);
-};
-
-export const clampTimeEndProperty = (
-  time: number,
-  min: number,
-  max: number,
-): number => {
-  if (Number.isNaN(time)) {
-    throw new Error("timeEnd must not be NaN.");
-  }
-
-  return clampTime(time, min, max);
-};
-
 /**
  * Clamps a range between two values.
  *
@@ -66,4 +42,21 @@ export const clampTimeRange = (
   }
 
   return clamped;
+};
+
+export const clampTimeRangeProperties = (
+  start: number,
+  end: number,
+  min: number,
+  max: number,
+): [number, number] => {
+  if (!Number.isFinite(start)) {
+    throw new Error("timeStart must be a finite number.");
+  }
+
+  if (!Number.isFinite(end)) {
+    throw new Error("timeEnd must be a finite number.");
+  }
+
+  return clampTimeRange(start, end, min, max);
 };

@@ -1,19 +1,20 @@
 import { css, cx } from "@linaria/core";
 import {
   type CSSProperties,
+  forwardRef,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type UIEvent,
-  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 
 import { clamp, half, mean, unit, unitPercent } from "./math";
 import {
-  clampTimeEndProperty,
   clampTimeRange,
-  clampTimeStartProperty,
+  clampTimeRangeProperties,
   TIME_MAX,
   TIME_MIN,
 } from "./time";
@@ -408,6 +409,15 @@ interface Coordinates {
   y: number;
 }
 
+interface ScrollState {
+  scrollX: number;
+  scrollY: number;
+  timeEnd: number;
+  timeMax: number;
+  timeMin: number;
+  timeStart: number;
+}
+
 enum BarSide {
   Bottom = "bottom",
   Left = "left",
@@ -483,16 +493,12 @@ const timelineMinWidth = 100;
 const verticalBarMinHeight = 50;
 const horizontalBarMinWidth = 100;
 
-const calcNewBarsDimensions = (
-  container: HTMLDivElement | null | undefined,
+const barResizeHandler = (
+  container: HTMLDivElement,
   barsDimensions: BarsDimensions,
   dimension: BarSide,
   targetCoordinates: Coordinates,
-): BarsDimensions | undefined => {
-  if (!container) {
-    return;
-  }
-
+): BarsDimensions => {
   let containerSize: number;
 
   let barMinSize: number;
@@ -548,7 +554,7 @@ const calcNewBarsDimensions = (
   // If the minimum possible size of the bar exceeds its maximum possible size,
   // do not update its dimensions.
   if (barMinSize > barMaxSize) {
-    return;
+    return barsDimensions;
   }
 
   // The resulting width is clamped between the minimum width of the bar and
@@ -581,14 +587,44 @@ export type TimeChangeHandler = (times: {
 }) => void;
 
 const updateScroll = (
-  content: Element,
+  timeline: Element,
+  scrollState: ScrollState,
   barsDimensions: BarsDimensions,
-  minVisibleTime: number,
-  maxVisibleTime: number,
-  minTime: number,
-  maxTime: number,
-): number => {
-  const { scrollLeft, scrollWidth, clientWidth } = content;
+): ScrollState => {
+  const { scrollLeft, scrollWidth, clientWidth } = timeline;
+  const { scrollX, timeEnd, timeMax, timeMin, timeStart } = scrollState;
+
+  const visibleRange = timeEnd - timeStart;
+
+  // The thresholds for adjusting the alignment of the scroll viewport are a
+  // half viewport from the content bounds. This ensures that if the user is
+  // scrolling, the user does not hit the end before the viewport can be
+  // adjusted.
+  //
+  // The viewport width is subtracted from the right threshold because the
+  // left side of the viewport is used to perform the check.
+  // ```
+  // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
+  // ```
+  const leftScrollUpdateThreshold = half;
+  const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
+
+  // When the viewport is near the bounds of the timeline, a recalculation is
+  // required to ensure any further scrolling stops at the bounds.
+  const isViewportNearTimeBounds =
+    timeStart < timeMin + visibleRange || timeEnd > timeMax - visibleRange;
+
+  // When the viewport is near the bounds of the content, a recalculation is
+  // required to ensure any further scrolling can continue.
+  const isViewportNearContentBounds =
+    scrollState.scrollX < leftScrollUpdateThreshold * clientWidth ||
+    scrollState.scrollX > rightScrollUpdateThreshold * clientWidth;
+
+  if (!isViewportNearTimeBounds && !isViewportNearContentBounds) {
+    return scrollState;
+  }
+
+  console.log("recalc");
 
   // The width of the timeline is the content width minus both vertical bars.
   const timelineWidth =
@@ -604,12 +640,11 @@ const updateScroll = (
   // - a visible range of all possible time,
   // the ratio will have an approximate value of 1.15e-16, far from the smallest
   // representable value of 5e-324.
-  const visibleRange = maxVisibleTime - minVisibleTime;
   const pixelPerSecond = timelineWidth / visibleRange;
 
   // The distance from the viewport bounds to the timeline bounds.
-  const minTimeDistance = (minVisibleTime - minTime) * pixelPerSecond;
-  const maxTimeDistance = (maxTime - maxVisibleTime) * pixelPerSecond;
+  const minTimeDistance = (timeStart - timeMin) * pixelPerSecond;
+  const maxTimeDistance = (timeMax - timeEnd) * pixelPerSecond;
 
   // The scrolling bounds for the content, given the size of the viewport.
   const minContentScroll = 0;
@@ -621,7 +656,7 @@ const updateScroll = (
   //
   // The value is rounded to the nearest integer to align with the behavior of
   // browser scrolling.
-  const scrollTarget = Math.round(
+  const newScrollX = Math.round(
     clamp(
       scrollCenter,
       maxContentScroll - maxTimeDistance,
@@ -630,58 +665,92 @@ const updateScroll = (
   );
 
   // Update the viewport.
-  if (scrollTarget !== scrollLeft) {
-    console.log(scrollLeft, scrollTarget, scrollTarget - content.scrollLeft);
+  if (newScrollX !== scrollLeft) {
+    console.log(
+      "scrollTo",
+      newScrollX - timeline.scrollLeft,
+      scrollLeft,
+      newScrollX,
+    );
 
-    content.scrollTo({ left: scrollTarget });
+    timeline.scrollTo({ left: newScrollX });
   }
 
   // Return the scroll position.
-  return scrollTarget;
+  return newScrollX === scrollX
+    ? scrollState
+    : { ...scrollState, scrollX: newScrollX };
 };
 
-interface ScrollState {
-  scrollX: number;
-  scrollY: number;
-  timeEnd: number;
-  timeStart: number;
-}
+const timelineInitResizeHandler = (content: Element): void => {
+  // Detect changes to the size of the timeline.
+  if (content.parentElement) {
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      if (entry) {
+        console.log("Resize", entry.contentRect);
+      }
+    });
+    resizeObserver.observe(content);
+
+    new MutationObserver((_mutations, mutationObserver) => {
+      if (!content.isConnected) {
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
+      }
+    }).observe(content.parentElement, { childList: true });
+  }
+};
+
+const timelineInitScrollHandler = (
+  timeline: Element,
+  scrollState: ScrollState,
+  barsDimensions: BarsDimensions,
+): ScrollState => {
+  const newScrollState = updateScroll(timeline, scrollState, barsDimensions);
+
+  // Set the initial scroll position.
+  return newScrollState;
+};
 
 const timelineScrollHandler = (
   timeline: Element,
   scrollState: ScrollState,
   barsDimensions: BarsDimensions,
+  onTimeChange: TimeChangeHandler | undefined,
 ): ScrollState => {
-  const { scrollX, scrollY, timeEnd, timeStart } = scrollState;
+  const { scrollX, scrollY, timeEnd, timeMax, timeMin, timeStart } =
+    scrollState;
   const { clientWidth: viewportWidth, scrollLeft, scrollTop } = timeline;
 
-  let newTimeStart = timeStart;
-  let newTimeEnd = timeEnd;
-  let newScrollX = scrollLeft;
-  const newScrollY = scrollTop;
+  let newScrollState: ScrollState = {
+    ...scrollState,
+    scrollX: scrollLeft,
+    scrollY: scrollTop,
+  };
 
   // Determine the change in pixels due to scrolling.
-  const deltaX = newScrollX - scrollX;
-  const deltaY = newScrollY - scrollY;
+  const deltaX = newScrollState.scrollX - scrollX;
+  const deltaY = newScrollState.scrollY - scrollY;
 
   if (deltaX) {
     const lastTimeStart = timeStart;
     const lastTimeEnd = timeEnd;
     const visibleRange = lastTimeEnd - lastTimeStart;
 
+    // Determine the time offset.
     const timelineWidth =
       viewportWidth - barsDimensions.left - barsDimensions.right;
     const secondPerPixel = visibleRange / timelineWidth;
+    const timeDelta = deltaX * secondPerPixel;
 
-    const deltaDate = deltaX * secondPerPixel;
-    const unclampedTimeStart = lastTimeStart + deltaDate;
+    const unclampedTimeStart = lastTimeStart + timeDelta;
     const unclampedTimeEnd = unclampedTimeStart + visibleRange;
 
-    [newTimeStart, newTimeEnd] = clampTimeRange(
+    [newScrollState.timeStart, newScrollState.timeEnd] = clampTimeRange(
       unclampedTimeStart,
       unclampedTimeEnd,
-      TIME_MIN,
-      TIME_MAX,
+      timeMin,
+      timeMax,
     );
 
     // Adjust the alignment of the scroll viewport if it is nearing either
@@ -697,17 +766,22 @@ const timelineScrollHandler = (
     const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
 
     if (
-      scrollLeft < leftScrollUpdateThreshold * viewportWidth ||
-      scrollLeft > rightScrollUpdateThreshold * viewportWidth
+      newScrollState.scrollX < leftScrollUpdateThreshold * viewportWidth ||
+      newScrollState.scrollX > rightScrollUpdateThreshold * viewportWidth
     ) {
-      newScrollX = updateScroll(
-        timeline,
-        barsDimensions,
-        newTimeStart,
-        newTimeEnd,
-        TIME_MIN,
-        TIME_MAX,
-      );
+      newScrollState = updateScroll(timeline, newScrollState, barsDimensions);
+    }
+
+    if (
+      newScrollState.timeStart !== timeStart ||
+      newScrollState.timeEnd !== timeEnd
+    ) {
+      onTimeChange?.({
+        lastTimeEnd: timeEnd,
+        lastTimeStart: timeStart,
+        timeEnd: newScrollState.timeEnd,
+        timeStart: newScrollState.timeStart,
+      });
     }
   }
 
@@ -715,28 +789,24 @@ const timelineScrollHandler = (
     console.log("Vertical scroll", deltaY);
   }
 
-  return {
-    scrollX: newScrollX,
-    scrollY: newScrollY,
-    timeEnd: newTimeEnd,
-    timeStart: newTimeStart,
-  };
+  return newScrollState;
 };
 
-export const Timeline = ({
-  className,
-  onTimeChange,
-  timeEnd: initTimeEnd,
-  timeStart: initTimeStart,
-}: Readonly<{
-  className?: string;
-  onTimeChange?: TimeChangeHandler;
-  timeEnd: number;
-  timeStart: number;
-}>): ReactNode => {
+export interface TimelineRef {
+  setTime: (timeStart: number, timeEnd: number) => void;
+}
+
+export const Timeline = forwardRef<
+  TimelineRef,
+  Readonly<{
+    className?: string;
+    onTimeChange?: TimeChangeHandler;
+    initTimeEnd: number;
+    initTimeStart: number;
+  }>
+>(({ className, onTimeChange, initTimeEnd, initTimeStart }, ref): ReactNode => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const lastScrollPositionRef = useRef<Coordinates>({ x: 0, y: 0 });
 
   const [barsDimensions, setBarsDimensions] = useState<BarsDimensions>({
     bottom: verticalBarMinHeight,
@@ -745,66 +815,76 @@ export const Timeline = ({
     top: verticalBarMinHeight,
   });
 
-  const [timeStart, setTimeStart] = useState<number>(() =>
-    clampTimeStartProperty(initTimeStart, TIME_MIN, TIME_MAX),
-  );
-  const [timeEnd, setTimeEnd] = useState<number>(() =>
-    clampTimeEndProperty(initTimeEnd, TIME_MIN, TIME_MAX),
-  );
+  const [scrollState, setScrollState] = useState<ScrollState>(() => {
+    const timeMin = TIME_MIN;
+    const timeMax = TIME_MAX;
 
-  useEffect(() => {
-    // Determine the new start and end times based on the initial values.
-    const newTimeStart = clampTimeStartProperty(
+    const [timeStart, timeEnd] = clampTimeRangeProperties(
       initTimeStart,
-      TIME_MIN,
-      TIME_MAX,
+      initTimeEnd,
+      timeMin,
+      timeMax,
     );
-    const newTimeEnd = clampTimeEndProperty(initTimeEnd, TIME_MIN, TIME_MAX);
 
-    // If the new times differ from the old times, trigger the appropriate
-    // actions for an update.
-    if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
-      setTimeStart(newTimeStart);
-      setTimeEnd(newTimeEnd);
+    return {
+      scrollX: 0,
+      scrollY: 0,
+      timeEnd,
+      timeMax,
+      timeMin,
+      timeStart,
+    };
+  });
 
-      onTimeChange?.({
-        lastTimeEnd: timeEnd,
-        lastTimeStart: timeStart,
-        timeEnd: newTimeEnd,
-        timeStart: newTimeStart,
-      });
+  useImperativeHandle(ref, () => ({
+    setTime: (targetTimeStart, targetTimeEnd): void => {
+      const { timeEnd, timeMax, timeMin, timeStart } = scrollState;
 
-      // Update the scroll position in case the new times are near the
-      // timeline boundaries.
+      const [newTimeStart, newTimeEnd] = clampTimeRangeProperties(
+        targetTimeStart,
+        targetTimeEnd,
+        timeMin,
+        timeMax,
+      );
+
       const content = contentRef.current;
 
-      if (content) {
-        lastScrollPositionRef.current.x = updateScroll(
-          content,
-          barsDimensions,
-          newTimeStart,
-          newTimeEnd,
-          TIME_MIN,
-          TIME_MAX,
-        );
+      // If the new times differ from the old times, trigger the appropriate
+      // actions for an update.
+      if ((newTimeStart !== timeStart || newTimeEnd !== timeEnd) && content) {
+        let newScrollState = {
+          ...scrollState,
+          timeEnd: newTimeEnd,
+          timeStart: newTimeStart,
+        };
+
+        newScrollState = updateScroll(content, newScrollState, barsDimensions);
+
+        setScrollState(newScrollState);
+
+        onTimeChange?.({
+          lastTimeEnd: timeEnd,
+          lastTimeStart: timeStart,
+          timeEnd: newTimeEnd,
+          timeStart: newTimeStart,
+        });
       }
-    }
-  }, [initTimeEnd, initTimeStart]);
+    },
+  }));
 
   const onBarResizeHandler = (
     targetCoordinates: Coordinates,
     dimension: BarSide,
   ): void => {
-    const containerBar = containerRef.current;
+    const container = containerRef.current;
 
-    const newBarDimensions = calcNewBarsDimensions(
-      containerBar,
-      barsDimensions,
-      dimension,
-      targetCoordinates,
-    );
-
-    if (newBarDimensions) {
+    if (container) {
+      const newBarDimensions = barResizeHandler(
+        container,
+        barsDimensions,
+        dimension,
+        targetCoordinates,
+      );
       setBarsDimensions(newBarDimensions);
     }
   };
@@ -815,70 +895,34 @@ export const Timeline = ({
     const { target } = event;
 
     if (target instanceof Element) {
-      const { x: lastX, y: lastY } = lastScrollPositionRef.current;
-
       const newScrollState = timelineScrollHandler(
         target,
-        {
-          scrollX: lastX,
-          scrollY: lastY,
-          timeEnd,
-          timeStart,
-        },
+        scrollState,
         barsDimensions,
+        onTimeChange,
       );
-
-      const {
-        scrollX: newScrollX,
-        scrollY: newScrollY,
-        timeEnd: newTimeEnd,
-        timeStart: newTimeStart,
-      } = newScrollState;
-
-      // Update the last scroll position.
-      lastScrollPositionRef.current = { x: newScrollX, y: newScrollY };
-
-      // Update and report the new times.
-      setTimeStart(newTimeStart);
-      setTimeEnd(newTimeEnd);
-      onTimeChange?.({
-        lastTimeEnd: timeEnd,
-        lastTimeStart: timeStart,
-        timeEnd: newTimeEnd,
-        timeStart: newTimeStart,
-      });
+      setScrollState(newScrollState);
     }
   };
 
   // Configure component on mount.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const content = contentRef.current;
 
     if (content) {
-      // Set the initial scroll position.
-      lastScrollPositionRef.current.x = updateScroll(
+      const newScrollState = timelineInitScrollHandler(
         content,
+        scrollState,
         barsDimensions,
-        timeStart,
-        timeEnd,
-        TIME_MIN,
-        TIME_MAX,
       );
+      setScrollState(newScrollState);
 
-      // Detect changes to the size of the timeline.
-      const observer = new ResizeObserver(([entry]) => {
-        if (entry) {
-          console.log("Resize", entry.contentRect);
-        }
-      });
-      observer.observe(content);
-
-      return () => {
-        observer.disconnect();
-      };
+      timelineInitResizeHandler(content);
     }
 
-    return undefined;
+    // This effect sets up the initial state of the component. Since it depends
+    // on the initial values of some states.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dimensionStyles: DimensionCSSProperties = {
@@ -939,4 +983,5 @@ export const Timeline = ({
       />
     </div>
   );
-};
+});
+Timeline.displayName = "Timeline";
