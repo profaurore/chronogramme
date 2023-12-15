@@ -1,3 +1,6 @@
+/** Math */
+export const zero = 0;
+
 /** Unit value. */
 export const unit = 1;
 
