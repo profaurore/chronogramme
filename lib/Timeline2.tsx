@@ -158,6 +158,7 @@ export class Timeline2 extends HTMLElement {
 		});
 	}
 
+	// @ts-expect-error Protected method used by HTMLElement
 	private attributeChangedCallback(
 		name: string,
 		_oldValue: string,
@@ -172,6 +173,7 @@ export class Timeline2 extends HTMLElement {
 		}
 	}
 
+	// @ts-expect-error Protected method used by HTMLElement
 	private connectedCallback(): void {
 		// Properties set before the Web Component was properly configured.
 		// if (Object.hasOwn(this, "windowTime")) {
@@ -214,6 +216,7 @@ export class Timeline2 extends HTMLElement {
 		this.onResizeHandler();
 	}
 
+	// @ts-expect-error Protected method used by HTMLElement
 	private disconnectedCallback(): void {
 		Timeline2.resizeHandler.unsubscribe((resizeObserver) => {
 			resizeObserver.unobserve(this);
