@@ -1,97 +1,143 @@
-import "./App.css";
-
 import { css } from "@linaria/core";
 import {
-  type MouseEventHandler,
-  type ReactNode,
-  useMemo,
-  useRef,
-  useState,
+	type MouseEventHandler,
+	type ReactNode,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
 } from "react";
 
-import { TIME_MAX, TIME_MIN } from "../lib/time";
 import {
-  type TimeChangeHandler,
-  Timeline,
-  type TimelineRef,
-} from "../lib/Timeline";
+	type TimeChangeHandler,
+	Timeline,
+	type TimelineRef,
+} from "../lib/Timeline.tsx";
+import { TimeChangeEventDetail, type Timeline2 } from "../lib/Timeline2.tsx";
+import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
+import "./App.css";
 
 const timelineClass = css`
-  height: 400px;
-  max-height: 80vh;
-  max-width: 100%;
-  outline: 1px solid #f00;
-  width: 800px;
+	height: 400px;
+	margin-bottom: 1em;
+	max-height: 80vh;
+	max-width: 100%;
+	outline: 1px solid #f00;
+	width: 800px;
 `;
 
 const buttonsClass = css`
-  display: flex;
-  gap: 5px;
+	display: flex;
+	gap: 5px;
 `;
 
 const daysInWeek = 7;
 
 const formatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "short",
-  timeStyle: "medium",
+	dateStyle: "short",
+	timeStyle: "medium",
 });
 const formatDate = (time: number): string => formatter.format(new Date(time));
 
 const formatDateRange = (start: number, end: number): string =>
-  `${formatDate(start)} - ${formatDate(end)}`;
+	`${formatDate(start)} - ${formatDate(end)}`;
 
 const datesFromStartDate = (start: number): [number, number] => [
-  start,
-  new Date(start).setDate(new Date(start).getDate() + daysInWeek),
+	start,
+	new Date(start).setDate(new Date(start).getDate() + daysInWeek),
 ];
 
 export const App = (): ReactNode => {
-  const timelineRef = useRef<TimelineRef>(null);
+	const timelineRef = useRef<TimelineRef>(null);
+	const timeline2Ref = useRef<Timeline2>(null);
 
-  const [initTimeStart, initTimeEnd] = useMemo<[number, number]>(
-    () => datesFromStartDate(Date.now()),
-    [],
-  );
+	const [initTimeStart, initTimeEnd] = useMemo<[number, number]>(
+		() => datesFromStartDate(Date.now()),
+		[],
+	);
+	const [initTimeStart2, initTimeEnd2] = useMemo<[number, number]>(
+		() => datesFromStartDate(Date.now()),
+		[],
+	);
 
-  const [datesString, setDatesString] = useState<string>(() =>
-    formatDateRange(initTimeStart, initTimeEnd),
-  );
+	const [datesString, setDatesString] = useState<string>(() =>
+		formatDateRange(initTimeStart, initTimeEnd),
+	);
+	const [datesString2, setDatesString2] = useState<string>(() =>
+		formatDateRange(initTimeStart2, initTimeEnd2),
+	);
 
-  const onTimeChangeHandler: TimeChangeHandler = ({ timeEnd, timeStart }) => {
-    setDatesString(formatDateRange(timeStart, timeEnd));
-  };
+	const onTimeChangeHandler: TimeChangeHandler = ({ timeEnd, timeStart }) => {
+		setDatesString(formatDateRange(timeStart, timeEnd));
+	};
 
-  const onStartOfTimeClickHandler: MouseEventHandler = () => {
-    timelineRef.current?.setTime(...datesFromStartDate(TIME_MIN));
-  };
+	const onStartOfTimeClickHandler: MouseEventHandler = () => {
+		timelineRef.current?.setTime(...datesFromStartDate(TIME_MIN));
 
-  const onNowClickHandler: MouseEventHandler = () => {
-    timelineRef.current?.setTime(...datesFromStartDate(Date.now()));
-  };
+		timeline2Ref.current?.setTimeWindowExtrema(...datesFromStartDate(TIME_MIN));
+	};
 
-  const onEndOfTimeClickHandler: MouseEventHandler = () => {
-    timelineRef.current?.setTime(
-      ...datesFromStartDate(
-        new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
-      ),
-    );
-  };
+	const onNowClickHandler: MouseEventHandler = () => {
+		timelineRef.current?.setTime(...datesFromStartDate(Date.now()));
 
-  return (
-    <>
-      <Timeline
-        className={timelineClass}
-        initTimeEnd={initTimeEnd}
-        initTimeStart={initTimeStart}
-        onTimeChange={onTimeChangeHandler}
-        ref={timelineRef}
-      />
-      <div>{datesString}</div>
-      <div className={buttonsClass}>
-        <button onClick={onStartOfTimeClickHandler}>Start of time</button>
-        <button onClick={onNowClickHandler}>Now</button>
-        <button onClick={onEndOfTimeClickHandler}>End of time</button>
-      </div>
-    </>
-  );
+		timeline2Ref.current?.setTimeWindowExtrema(
+			...datesFromStartDate(Date.now()),
+		);
+	};
+
+	const onEndOfTimeClickHandler: MouseEventHandler = () => {
+		timelineRef.current?.setTime(
+			...datesFromStartDate(
+				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
+			),
+		);
+
+		timeline2Ref.current?.setTimeWindowExtrema(
+			...datesFromStartDate(
+				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
+			),
+		);
+	};
+
+	useEffect(() => {
+		timeline2Ref.current?.addEventListener("timeChange", (e) => {
+			if (
+				e instanceof CustomEvent &&
+				e.detail instanceof TimeChangeEventDetail
+			) {
+				setDatesString2(
+					formatDateRange(e.detail.timeWindowMin, e.detail.timeWindowMax),
+				);
+			}
+		});
+	}, []);
+
+	return (
+		<>
+			<div className={buttonsClass}>
+				<button onClick={onStartOfTimeClickHandler}>Start of time</button>
+				<button onClick={onNowClickHandler}>Now</button>
+				<button onClick={onEndOfTimeClickHandler}>End of time</button>
+			</div>
+
+			<div>{datesString2}</div>
+			<cg-timeline
+				class={timelineClass}
+				ref={timeline2Ref}
+				timeExtrema={[TIME_MIN, TIME_MAX]}
+				windowTime={[initTimeStart2, initTimeEnd2]}
+			>
+				<div slot="abc">abc</div>
+			</cg-timeline>
+
+			<div>{datesString}</div>
+			<Timeline
+				className={timelineClass}
+				initTimeEnd={initTimeEnd}
+				initTimeStart={initTimeStart}
+				onTimeChange={onTimeChangeHandler}
+				ref={timelineRef}
+			/>
+		</>
+	);
 };

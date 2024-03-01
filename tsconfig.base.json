@@ -1,41 +1,46 @@
 {
-  "compilerOptions": {
-    /* Type Checking */
-    "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strict": true,
+	"compilerOptions": {
+		/* Type Checking */
+		"allowUnusedLabels": false,
+		"allowUnreachableCode": false,
+		"exactOptionalPropertyTypes": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"strict": true,
 
-    /* Modules */
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
+		/* Modules */
+		"allowImportingTsExtensions": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
 
-    /* JavaScript Support */
-    "allowJs": false,
+		/* JavaScript Support */
+		"allowJs": false,
 
-    /* Interop Constraints */
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
+		/* Interop Constraints */
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
 
-    /* Language and Environment */
-    "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "target": "esnext",
-    "useDefineForClassFields": true,
+		/* Language and Environment */
+		"jsx": "preserve",
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"target": "esnext",
+		"useDefineForClassFields": true,
 
-    /* Projects */
-    "composite": true,
-    "incremental": true,
+		/* Projects */
+		"composite": true,
+		"incremental": true,
+		"declarationMap": true,
 
-    /* Output Formatting */
-    "noErrorTruncation": true
-  }
+		/* Output Formatting */
+		"noErrorTruncation": true,
+
+		/* Source Maps */
+		"sourceMap": true
+	}
 }

@@ -2,29 +2,29 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-  margin: 0;
-  overflow-wrap: break-word;
+	box-sizing: border-box;
+	margin: 0;
+	overflow-wrap: break-word;
 }
 
 html {
-  height: 100%;
+	height: 100%;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.5;
-  padding: 0;
-  margin: 0;
-  height: 100%;
+	display: flex;
+	flex-direction: column;
+	line-height: 1.5;
+	padding: 0;
+	margin: 0;
+	height: 100%;
 }
 
 input,
 button,
 textarea,
 select {
-  font: inherit;
+	font: inherit;
 }
 
 img,
@@ -32,15 +32,15 @@ picture,
 video,
 canvas,
 svg {
-  display: block;
-  max-width: 100%;
+	display: block;
+	max-width: 100%;
 }
 
 #root {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  padding: 1rem;
-  width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	padding: 1rem;
+	width: 100%;
 }

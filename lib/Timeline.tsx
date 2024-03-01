@@ -1,821 +1,826 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
+
 import { css, cx } from "@linaria/core";
 import {
-  type CSSProperties,
-  forwardRef,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
+	type CSSProperties,
+	type MouseEvent as ReactMouseEvent,
+	type ReactNode,
+	forwardRef,
+	useImperativeHandle,
+	useLayoutEffect,
+	useRef,
+	useState,
 } from "react";
 
-import { clamp, half, mean, unit, unitPercent, zero } from "./math";
+import { HALF, UNIT, UNIT_PERCENT, ZERO, clamp, mean } from "./math.ts";
 import {
-  clampTimeRange,
-  clampTimeRangeProperties,
-  TIME_MAX,
-  TIME_MIN,
-} from "./time";
+	TIME_MAX,
+	TIME_MIN,
+	clampTimeInterval,
+	clampTimeIntervalProperties,
+} from "./time.ts";
 
 const contentToViewportRatio = 3;
 
 const containerClass = css`
-  /* Defaults */
-  --bottom-bar-height: 0px;
-  --left-bar-width: 0px;
-  --right-bar-width: 0px;
-  --timeline-height: 1000px;
-  --top-bar-height: 0px;
+	/* Defaults */
+	--bottom-bar-height: 0px;
+	--left-bar-width: 0px;
+	--right-bar-width: 0px;
+	--timeline-height: 1000px;
+	--top-bar-height: 0px;
 
-  display: flex;
-  position: relative;
+	display: flex;
+	position: relative;
 `;
 
 const contentClass = css`
-  display: grid;
-  flex: 1;
-  grid-template-areas:
-    "top-left top top-right"
-    "left center right"
-    "bottom-left bottom bottom-right";
-  grid-template-columns: var(--left-bar-width) 300% var(--right-bar-width);
-  grid-template-rows: var(--top-bar-height) minmax(var(--timeline-height), 1fr) var(
-      --bottom-bar-height
-    );
-  height: 100%;
-  overflow: auto;
-  position: relative;
-  width: ${contentToViewportRatio * unitPercent}%;
+	display: grid;
+	flex: 1;
+	grid-template:
+		"top-left top top-right" var(--top-bar-height)
+		"left center right" minmax(var(--timeline-height), 1fr)
+		"bottom-left bottom bottom-right" var(--bottom-bar-height)
+		/ var(--left-bar-width) 300% var(--right-bar-width);
+	height: 100%;
+	overflow: auto;
+	position: relative;
+	width: ${contentToViewportRatio * UNIT_PERCENT}%;
 
-  /* Hide the scrollbars */
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+	/* Hide the scrollbars */
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
 `;
 
 const timelineClass = css`
-  background-image: repeating-linear-gradient(-45deg, #0000ff, #ff00ff 100px);
-  grid-area: center;
-  position: relative;
+	background-image: repeating-linear-gradient(-45deg, #00f, #f0f 100px);
+	grid-area: center;
+	position: relative;
 `;
 
 const topBarClass = css`
-  background-color: #ff0000;
-  grid-area: top;
-  position: sticky;
-  top: 0;
+	background-color: #f00;
+	grid-area: top;
+	position: sticky;
+	top: 0;
 `;
 
 const leftBarClass = css`
-  background-color: #00ff00;
-  left: 0;
-  grid-area: left;
-  position: sticky;
+	background-color: #0f0;
+	left: 0;
+	grid-area: left;
+	position: sticky;
 `;
 
 const rightBarClass = css`
-  background-color: #00ff00;
-  grid-area: right;
-  position: sticky;
-  right: 0;
+	background-color: #0f0;
+	grid-area: right;
+	position: sticky;
+	right: 0;
 `;
 
 const bottomBarClass = css`
-  background-color: #ff0000;
-  bottom: 0;
-  grid-area: bottom;
-  position: sticky;
+	background-color: #f00;
+	bottom: 0;
+	grid-area: bottom;
+	position: sticky;
 `;
 
 const topLeftBarClass = css`
-  background-color: #00ffff;
-  left: 0;
-  grid-area: top-left;
-  position: sticky;
-  top: 0;
+	background-color: #0ff;
+	left: 0;
+	grid-area: top-left;
+	position: sticky;
+	top: 0;
 `;
 
 const topRightBarClass = css`
-  background-color: #00ffff;
-  grid-area: top-right;
-  position: sticky;
-  right: 0;
-  top: 0;
+	background-color: #0ff;
+	grid-area: top-right;
+	position: sticky;
+	right: 0;
+	top: 0;
 `;
 
 const bottomLeftBarClass = css`
-  background-color: #00ffff;
-  bottom: 0;
-  left: 0;
-  grid-area: bottom-left;
-  position: sticky;
+	background-color: #0ff;
+	bottom: 0;
+	left: 0;
+	grid-area: bottom-left;
+	position: sticky;
 `;
 
 const bottomRightBarClass = css`
-  background-color: #00ffff;
-  bottom: 0;
-  grid-area: bottom-right;
-  position: sticky;
-  right: 0;
+	background-color: #0ff;
+	bottom: 0;
+	grid-area: bottom-right;
+	position: sticky;
+	right: 0;
 `;
 
 const topDividerClass = css`
-  /* Shared with *DividerClass */
-  --bar-size: 3px;
-  --interact-margin: 5px;
-  --hover-size: 60px;
+	/* Shared with *DividerClass */
+	--bar-size: 3px;
+	--interact-margin: 5px;
+	--hover-size: 60px;
 
-  /* Interaction area */
-  & {
-    top: var(--top-bar-height);
+	/* Interaction area */
+	& {
+		top: var(--top-bar-height);
 
-    /* Shared with bottomDividerClass */
-    clip-path: polygon(
-      var(--hover-size) calc(50% - var(--hover-size)),
-      calc(100% - var(--hover-size)) calc(50% - var(--hover-size)),
-      100% 50%,
-      calc(100% - var(--hover-size)) calc(50% + var(--hover-size)),
-      var(--hover-size) calc(50% + var(--hover-size)),
-      0 50%
-    );
-    height: var(--bar-size);
-    left: var(--left-bar-width);
-    padding: var(--interact-margin) 0;
-    right: var(--right-bar-width);
-    transform: translateY(-50%);
+		/* Shared with bottomDividerClass */
+		clip-path: polygon(
+			var(--hover-size) calc(50% - var(--hover-size)),
+			calc(100% - var(--hover-size)) calc(50% - var(--hover-size)),
+			100% 50%,
+			calc(100% - var(--hover-size)) calc(50% + var(--hover-size)),
+			var(--hover-size) calc(50% + var(--hover-size)),
+			0 50%
+		);
+		height: var(--bar-size);
+		left: var(--left-bar-width);
+		padding: var(--interact-margin) 0;
+		right: var(--right-bar-width);
+		transform: translateY(-50%);
 
-    /* Shared with *DividerClass */
-    background-clip: content-box;
-    background-color: #ccc;
-    box-sizing: content-box;
-    opacity: 0;
-    position: absolute;
-    transition: opacity 0.25s ease-in 0.5s;
+		/* Shared with *DividerClass */
+		background-clip: content-box;
+		background-color: #ccc;
+		box-sizing: content-box;
+		opacity: 0;
+		position: absolute;
+		transition: opacity 0.25s ease-in 0.5s;
 
-    &:hover {
-      /* Shared with *DividerClass */
-      opacity: 1;
-      transition-delay: 0s;
-      transition-duration: 0s;
-    }
-  }
+		&:hover {
+			/* Shared with *DividerClass */
+			opacity: 1;
+			transition-delay: 0s;
+			transition-duration: 0s;
+		}
+	}
 
-  /* Cursor area */
-  &::before {
-    /* Shared with bottomDividerClass */
-    cursor: ns-resize;
+	/* Cursor area */
+	&::before {
+		/* Shared with bottomDividerClass */
+		cursor: ns-resize;
 
-    /* Shared with *DividerClass */
-    content: "";
-    height: 100%;
-    left: 0;
-    top: 0;
-    position: absolute;
-    width: 100%;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		height: 100%;
+		left: 0;
+		top: 0;
+		position: absolute;
+		width: 100%;
+	}
 
-  /* Hover area */
-  &::after {
-    /* Shared with bottomDividerClass */
-    height: var(--hover-size);
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
+	/* Hover area */
+	&::after {
+		/* Shared with bottomDividerClass */
+		height: var(--hover-size);
+		top: 50%;
+		transform: translateY(-50%);
+		width: 100%;
 
-    /* Shared with *DividerClass */
-    content: "";
-    position: absolute;
-    z-index: -1;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		position: absolute;
+		z-index: -1;
+	}
 `;
 
 const leftDividerClass = css`
-  /* Shared with *DividerClass */
-  --bar-size: 3px;
-  --interact-margin: 5px;
-  --hover-size: 60px;
+	/* Shared with *DividerClass */
+	--bar-size: 3px;
+	--interact-margin: 5px;
+	--hover-size: 60px;
 
-  /* Interaction area */
-  & {
-    left: var(--left-bar-width);
+	/* Interaction area */
+	& {
+		left: var(--left-bar-width);
 
-    /* Shared with rightDividerClass */
-    bottom: var(--bottom-bar-height);
-    clip-path: polygon(
-      calc(50% - var(--hover-size)) var(--hover-size),
-      calc(50% - var(--hover-size)) calc(100% - var(--hover-size)),
-      50% 100%,
-      calc(50% + var(--hover-size)) calc(100% - var(--hover-size)),
-      calc(50% + var(--hover-size)) var(--hover-size),
-      50% 0
-    );
-    padding: 0 var(--interact-margin);
-    top: var(--top-bar-height);
-    transform: translateX(-50%);
-    width: var(--bar-size);
+		/* Shared with rightDividerClass */
+		bottom: var(--bottom-bar-height);
+		clip-path: polygon(
+			calc(50% - var(--hover-size)) var(--hover-size),
+			calc(50% - var(--hover-size)) calc(100% - var(--hover-size)),
+			50% 100%,
+			calc(50% + var(--hover-size)) calc(100% - var(--hover-size)),
+			calc(50% + var(--hover-size)) var(--hover-size),
+			50% 0
+		);
+		padding: 0 var(--interact-margin);
+		top: var(--top-bar-height);
+		transform: translateX(-50%);
+		width: var(--bar-size);
 
-    /* Shared with *DividerClass */
-    background-clip: content-box;
-    background-color: #ccc;
-    box-sizing: content-box;
-    opacity: 0;
-    position: absolute;
-    transition: opacity 0.25s ease-in 0.5s;
+		/* Shared with *DividerClass */
+		background-clip: content-box;
+		background-color: #ccc;
+		box-sizing: content-box;
+		opacity: 0;
+		position: absolute;
+		transition: opacity 0.25s ease-in 0.5s;
 
-    &:hover {
-      /* Shared with *DividerClass */
-      opacity: 1;
-      transition-delay: 0s;
-      transition-duration: 0s;
-    }
-  }
+		&:hover {
+			/* Shared with *DividerClass */
+			opacity: 1;
+			transition-delay: 0s;
+			transition-duration: 0s;
+		}
+	}
 
-  /* Cursor area */
-  &::before {
-    /* Shared with rightDividerClass */
-    cursor: ew-resize;
+	/* Cursor area */
+	&::before {
+		/* Shared with rightDividerClass */
+		cursor: ew-resize;
 
-    /* Shared with *DividerClass */
-    content: "";
-    height: 100%;
-    left: 0;
-    top: 0;
-    position: absolute;
-    width: 100%;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		height: 100%;
+		left: 0;
+		top: 0;
+		position: absolute;
+		width: 100%;
+	}
 
-  /* Hover area */
-  &::after {
-    /* Shared with rightDividerClass */
-    height: 100%;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    width: var(--hover-size);
+	/* Hover area */
+	&::after {
+		/* Shared with rightDividerClass */
+		height: 100%;
+		left: 50%;
+		top: 0;
+		transform: translateX(-50%);
+		width: var(--hover-size);
 
-    /* Shared with *DividerClass */
-    content: "";
-    position: absolute;
-    z-index: -1;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		position: absolute;
+		z-index: -1;
+	}
 `;
 
 const rightDividerClass = css`
-  /* Shared with *DividerClass */
-  --bar-size: 3px;
-  --interact-margin: 5px;
-  --hover-size: 60px;
+	/* Shared with *DividerClass */
+	--bar-size: 3px;
+	--interact-margin: 5px;
+	--hover-size: 60px;
 
-  /* Interaction area */
-  & {
-    left: calc(100% - var(--right-bar-width));
+	/* Interaction area */
+	& {
+		left: calc(100% - var(--right-bar-width));
 
-    /* Shared with rightDividerClass */
-    bottom: var(--bottom-bar-height);
-    clip-path: polygon(
-      calc(50% - var(--hover-size)) var(--hover-size),
-      calc(50% - var(--hover-size)) calc(100% - var(--hover-size)),
-      50% 100%,
-      calc(50% + var(--hover-size)) calc(100% - var(--hover-size)),
-      calc(50% + var(--hover-size)) var(--hover-size),
-      50% 0
-    );
-    padding: 0 var(--interact-margin);
-    top: var(--top-bar-height);
-    transform: translateX(-50%);
-    width: var(--bar-size);
+		/* Shared with rightDividerClass */
+		bottom: var(--bottom-bar-height);
+		clip-path: polygon(
+			calc(50% - var(--hover-size)) var(--hover-size),
+			calc(50% - var(--hover-size)) calc(100% - var(--hover-size)),
+			50% 100%,
+			calc(50% + var(--hover-size)) calc(100% - var(--hover-size)),
+			calc(50% + var(--hover-size)) var(--hover-size),
+			50% 0
+		);
+		padding: 0 var(--interact-margin);
+		top: var(--top-bar-height);
+		transform: translateX(-50%);
+		width: var(--bar-size);
 
-    /* Shared with *DividerClass */
-    background-clip: content-box;
-    background-color: #ccc;
-    box-sizing: content-box;
-    opacity: 0;
-    position: absolute;
-    transition: opacity 0.25s ease-in 0.5s;
+		/* Shared with *DividerClass */
+		background-clip: content-box;
+		background-color: #ccc;
+		box-sizing: content-box;
+		opacity: 0;
+		position: absolute;
+		transition: opacity 0.25s ease-in 0.5s;
 
-    &:hover {
-      /* Shared with *DividerClass */
-      opacity: 1;
-      transition-delay: 0s;
-      transition-duration: 0s;
-    }
-  }
+		&:hover {
+			/* Shared with *DividerClass */
+			opacity: 1;
+			transition-delay: 0s;
+			transition-duration: 0s;
+		}
+	}
 
-  /* Cursor area */
-  &::before {
-    /* Shared with rightDividerClass */
-    cursor: ew-resize;
+	/* Cursor area */
+	&::before {
+		/* Shared with rightDividerClass */
+		cursor: ew-resize;
 
-    /* Shared with *DividerClass */
-    content: "";
-    height: 100%;
-    left: 0;
-    top: 0;
-    position: absolute;
-    width: 100%;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		height: 100%;
+		left: 0;
+		top: 0;
+		position: absolute;
+		width: 100%;
+	}
 
-  /* Hover area */
-  &::after {
-    /* Shared with rightDividerClass */
-    height: 100%;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    width: var(--hover-size);
+	/* Hover area */
+	&::after {
+		/* Shared with rightDividerClass */
+		height: 100%;
+		left: 50%;
+		top: 0;
+		transform: translateX(-50%);
+		width: var(--hover-size);
 
-    /* Shared with *DividerClass */
-    content: "";
-    position: absolute;
-    z-index: -1;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		position: absolute;
+		z-index: -1;
+	}
 `;
 
 const bottomDividerClass = css`
-  /* Shared with *DividerClass */
-  --bar-size: 3px;
-  --interact-margin: 5px;
-  --hover-size: 60px;
+	/* Shared with *DividerClass */
+	--bar-size: 3px;
+	--interact-margin: 5px;
+	--hover-size: 60px;
 
-  /* Interaction area */
-  & {
-    top: calc(100% - var(--bottom-bar-height));
+	/* Interaction area */
+	& {
+		top: calc(100% - var(--bottom-bar-height));
 
-    /* Shared with topDividerClass */
-    clip-path: polygon(
-      var(--hover-size) calc(50% - var(--hover-size)),
-      calc(100% - var(--hover-size)) calc(50% - var(--hover-size)),
-      100% 50%,
-      calc(100% - var(--hover-size)) calc(50% + var(--hover-size)),
-      var(--hover-size) calc(50% + var(--hover-size)),
-      0 50%
-    );
-    height: var(--bar-size);
-    left: var(--left-bar-width);
-    padding: var(--interact-margin) 0;
-    right: var(--right-bar-width);
-    transform: translateY(-50%);
+		/* Shared with topDividerClass */
+		clip-path: polygon(
+			var(--hover-size) calc(50% - var(--hover-size)),
+			calc(100% - var(--hover-size)) calc(50% - var(--hover-size)),
+			100% 50%,
+			calc(100% - var(--hover-size)) calc(50% + var(--hover-size)),
+			var(--hover-size) calc(50% + var(--hover-size)),
+			0 50%
+		);
+		height: var(--bar-size);
+		left: var(--left-bar-width);
+		padding: var(--interact-margin) 0;
+		right: var(--right-bar-width);
+		transform: translateY(-50%);
 
-    /* Shared with *DividerClass */
-    background-clip: content-box;
-    background-color: #ccc;
-    box-sizing: content-box;
-    opacity: 0;
-    position: absolute;
-    transition: opacity 0.25s ease-in 0.5s;
+		/* Shared with *DividerClass */
+		background-clip: content-box;
+		background-color: #ccc;
+		box-sizing: content-box;
+		opacity: 0;
+		position: absolute;
+		transition: opacity 0.25s ease-in 0.5s;
 
-    &:hover {
-      /* Shared with *DividerClass */
-      opacity: 1;
-      transition-delay: 0s;
-      transition-duration: 0s;
-    }
-  }
+		&:hover {
+			/* Shared with *DividerClass */
+			opacity: 1;
+			transition-delay: 0s;
+			transition-duration: 0s;
+		}
+	}
 
-  /* Cursor area */
-  &::before {
-    /* Shared with topDividerClass */
-    cursor: ns-resize;
+	/* Cursor area */
+	&::before {
+		/* Shared with topDividerClass */
+		cursor: ns-resize;
 
-    /* Shared with *DividerClass */
-    content: "";
-    height: 100%;
-    left: 0;
-    top: 0;
-    position: absolute;
-    width: 100%;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		height: 100%;
+		left: 0;
+		top: 0;
+		position: absolute;
+		width: 100%;
+	}
 
-  /* Hover area */
-  &::after {
-    /* Shared with topDividerClass */
-    height: var(--hover-size);
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
+	/* Hover area */
+	&::after {
+		/* Shared with topDividerClass */
+		height: var(--hover-size);
+		top: 50%;
+		transform: translateY(-50%);
+		width: 100%;
 
-    /* Shared with *DividerClass */
-    content: "";
-    position: absolute;
-    z-index: -1;
-  }
+		/* Shared with *DividerClass */
+		content: "";
+		position: absolute;
+		z-index: -1;
+	}
 `;
 
 interface Coordinates {
-  x: number;
-  y: number;
+	x: number;
+	y: number;
 }
 
 class ScrollState {
-  public readonly container: Element;
+	public readonly container: Element;
 
-  public readonly scrollX: number;
+	public readonly scrollX: number;
 
-  public readonly scrollY: number;
+	public readonly scrollY: number;
 
-  public readonly timeEnd: number;
+	public readonly timeEnd: number;
 
-  public readonly timeMax: number;
+	public readonly timeMax: number;
 
-  public readonly timeMin: number;
+	public readonly timeMin: number;
 
-  public readonly timeStart: number;
+	public readonly timeStart: number;
 
-  private constructor(
-    container: Element,
-    timeStart: number,
-    timeEnd: number,
-    timeMin: number,
-    timeMax: number,
-    scrollX: number,
-    scrollY: number,
-  ) {
-    this.container = container;
-    this.scrollX = scrollX;
-    this.scrollY = scrollY;
-    this.timeEnd = timeEnd;
-    this.timeMax = timeMax;
-    this.timeMin = timeMin;
-    this.timeStart = timeStart;
-  }
+	private constructor(
+		container: Element,
+		timeStart: number,
+		timeEnd: number,
+		timeMin: number,
+		timeMax: number,
+		scrollX: number,
+		scrollY: number,
+	) {
+		this.container = container;
+		this.scrollX = scrollX;
+		this.scrollY = scrollY;
+		this.timeEnd = timeEnd;
+		this.timeMax = timeMax;
+		this.timeMin = timeMin;
+		this.timeStart = timeStart;
+	}
 
-  public static build(
-    container: Element,
-    parameters: Partial<{
-      scrollX: number;
-      scrollY: number;
-      timeEnd: number;
-      timeMax: number;
-      timeMin: number;
-      timeStart: number;
-    }> = {},
-  ): ScrollState {
-    const {
-      scrollX = zero,
-      scrollY = zero,
-      timeEnd = TIME_MAX,
-      timeMax = TIME_MAX,
-      timeMin = TIME_MIN,
-      timeStart = TIME_MIN,
-    } = parameters;
+	public static build(
+		container: Element,
+		parameters: Partial<{
+			scrollX: number;
+			scrollY: number;
+			timeEnd: number;
+			timeMax: number;
+			timeMin: number;
+			timeStart: number;
+		}> = {},
+	): ScrollState {
+		const {
+			scrollX = ZERO,
+			scrollY = ZERO,
+			timeEnd = TIME_MAX,
+			timeMax = TIME_MAX,
+			timeMin = TIME_MIN,
+			timeStart = TIME_MIN,
+		} = parameters;
 
-    const scrollState = new ScrollState(
-      container,
-      timeStart,
-      timeEnd,
-      timeMin,
-      timeMax,
-      scrollX,
-      scrollY,
-    );
+		const scrollState = new ScrollState(
+			container,
+			timeStart,
+			timeEnd,
+			timeMin,
+			timeMax,
+			scrollX,
+			scrollY,
+		);
 
-    scrollState.validateTimeBounds();
-    scrollState.validateTimeInterval();
-    scrollState.initResizeHandler();
+		scrollState.validateTimeBounds();
+		scrollState.validateTimeInterval();
+		scrollState.initResizeHandler();
 
-    return scrollState;
-  }
+		return scrollState;
+	}
 
-  public setTimeInterval(timeStart: number, timeEnd: number): ScrollState {
-    if (timeStart === this.timeStart && timeEnd === this.timeEnd) {
-      return this;
-    }
+	private initResizeHandler(): void {
+		const { container } = this;
 
-    const newScrollState = new ScrollState(
-      this.container,
-      timeStart,
-      timeEnd,
-      this.timeMin,
-      this.timeMax,
-      this.scrollX,
-      this.scrollY,
-    );
+		if (container.parentElement) {
+			// Detect changes in size.
+			const resizeObserver = new ResizeObserver(
+				([entry]: readonly ResizeObserverEntry[]) => {
+					if (entry) {
+						// console.log("Resize", entry.contentRect);
+					}
+				},
+			);
+			resizeObserver.observe(container);
 
-    newScrollState.validateTimeInterval();
+			// Detect the element being removed from the DOM to cancel the resize
+			// observer.
+			new MutationObserver(
+				(_mutations: readonly MutationRecord[], mutationObserver) => {
+					if (!container.isConnected) {
+						resizeObserver.disconnect();
+						mutationObserver.disconnect();
+					}
+				},
+			).observe(container.parentElement, { childList: true });
+		}
+	}
 
-    return newScrollState;
-  }
+	private updateScrollX(barsDimensions: Readonly<BarsDimensions>): number {
+		const { clientWidth, scrollLeft, scrollWidth } = this.container;
+		const { scrollX, timeEnd, timeMax, timeMin, timeStart } = this;
 
-  public setTimeBounds(timeMin: number, timeMax: number): ScrollState {
-    if (timeMin === this.timeMin && timeMax === this.timeMax) {
-      return this;
-    }
+		const windowRange = timeEnd - timeStart;
 
-    const newScrollState = new ScrollState(
-      this.container,
-      this.timeStart,
-      this.timeEnd,
-      timeMin,
-      timeMax,
-      this.scrollX,
-      this.scrollY,
-    );
+		// The thresholds for adjusting the alignment of the scroll viewport are a
+		// half viewport from the content bounds. This ensures that if the user is
+		// scrolling, the user does not hit the end before the viewport can be
+		// adjusted.
+		//
+		// The viewport width is subtracted from the right threshold because the
+		// left side of the viewport is used to perform the check.
+		// ```
+		// rightThreshold = contentWidth - halfViewportWidth - viewportWidth
+		// ```
+		const leftScrollUpdateThreshold = HALF;
+		const rightScrollUpdateThreshold = contentToViewportRatio - UNIT - HALF;
 
-    newScrollState.validateTimeBounds();
+		// When the viewport is near the bounds of the timeline, a recalculation is
+		// required to ensure any further scrolling stops at the bounds.
+		const isViewportNearTimeBounds =
+			timeStart < timeMin + windowRange || timeEnd > timeMax - windowRange;
 
-    return newScrollState;
-  }
+		// When the viewport is near the bounds of the content, a recalculation is
+		// required to ensure any further scrolling can continue.
+		const isViewportNearContentBounds =
+			scrollX < leftScrollUpdateThreshold * clientWidth ||
+			scrollX > rightScrollUpdateThreshold * clientWidth;
 
-  public onScrollHandler(
-    barsDimensions: BarsDimensions,
-    onTimeChange: TimeChangeHandler | undefined,
-  ): ScrollState {
-    console.log("onScrollHandler");
-    const { scrollX, scrollY, timeEnd, timeMax, timeMin, timeStart } = this;
-    const {
-      clientWidth: viewportWidth,
-      scrollLeft,
-      scrollTop,
-    } = this.container;
+		if (!isViewportNearTimeBounds && !isViewportNearContentBounds) {
+			return scrollX;
+		}
 
-    let newTimeStart = this.timeStart;
-    let newTimeEnd = this.timeEnd;
-    let newScrollX = scrollLeft;
-    const newScrollY = scrollTop;
+		// console.log("recalc");
 
-    // Determine the change in pixels due to scrolling.
-    const deltaX = newScrollX - scrollX;
-    const deltaY = newScrollY - scrollY;
+		// The width of the timeline is the content width minus both vertical bars.
+		const timelineWidth =
+			clientWidth - barsDimensions.left - barsDimensions.right;
 
-    if (deltaX) {
-      const lastTimeStart = timeStart;
-      const lastTimeEnd = timeEnd;
-      const visibleRange = lastTimeEnd - lastTimeStart;
+		// Horizontally center the scroll viewport on the content.
+		const scrollCenter = HALF * (scrollWidth - clientWidth);
 
-      // Determine the time offset.
-      const timelineWidth =
-        viewportWidth - barsDimensions.left - barsDimensions.right;
-      const secondPerPixel = visibleRange / timelineWidth;
-      const timeDelta = deltaX * secondPerPixel;
+		// Determine the ratio of pixels per second.
+		//
+		// In the extreme case of
+		// - a timeline of width 1px and
+		// - a window range of all possible time,
+		// the ratio will have an approximate value of 1.15e-16, far from the
+		// smallest representable value of 5e-324.
+		const pixelPerSecond = timelineWidth / windowRange;
 
-      const unclampedTimeStart = lastTimeStart + timeDelta;
-      const unclampedTimeEnd = unclampedTimeStart + visibleRange;
+		// The distance from the viewport bounds to the timeline bounds.
+		const minTimeDistance = (timeStart - timeMin) * pixelPerSecond;
+		const maxTimeDistance = (timeMax - timeEnd) * pixelPerSecond;
 
-      [newTimeStart, newTimeEnd] = clampTimeRange(
-        unclampedTimeStart,
-        unclampedTimeEnd,
-        timeMin,
-        timeMax,
-      );
+		// The scrolling bounds for the content, given the size of the viewport.
+		const minContentScroll = 0;
+		const maxContentScroll = scrollWidth - clientWidth;
 
-      // Adjust the alignment of the scroll viewport if it is nearing either
-      // extremity. The thresholds are a half viewport from the content
-      // bounds.
-      //
-      // The viewport width is subtracted from the right threshold because the
-      // left side of the viewport is used to perform the check.
-      // ```
-      // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
-      // ```
-      const leftScrollUpdateThreshold = half;
-      const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
+		// Clamp the value to the permitted time range. There is a case where the
+		// values of `minTime` and `maxTime` could conflict. The caller must ensure
+		// that `windowTimeEnd - windowTimeStart <= maxTime - minTime`.
+		//
+		// The value is rounded to the nearest integer to align with the behavior of
+		// browser scrolling.
+		const newScrollX = Math.round(
+			clamp(
+				scrollCenter,
+				maxContentScroll - maxTimeDistance,
+				minContentScroll + minTimeDistance,
+			),
+		);
 
-      if (
-        newScrollX < leftScrollUpdateThreshold * viewportWidth ||
-        newScrollX > rightScrollUpdateThreshold * viewportWidth
-      ) {
-        newScrollX = this.updateScrollX(barsDimensions);
-      }
+		// Update the viewport.
+		if (newScrollX !== scrollLeft) {
+			// console.log(`scrollTo from ${scrollLeft} to ${newScrollX}`);
 
-      if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
-        onTimeChange?.({
-          lastTimeEnd: timeEnd,
-          lastTimeStart: timeStart,
-          timeEnd: newTimeEnd,
-          timeStart: newTimeStart,
-        });
-      }
-    }
+			this.container.scrollTo({ left: newScrollX });
+		}
 
-    if (deltaY) {
-      console.log("Vertical scroll", deltaY);
-    }
+		// Return the scroll position.
+		return newScrollX;
+	}
 
-    const newScrollState = new ScrollState(
-      this.container,
-      newTimeStart,
-      newTimeEnd,
-      this.timeMin,
-      this.timeMax,
-      newScrollX,
-      newScrollY,
-    );
+	private validateTimeBounds(): void {
+		if (this.timeMax <= this.timeMin) {
+			throw new Error("timeMax must be greater than timeMin");
+		}
+	}
 
-    return newScrollState;
-  }
+	private validateTimeInterval(): void {
+		if (this.timeStart < this.timeMin) {
+			throw new Error("timeStart must be greater than or equal to timeMin");
+		}
 
-  public updateScroll(barsDimensions: BarsDimensions): ScrollState {
-    console.log("updateScroll");
-    const newScrollX = this.updateScrollX(barsDimensions);
+		if (this.timeEnd > this.timeMax) {
+			throw new Error("timeEnd must be less than or equal to timeMax");
+		}
+	}
 
-    return newScrollX === this.scrollX
-      ? this
-      : new ScrollState(
-          this.container,
-          this.timeStart,
-          this.timeEnd,
-          this.timeMin,
-          this.timeMax,
-          newScrollX,
-          this.scrollY,
-        );
-  }
+	public onScrollHandler(
+		barsDimensions: Readonly<BarsDimensions>,
+		onTimeChange: TimeChangeHandler | undefined,
+	): ScrollState {
+		// console.log("onScrollHandler");
+		const { scrollX, scrollY, timeEnd, timeMax, timeMin, timeStart } = this;
+		const {
+			clientWidth: viewportWidth,
+			scrollLeft,
+			scrollTop,
+		} = this.container;
 
-  private validateTimeInterval(): void {
-    if (this.timeStart < this.timeMin) {
-      throw new Error("timeStart must be greater than or equal to timeMin");
-    }
+		let newTimeStart = this.timeStart;
+		let newTimeEnd = this.timeEnd;
+		let newScrollX = scrollLeft;
+		const newScrollY = scrollTop;
 
-    if (this.timeEnd > this.timeMax) {
-      throw new Error("timeEnd must be less than or equal to timeMax");
-    }
-  }
+		// Determine the change in pixels due to scrolling.
+		const deltaX = newScrollX - scrollX;
+		const deltaY = newScrollY - scrollY;
 
-  private validateTimeBounds(): void {
-    if (this.timeMax <= this.timeMin) {
-      throw new Error("timeMax must be greater than timeMin");
-    }
-  }
+		if (deltaX) {
+			const lastTimeStart = timeStart;
+			const lastTimeEnd = timeEnd;
+			const windowRange = lastTimeEnd - lastTimeStart;
 
-  private initResizeHandler(): void {
-    const { container } = this;
+			// Determine the time offset.
+			const timelineWidth =
+				viewportWidth - barsDimensions.left - barsDimensions.right;
+			const secondPerPixel = windowRange / timelineWidth;
+			const timeDelta = deltaX * secondPerPixel;
 
-    if (container.parentElement) {
-      // Detect changes in size.
-      const resizeObserver = new ResizeObserver(([entry]) => {
-        if (entry) {
-          console.log("Resize", entry.contentRect);
-        }
-      });
-      resizeObserver.observe(container);
+			const unclampedTimeStart = lastTimeStart + timeDelta;
+			const unclampedTimeEnd = unclampedTimeStart + windowRange;
 
-      // Detect the element being removed from the DOM to cancel the resize
-      // observer.
-      new MutationObserver((_mutations, mutationObserver) => {
-        if (!container.isConnected) {
-          resizeObserver.disconnect();
-          mutationObserver.disconnect();
-        }
-      }).observe(container.parentElement, { childList: true });
-    }
-  }
+			[newTimeStart, newTimeEnd] = clampTimeInterval(
+				unclampedTimeStart,
+				unclampedTimeEnd,
+				timeMin,
+				timeMax,
+			);
 
-  private updateScrollX(barsDimensions: BarsDimensions): number {
-    const { scrollLeft, scrollWidth, clientWidth } = this.container;
-    const { scrollX, timeEnd, timeMax, timeMin, timeStart } = this;
+			// Adjust the alignment of the scroll viewport if it is nearing either
+			// extremity. The thresholds are a half viewport from the content
+			// bounds.
+			//
+			// The viewport width is subtracted from the right threshold because the
+			// left side of the viewport is used to perform the check.
+			// ```
+			// rightThreshold = contentWidth - halfViewportWidth - viewportWidth
+			// ```
+			const leftScrollUpdateThreshold = HALF;
+			const rightScrollUpdateThreshold = contentToViewportRatio - UNIT - HALF;
 
-    const visibleRange = timeEnd - timeStart;
+			if (
+				newScrollX < leftScrollUpdateThreshold * viewportWidth ||
+				newScrollX > rightScrollUpdateThreshold * viewportWidth
+			) {
+				newScrollX = this.updateScrollX(barsDimensions);
+			}
 
-    // The thresholds for adjusting the alignment of the scroll viewport are a
-    // half viewport from the content bounds. This ensures that if the user is
-    // scrolling, the user does not hit the end before the viewport can be
-    // adjusted.
-    //
-    // The viewport width is subtracted from the right threshold because the
-    // left side of the viewport is used to perform the check.
-    // ```
-    // rightThreshold = contentWidth - halfViewportWidth - viewportWidth
-    // ```
-    const leftScrollUpdateThreshold = half;
-    const rightScrollUpdateThreshold = contentToViewportRatio - unit - half;
+			if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
+				onTimeChange?.({
+					lastTimeEnd: timeEnd,
+					lastTimeStart: timeStart,
+					timeEnd: newTimeEnd,
+					timeStart: newTimeStart,
+				});
+			}
+		}
 
-    // When the viewport is near the bounds of the timeline, a recalculation is
-    // required to ensure any further scrolling stops at the bounds.
-    const isViewportNearTimeBounds =
-      timeStart < timeMin + visibleRange || timeEnd > timeMax - visibleRange;
+		if (deltaY) {
+			// console.log("Vertical scroll", deltaY);
+		}
 
-    // When the viewport is near the bounds of the content, a recalculation is
-    // required to ensure any further scrolling can continue.
-    const isViewportNearContentBounds =
-      scrollX < leftScrollUpdateThreshold * clientWidth ||
-      scrollX > rightScrollUpdateThreshold * clientWidth;
+		const newScrollState = new ScrollState(
+			this.container,
+			newTimeStart,
+			newTimeEnd,
+			this.timeMin,
+			this.timeMax,
+			newScrollX,
+			newScrollY,
+		);
 
-    if (!isViewportNearTimeBounds && !isViewportNearContentBounds) {
-      return scrollX;
-    }
+		return newScrollState;
+	}
 
-    console.log("recalc");
+	public setTimeBounds(timeMin: number, timeMax: number): ScrollState {
+		if (timeMin === this.timeMin && timeMax === this.timeMax) {
+			return this;
+		}
 
-    // The width of the timeline is the content width minus both vertical bars.
-    const timelineWidth =
-      clientWidth - barsDimensions.left - barsDimensions.right;
+		const newScrollState = new ScrollState(
+			this.container,
+			this.timeStart,
+			this.timeEnd,
+			timeMin,
+			timeMax,
+			this.scrollX,
+			this.scrollY,
+		);
 
-    // Horizontally center the scroll viewport on the content.
-    const scrollCenter = half * (scrollWidth - clientWidth);
+		newScrollState.validateTimeBounds();
 
-    // Determine the ratio of pixels per second.
-    //
-    // In the extreme case of
-    // - a timeline of width 1px and
-    // - a visible range of all possible time,
-    // the ratio will have an approximate value of 1.15e-16, far from the smallest
-    // representable value of 5e-324.
-    const pixelPerSecond = timelineWidth / visibleRange;
+		return newScrollState;
+	}
 
-    // The distance from the viewport bounds to the timeline bounds.
-    const minTimeDistance = (timeStart - timeMin) * pixelPerSecond;
-    const maxTimeDistance = (timeMax - timeEnd) * pixelPerSecond;
+	public setTimeInterval(timeStart: number, timeEnd: number): ScrollState {
+		if (timeStart === this.timeStart && timeEnd === this.timeEnd) {
+			return this;
+		}
 
-    // The scrolling bounds for the content, given the size of the viewport.
-    const minContentScroll = 0;
-    const maxContentScroll = scrollWidth - clientWidth;
+		const newScrollState = new ScrollState(
+			this.container,
+			timeStart,
+			timeEnd,
+			this.timeMin,
+			this.timeMax,
+			this.scrollX,
+			this.scrollY,
+		);
 
-    // Clamp the value to the permitted time range. There is a case where the
-    // values of `minTime` and `maxTime` could conflict. The caller must ensure
-    // that `visibleTimeEnd - visibleTimeStart <= maxTime - minTime`.
-    //
-    // The value is rounded to the nearest integer to align with the behavior of
-    // browser scrolling.
-    const newScrollX = Math.round(
-      clamp(
-        scrollCenter,
-        maxContentScroll - maxTimeDistance,
-        minContentScroll + minTimeDistance,
-      ),
-    );
+		newScrollState.validateTimeInterval();
 
-    // Update the viewport.
-    if (newScrollX !== scrollLeft) {
-      console.log(`scrollTo from ${scrollLeft} to ${newScrollX}`);
+		return newScrollState;
+	}
 
-      this.container.scrollTo({ left: newScrollX });
-    }
+	public updateScroll(barsDimensions: Readonly<BarsDimensions>): ScrollState {
+		// console.log("updateScroll");
+		const newScrollX = this.updateScrollX(barsDimensions);
 
-    // Return the scroll position.
-    return newScrollX;
-  }
+		return newScrollX === this.scrollX
+			? this
+			: new ScrollState(
+					this.container,
+					this.timeStart,
+					this.timeEnd,
+					this.timeMin,
+					this.timeMax,
+					newScrollX,
+					this.scrollY,
+				);
+	}
 }
 
 enum BarSide {
-  Bottom = "bottom",
-  Left = "left",
-  Right = "right",
-  Top = "top",
+	Bottom = "bottom",
+	Left = "left",
+	Right = "right",
+	Top = "top",
 }
 
 const ResizeDivider = ({
-  className,
-  onResize,
-  side,
+	className,
+	onResize,
+	side,
 }: Readonly<{
-  className?: string;
-  onResize: (target: Coordinates, side: BarSide) => void;
-  side: BarSide;
+	className?: string;
+	onResize: (target: Readonly<Coordinates>, side: BarSide) => void;
+	side: BarSide;
 }>): ReactNode => {
-  const onStartResizing = (event: Readonly<ReactMouseEvent>): void => {
-    event.stopPropagation();
+	const onStartResizing = (event: ReactMouseEvent): void => {
+		event.stopPropagation();
 
-    const { clientX, clientY, currentTarget } = event;
+		const { clientX, clientY, currentTarget } = event;
 
-    const { bottom, left, right, top } = currentTarget.getBoundingClientRect();
-    const isInsideBoundingRect =
-      clientX >= left &&
-      clientX <= right &&
-      clientY >= top &&
-      clientY <= bottom;
+		const { bottom, left, right, top } = currentTarget.getBoundingClientRect();
+		const isInsideBoundingRect =
+			clientX >= left &&
+			clientX <= right &&
+			clientY >= top &&
+			clientY <= bottom;
 
-    // The element may have pseudo-elements that are rendered outside of its
-    // bounding rectangle. Only start dragging if the event started inside of
-    // the rectangle.
-    if (!isInsideBoundingRect) {
-      return;
-    }
+		// The element may have pseudo-elements that are rendered outside of its
+		// bounding rectangle. Only start dragging if the event started inside of
+		// the rectangle.
+		if (!isInsideBoundingRect) {
+			return;
+		}
 
-    // Determine the distance from the centerline of the divider so that the
-    // relative position can be maintained while dragging. This avoids jumping
-    // caused by the center of the divider jumping to the location of the
-    // cursor.
-    const centerX = mean(left, right);
-    const centerY = mean(bottom, top);
-    const offsetX = centerX - clientX;
-    const offsetY = centerY - clientY;
+		// Determine the distance from the centerline of the divider so that the
+		// relative position can be maintained while dragging. This avoids jumping
+		// caused by the center of the divider jumping to the location of the
+		// cursor.
+		const centerX = mean(left, right);
+		const centerY = mean(bottom, top);
+		const offsetX = centerX - clientX;
+		const offsetY = centerY - clientY;
 
-    const onMoveResizing = (event: Readonly<MouseEvent>): void => {
-      event.stopPropagation();
+		const onMoveResizing = (event: MouseEvent): void => {
+			event.stopPropagation();
 
-      const { clientX, clientY } = event;
+			const { clientX, clientY } = event;
 
-      // Maintain the position of the divider relative to the cursor.
-      const target = {
-        x: clientX + offsetX,
-        y: clientY + offsetY,
-      };
+			// Maintain the position of the divider relative to the cursor.
+			const target = {
+				x: clientX + offsetX,
+				y: clientY + offsetY,
+			};
 
-      onResize(target, side);
-    };
+			onResize(target, side);
+		};
 
-    const onStopResizing = (): void => {
-      document.removeEventListener("mousemove", onMoveResizing, false);
-      document.removeEventListener("mouseup", onStopResizing, false);
-    };
+		const onStopResizing = (): void => {
+			document.removeEventListener("mousemove", onMoveResizing, false);
+			document.removeEventListener("mouseup", onStopResizing, false);
+		};
 
-    document.addEventListener("mousemove", onMoveResizing, false);
-    document.addEventListener("mouseup", onStopResizing, false);
-  };
+		document.addEventListener("mousemove", onMoveResizing, false);
+		document.addEventListener("mouseup", onStopResizing, false);
+	};
 
-  return <div className={className} onMouseDown={onStartResizing} />;
+	return <div className={className} onMouseDown={onStartResizing} />;
 };
 
 const timelineMinHeight = 100;
@@ -824,267 +829,269 @@ const verticalBarMinHeight = 50;
 const horizontalBarMinWidth = 100;
 
 const barResizeHandler = (
-  container: HTMLDivElement,
-  barsDimensions: BarsDimensions,
-  dimension: BarSide,
-  targetCoordinates: Coordinates,
+	container: HTMLDivElement,
+	barsDimensions: Readonly<BarsDimensions>,
+	dimension: BarSide,
+	targetCoordinates: Readonly<Coordinates>,
 ): BarsDimensions => {
-  let containerSize: number;
+	let containerSize: number;
 
-  let barMinSize: number;
+	let barMinSize: number;
 
-  let otherBarSize: number;
+	let otherBarSize: number;
 
-  // The target size is defined as the distance from the outer edge of the bar
-  // to the target position of the inner edge.
-  let targetSize: number;
+	// The target size is defined as the distance from the outer edge of the bar
+	// to the target position of the inner edge.
+	let targetSize: number;
 
-  let timelineMinSize: number;
+	let timelineMinSize: number;
 
-  switch (dimension) {
-    case BarSide.Bottom:
-      containerSize = container.clientHeight;
-      barMinSize = verticalBarMinHeight;
-      otherBarSize = barsDimensions.top;
-      targetSize =
-        container.clientTop + container.clientHeight - targetCoordinates.y;
-      timelineMinSize = timelineMinHeight;
-      break;
+	switch (dimension) {
+		case BarSide.Bottom:
+			containerSize = container.clientHeight;
+			barMinSize = verticalBarMinHeight;
+			otherBarSize = barsDimensions.top;
+			targetSize =
+				container.clientTop + container.clientHeight - targetCoordinates.y;
+			timelineMinSize = timelineMinHeight;
+			break;
 
-    case BarSide.Left:
-      containerSize = container.clientWidth;
-      barMinSize = horizontalBarMinWidth;
-      otherBarSize = barsDimensions.right;
-      targetSize = targetCoordinates.x - container.clientLeft;
-      timelineMinSize = timelineMinWidth;
-      break;
+		case BarSide.Left:
+			containerSize = container.clientWidth;
+			barMinSize = horizontalBarMinWidth;
+			otherBarSize = barsDimensions.right;
+			targetSize = targetCoordinates.x - container.clientLeft;
+			timelineMinSize = timelineMinWidth;
+			break;
 
-    case BarSide.Right:
-      containerSize = container.clientWidth;
-      barMinSize = horizontalBarMinWidth;
-      otherBarSize = barsDimensions.left;
-      targetSize =
-        container.clientLeft + container.clientWidth - targetCoordinates.x;
-      timelineMinSize = timelineMinWidth;
-      break;
+		case BarSide.Right:
+			containerSize = container.clientWidth;
+			barMinSize = horizontalBarMinWidth;
+			otherBarSize = barsDimensions.left;
+			targetSize =
+				container.clientLeft + container.clientWidth - targetCoordinates.x;
+			timelineMinSize = timelineMinWidth;
+			break;
 
-    case BarSide.Top:
-      containerSize = container.clientHeight;
-      barMinSize = verticalBarMinHeight;
-      otherBarSize = barsDimensions.bottom;
-      targetSize = targetCoordinates.y - container.clientTop;
-      timelineMinSize = timelineMinHeight;
-      break;
-  }
+		case BarSide.Top:
+			containerSize = container.clientHeight;
+			barMinSize = verticalBarMinHeight;
+			otherBarSize = barsDimensions.bottom;
+			targetSize = targetCoordinates.y - container.clientTop;
+			timelineMinSize = timelineMinHeight;
+			break;
+	}
 
-  // The maximum width is defined by the maximum available size assuming the
-  // timeline shrinks to its minimum size.
-  const barMaxSize = containerSize - timelineMinSize - otherBarSize;
+	// The maximum width is defined by the maximum available size assuming the
+	// timeline shrinks to its minimum size.
+	const barMaxSize = containerSize - timelineMinSize - otherBarSize;
 
-  // If the minimum possible size of the bar exceeds its maximum possible size,
-  // do not update its dimensions.
-  if (barMinSize > barMaxSize) {
-    return barsDimensions;
-  }
+	// If the minimum possible size of the bar exceeds its maximum possible size,
+	// do not update its dimensions.
+	if (barMinSize > barMaxSize) {
+		return barsDimensions;
+	}
 
-  // The resulting width is clamped between the minimum width of the bar and
-  // the maximum available width if the timeline shrank as much as it can.
-  const newBarSize = Math.min(Math.max(targetSize, barMinSize), barMaxSize);
+	// The resulting width is clamped between the minimum width of the bar and
+	// the maximum available width if the timeline shrank as much as it can.
+	const newBarSize = Math.min(Math.max(targetSize, barMinSize), barMaxSize);
 
-  return {
-    ...barsDimensions,
-    [dimension]: newBarSize,
-  };
+	return {
+		...barsDimensions,
+		[dimension]: newBarSize,
+	};
 };
 
 export interface DimensionCSSProperties extends CSSProperties {
-  "--bottom-bar-height": string;
-  "--left-bar-width": string;
-  "--right-bar-width": string;
-  "--timeline-height": string;
-  "--top-bar-height": string;
+	"--bottom-bar-height": string;
+	"--left-bar-width": string;
+	"--right-bar-width": string;
+	"--timeline-height": string;
+	"--top-bar-height": string;
 }
 
 type BarsDimensions = {
-  [key in BarSide]: number;
+	[key in BarSide]: number;
 };
 
-export type TimeChangeHandler = (times: {
-  lastTimeEnd: number;
-  lastTimeStart: number;
-  timeEnd: number;
-  timeStart: number;
-}) => void;
+export type TimeChangeHandler = (
+	times: Readonly<{
+		lastTimeEnd: number;
+		lastTimeStart: number;
+		timeEnd: number;
+		timeStart: number;
+	}>,
+) => void;
 
 export interface TimelineRef {
-  setTime: (timeStart: number, timeEnd: number) => void;
+	setTime: (timeStart: number, timeEnd: number) => void;
 }
 
 export const Timeline = forwardRef<
-  TimelineRef,
-  Readonly<{
-    className?: string;
-    onTimeChange?: TimeChangeHandler;
-    initTimeEnd: number;
-    initTimeStart: number;
-  }>
->(({ className, onTimeChange, initTimeEnd, initTimeStart }, ref): ReactNode => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+	TimelineRef,
+	Readonly<{
+		className?: string;
+		initTimeEnd: number;
+		initTimeStart: number;
+		onTimeChange?: TimeChangeHandler;
+	}>
+>(({ className, initTimeEnd, initTimeStart, onTimeChange }, ref): ReactNode => {
+	const containerRef = useRef<HTMLDivElement | null>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
 
-  const [barsDimensions, setBarsDimensions] = useState<BarsDimensions>({
-    bottom: verticalBarMinHeight,
-    left: horizontalBarMinWidth,
-    right: horizontalBarMinWidth,
-    top: verticalBarMinHeight,
-  });
+	const [barsDimensions, setBarsDimensions] = useState<BarsDimensions>({
+		bottom: verticalBarMinHeight,
+		left: horizontalBarMinWidth,
+		right: horizontalBarMinWidth,
+		top: verticalBarMinHeight,
+	});
 
-  const [scrollState, setScrollState] = useState<ScrollState | undefined>();
+	const [scrollState, setScrollState] = useState<ScrollState | undefined>();
 
-  useImperativeHandle(ref, () => ({
-    setTime: (targetTimeStart, targetTimeEnd): void => {
-      if (!scrollState) {
-        return;
-      }
+	useImperativeHandle(ref, () => ({
+		setTime: (targetTimeStart, targetTimeEnd): void => {
+			if (!scrollState) {
+				return;
+			}
 
-      const { timeEnd, timeMax, timeMin, timeStart } = scrollState;
+			const { timeEnd, timeMax, timeMin, timeStart } = scrollState;
 
-      const [newTimeStart, newTimeEnd] = clampTimeRangeProperties(
-        targetTimeStart,
-        targetTimeEnd,
-        timeMin,
-        timeMax,
-      );
+			const [newTimeStart, newTimeEnd] = clampTimeIntervalProperties(
+				targetTimeStart,
+				targetTimeEnd,
+				timeMin,
+				timeMax,
+			);
 
-      // If the new times differ from the old times, trigger the appropriate
-      // actions for an update.
-      if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
-        let newScrollState = scrollState.setTimeInterval(
-          newTimeStart,
-          newTimeEnd,
-        );
+			// If the new times differ from the old times, trigger the appropriate
+			// actions for an update.
+			if (newTimeStart !== timeStart || newTimeEnd !== timeEnd) {
+				let newScrollState = scrollState.setTimeInterval(
+					newTimeStart,
+					newTimeEnd,
+				);
 
-        newScrollState = newScrollState.updateScroll(barsDimensions);
+				newScrollState = newScrollState.updateScroll(barsDimensions);
 
-        setScrollState(newScrollState);
+				setScrollState(newScrollState);
 
-        onTimeChange?.({
-          lastTimeEnd: timeEnd,
-          lastTimeStart: timeStart,
-          timeEnd: newTimeEnd,
-          timeStart: newTimeStart,
-        });
-      }
-    },
-  }));
+				onTimeChange?.({
+					lastTimeEnd: timeEnd,
+					lastTimeStart: timeStart,
+					timeEnd: newTimeEnd,
+					timeStart: newTimeStart,
+				});
+			}
+		},
+	}));
 
-  const onBarResizeHandler = (
-    targetCoordinates: Coordinates,
-    dimension: BarSide,
-  ): void => {
-    const container = containerRef.current;
+	const onBarResizeHandler = (
+		targetCoordinates: Coordinates,
+		dimension: BarSide,
+	): void => {
+		const container = containerRef.current;
 
-    if (container) {
-      const newBarDimensions = barResizeHandler(
-        container,
-        barsDimensions,
-        dimension,
-        targetCoordinates,
-      );
+		if (container) {
+			const newBarDimensions = barResizeHandler(
+				container,
+				barsDimensions,
+				dimension,
+				targetCoordinates,
+			);
 
-      setBarsDimensions(newBarDimensions);
-    }
-  };
+			setBarsDimensions(newBarDimensions);
+		}
+	};
 
-  const onContentScrollHandler = (): void => {
-    if (scrollState) {
-      const newScrollState = scrollState.onScrollHandler(
-        barsDimensions,
-        onTimeChange,
-      );
+	const onContentScrollHandler = (): void => {
+		if (scrollState) {
+			const newScrollState = scrollState.onScrollHandler(
+				barsDimensions,
+				onTimeChange,
+			);
 
-      setScrollState(newScrollState);
-    }
-  };
+			setScrollState(newScrollState);
+		}
+	};
 
-  // Configure component on mount.
-  useLayoutEffect(() => {
-    const content = contentRef.current;
+	// Configure component on mount.
+	useLayoutEffect(() => {
+		const content = contentRef.current;
 
-    if (content) {
-      let newScrollState = ScrollState.build(content, {
-        timeEnd: initTimeEnd,
-        timeMax: TIME_MAX,
-        timeMin: TIME_MIN,
-        timeStart: initTimeStart,
-      });
-      newScrollState = newScrollState.updateScroll(barsDimensions);
+		if (content) {
+			let newScrollState = ScrollState.build(content, {
+				timeEnd: initTimeEnd,
+				timeMax: TIME_MAX,
+				timeMin: TIME_MIN,
+				timeStart: initTimeStart,
+			});
+			newScrollState = newScrollState.updateScroll(barsDimensions);
 
-      setScrollState(newScrollState);
-    }
+			setScrollState(newScrollState);
+		}
 
-    // This effect sets up the initial state of the component. Since it depends
-    // on the initial values of some states.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+		// This effect sets up the initial state of the component. Since it depends
+		// on the initial values of some states.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-  const dimensionStyles: DimensionCSSProperties = {
-    "--bottom-bar-height": `${barsDimensions.bottom}px`,
-    "--left-bar-width": `${barsDimensions.left}px`,
-    "--right-bar-width": `${barsDimensions.right}px`,
-    "--timeline-height": "500px",
-    "--top-bar-height": `${barsDimensions.top}px`,
-  };
+	const dimensionStyles: DimensionCSSProperties = {
+		"--bottom-bar-height": `${barsDimensions.bottom}px`,
+		"--left-bar-width": `${barsDimensions.left}px`,
+		"--right-bar-width": `${barsDimensions.right}px`,
+		"--timeline-height": "500px",
+		"--top-bar-height": `${barsDimensions.top}px`,
+	};
 
-  return (
-    <div
-      className={cx(containerClass, className)}
-      ref={containerRef}
-      style={dimensionStyles}
-    >
-      <div
-        className={contentClass}
-        onScroll={onContentScrollHandler}
-        ref={contentRef}
-      >
-        {/* Center */}
-        <div className={timelineClass}>timeline</div>
+	return (
+		<div
+			className={cx(containerClass, className)}
+			ref={containerRef}
+			style={dimensionStyles}
+		>
+			<div
+				className={contentClass}
+				onScroll={onContentScrollHandler}
+				ref={contentRef}
+			>
+				{/* Center */}
+				<div className={timelineClass}>timeline</div>
 
-        {/* Sides */}
-        <div className={topBarClass}>top</div>
-        <div className={leftBarClass}>left</div>
-        <div className={rightBarClass}>right</div>
-        <div className={bottomBarClass}>bottom</div>
+				{/* Sides */}
+				<div className={topBarClass}>top</div>
+				<div className={leftBarClass}>left</div>
+				<div className={rightBarClass}>right</div>
+				<div className={bottomBarClass}>bottom</div>
 
-        {/* Corners */}
-        <div className={topLeftBarClass}>top-left</div>
-        <div className={topRightBarClass}>top-right</div>
-        <div className={bottomLeftBarClass}>bottom-left</div>
-        <div className={bottomRightBarClass}>bottom-right</div>
-      </div>
+				{/* Corners */}
+				<div className={topLeftBarClass}>top-left</div>
+				<div className={topRightBarClass}>top-right</div>
+				<div className={bottomLeftBarClass}>bottom-left</div>
+				<div className={bottomRightBarClass}>bottom-right</div>
+			</div>
 
-      {/* Resize handles */}
-      <ResizeDivider
-        className={topDividerClass}
-        onResize={onBarResizeHandler}
-        side={BarSide.Top}
-      />
-      <ResizeDivider
-        className={leftDividerClass}
-        onResize={onBarResizeHandler}
-        side={BarSide.Left}
-      />
-      <ResizeDivider
-        className={rightDividerClass}
-        onResize={onBarResizeHandler}
-        side={BarSide.Right}
-      />
-      <ResizeDivider
-        className={bottomDividerClass}
-        onResize={onBarResizeHandler}
-        side={BarSide.Bottom}
-      />
-    </div>
-  );
+			{/* Resize handles */}
+			<ResizeDivider
+				className={topDividerClass}
+				onResize={onBarResizeHandler}
+				side={BarSide.Top}
+			/>
+			<ResizeDivider
+				className={leftDividerClass}
+				onResize={onBarResizeHandler}
+				side={BarSide.Left}
+			/>
+			<ResizeDivider
+				className={rightDividerClass}
+				onResize={onBarResizeHandler}
+				side={BarSide.Right}
+			/>
+			<ResizeDivider
+				className={bottomDividerClass}
+				onResize={onBarResizeHandler}
+				side={BarSide.Bottom}
+			/>
+		</div>
+	);
 });
 Timeline.displayName = "Timeline";
