@@ -1,10 +1,6 @@
 {
-	"entry": ["lib/main.ts"],
+	"entry": ["src/main.tsx", "lib/main.ts"],
 	"ignoreDependencies": [
-		// For main.ts
-		"react-dom",
-		"@types/react-dom",
-
 		// For Vite
 		"@babel/preset-react",
 		"@babel/preset-typescript",
@@ -26,5 +22,5 @@
 		"postcss-styled-syntax",
 		"postcss-syntax",
 	],
-	"project": ["lib/**/*.{ts,tsx}"],
+	"project": ["lib/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
 }
