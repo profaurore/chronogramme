@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { clamp, mean } from "./math.ts";
+import { clampMinWins, mean } from "./math.ts";
 
 describe("clamp", () => {
 	const numberMin = 1000;
@@ -39,7 +39,7 @@ describe("clamp", () => {
 	])(
 		"%s the range returns %s",
 		(_positionDescription, _resultDescription, value, result) => {
-			expect(clamp(value, numberMin, numberMax)).toEqual(result);
+			expect(clampMinWins(value, numberMin, numberMax)).toEqual(result);
 		},
 	);
 });

@@ -1,4 +1,4 @@
-import { type Interval, clamp } from "./math.ts";
+import { type Interval, clampMinWins } from "./math.ts";
 
 type TimeInterval = Interval;
 
@@ -6,7 +6,7 @@ export const TIME_MIN = -8.64e15;
 
 export const TIME_MAX = 8.64e15;
 
-export const clampTime = clamp;
+export const clampTime = clampMinWins;
 
 /**
  * Clamps a time interval between two values.

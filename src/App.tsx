@@ -24,6 +24,13 @@ const timelineClass = css`
 	max-width: 100%;
 	outline: 1px solid #f00;
 	width: 800px;
+
+	&::part(divider-top),
+	&::part(divider-left),
+	&::part(divider-right),
+	&::part(divider-bottom) {
+		display: block;
+	}
 `;
 
 const buttonsClass = css`
@@ -67,7 +74,10 @@ export const App = (): ReactNode => {
 		formatDateRange(initTimeStart2, initTimeEnd2),
 	);
 
-	const onTimeChangeHandler: TimeChangeHandler = ({ timeEnd, timeStart }) => {
+	const onTimeChangeHandler: TimeChangeHandler = (times) => {
+		const timeEnd = times.timeEnd;
+		const timeStart = times.timeStart;
+
 		setDatesString(formatDateRange(timeStart, timeEnd));
 	};
 
@@ -121,14 +131,15 @@ export const App = (): ReactNode => {
 			</div>
 
 			<div>{datesString2}</div>
-			<cg-timeline
-				class={timelineClass}
-				ref={timeline2Ref}
-				timeExtrema={[TIME_MIN, TIME_MAX]}
-				windowTime={[initTimeStart2, initTimeEnd2]}
-			>
-				<div slot="abc">abc</div>
-			</cg-timeline>
+			<div>
+				<cg-timeline
+					class={timelineClass}
+					defaultResizeHandles
+					ref={timeline2Ref}
+					timeExtrema={[TIME_MIN, TIME_MAX]}
+					windowTime={[initTimeStart2, initTimeEnd2]}
+				></cg-timeline>
+			</div>
 
 			<div>{datesString}</div>
 			<Timeline

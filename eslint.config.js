@@ -16,6 +16,8 @@ import globals from "globals";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import noObjectDestructuring from "./eslint/no-object-destructuring.js";
+
 // For converting legacy plugins to the new flat config.
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -36,7 +38,7 @@ const jsLikeFiles = ["**/*.js", ...tsFiles];
 
 const config = [
 	{
-		ignores: ["coverage", "dist"],
+		ignores: ["coverage", "dist", "eslint"],
 	},
 
 	// Node
@@ -171,7 +173,6 @@ const config = [
 				"operator-assignment": "warn",
 				"prefer-arrow-callback": "warn",
 				"prefer-const": "warn",
-				"prefer-destructuring": "warn",
 				"prefer-exponentiation-operator": "warn",
 				"prefer-named-capture-group": "error",
 				"prefer-numeric-literals": "warn",
@@ -255,7 +256,7 @@ const config = [
 					// No lines between
 					{ blankLine: "any", next: "import", prev: "import" },
 				],
-				"@stylistic/quotes": ["warn", "double"],
+				"@stylistic/quotes": ["warn", "double", { avoidEscape: true }],
 				"@stylistic/spaced-comment": [
 					"warn",
 					"always",
@@ -392,6 +393,7 @@ const config = [
 					"error",
 					{
 						allow: [
+							"MouseEvent",
 							"MutationRecord",
 							"MutationObserver",
 							"ResizeObserver",
@@ -488,6 +490,9 @@ const config = [
 
 	// ESLint
 	...compat.extends("plugin:eslint-comments/recommended"),
+
+	// Custom rules
+	noObjectDestructuring,
 
 	// Disable ESLint rules that conflict with Prettier
 	(() => {

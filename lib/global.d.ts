@@ -10,6 +10,7 @@ declare global {
 				"className"
 			> & {
 				class?: string;
+				defaultResizeHandles: boolean;
 				timeExtrema?: [number, number] | string;
 				windowTime: [number, number] | string;
 			};

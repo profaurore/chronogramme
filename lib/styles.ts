@@ -97,10 +97,10 @@ const buildStylesheet = (): CSSStyleSheet => {
 			right: 0;
 		}
 
-		.cg-divider-top,
-		.cg-divider-left,
-		.cg-divider-right,
-		.cg-divider-bottom {
+		[part="divider-top"].default,
+		[part="divider-left"].default,
+		[part="divider-right"].default,
+		[part="divider-bottom"].default {
 			--bar-size: 3px;
 			--interact-margin: 5px;
 			--hover-size: 60px;
@@ -114,8 +114,8 @@ const buildStylesheet = (): CSSStyleSheet => {
 			transition: opacity 0.25s ease-in 0.5s;
 		}
 
-		.cg-divider-top,
-		.cg-divider-bottom {
+		[part="divider-top"].default,
+		[part="divider-bottom"].default {
 			/* Interaction area */
 			clip-path: polygon(
 				var(--hover-size) calc(50% - var(--hover-size)),
@@ -132,40 +132,58 @@ const buildStylesheet = (): CSSStyleSheet => {
 			transform: translateY(-50%);
 		}
 
-		.cg-divider-top {
+		[part="divider-left"].default,
+		[part="divider-right"].default {
+			/* Interaction area */
+			bottom: var(--bottom-bar-height, 0);
+			clip-path: polygon(
+				calc(50% - var(--hover-size)) var(--hover-size),
+				calc(50% - var(--hover-size)) calc(100% - var(--hover-size)),
+				50% 100%,
+				calc(50% + var(--hover-size)) calc(100% - var(--hover-size)),
+				calc(50% + var(--hover-size)) var(--hover-size),
+				50% 0
+			);
+			padding: 0 var(--interact-margin);
+			top: var(--top-bar-height, 0);
+			transform: translateX(-50%);
+			width: var(--bar-size);
+		}
+
+		[part="divider-top"].default {
 			/* Interaction area */
 			top: var(--top-bar-height, 0);
 		}
 
-		.cg-divider-left {
+		[part="divider-left"].default {
 			/* Interaction area */
 			left: var(--left-bar-width, 0);
 		}
 
-		.cg-divider-right {
+		[part="divider-right"].default {
 			/* Interaction area */
 			left: calc(100% - var(--right-bar-width, 0));
 		}
 
-		.cg-divider-bottom {
+		[part="divider-bottom"].default {
 			/* Interaction area */
 			top: calc(100% - var(--bottom-bar-height, 0));
 		}
 
-		.cg-divider-top:hover,
-		.cg-divider-left:hover,
-		.cg-divider-right:hover,
-		.cg-divider-bottom:hover {
+		[part="divider-top"].default:hover,
+		[part="divider-left"].default:hover,
+		[part="divider-right"].default:hover,
+		[part="divider-bottom"].default:hover {
 			/* Interaction area */
 			opacity: 1;
 			transition-delay: 0s;
 			transition-duration: 0s;
 		}
 
-		.cg-divider-top::before,
-		.cg-divider-left::before,
-		.cg-divider-right::before,
-		.cg-divider-bottom::before {
+		[part="divider-top"].default::before,
+		[part="divider-left"].default::before,
+		[part="divider-right"].default::before,
+		[part="divider-bottom"].default::before {
 			/* Cursor area */
 			content: "";
 			height: 100%;
@@ -175,24 +193,30 @@ const buildStylesheet = (): CSSStyleSheet => {
 			width: 100%;
 		}
 
-		.cg-divider-top::before,
-		.cg-divider-bottom::before {
+		[part="divider-top"].default::before,
+		[part="divider-bottom"].default::before {
 			/* Cursor area */
 			cursor: ns-resize;
 		}
 
-		.cg-divider-top::after,
-		.cg-divider-left::after,
-		.cg-divider-right::after,
-		.cg-divider-bottom::after {
+		[part="divider-left"].default::before,
+		[part="divider-right"].default::before {
+			/* Cursor area */
+			cursor: ew-resize;
+		}
+
+		[part="divider-top"].default::after,
+		[part="divider-left"].default::after,
+		[part="divider-right"].default::after,
+		[part="divider-bottom"].default::after {
 			/* Hover area */
 			content: "";
 			position: absolute;
 			z-index: -1;
 		}
 
-		.cg-divider-top::after,
-		.cg-divider-bottom::after {
+		[part="divider-top"].default::after,
+		[part="divider-bottom"].default::after {
 			/* Hover area */
 			height: var(--hover-size);
 			top: 50%;

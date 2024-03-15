@@ -13,7 +13,7 @@ import {
 	useState,
 } from "react";
 
-import { HALF, UNIT, UNIT_PERCENT, ZERO, clamp, mean } from "./math.ts";
+import { HALF, UNIT, UNIT_PERCENT, ZERO, clampMinWins, mean } from "./math.ts";
 import {
 	TIME_MAX,
 	TIME_MIN,
@@ -453,14 +453,12 @@ class ScrollState {
 			timeStart: number;
 		}> = {},
 	): ScrollState {
-		const {
-			scrollX = ZERO,
-			scrollY = ZERO,
-			timeEnd = TIME_MAX,
-			timeMax = TIME_MAX,
-			timeMin = TIME_MIN,
-			timeStart = TIME_MIN,
-		} = parameters;
+		const scrollX = parameters.scrollX ?? ZERO;
+		const scrollY = parameters.scrollY ?? ZERO;
+		const timeEnd = parameters.timeEnd ?? TIME_MAX;
+		const timeMax = parameters.timeMax ?? TIME_MAX;
+		const timeMin = parameters.timeMin ?? TIME_MIN;
+		const timeStart = parameters.timeStart ?? TIME_MIN;
 
 		const scrollState = new ScrollState(
 			container,
@@ -480,12 +478,14 @@ class ScrollState {
 	}
 
 	private initResizeHandler(): void {
-		const { container } = this;
+		const container = this.container;
 
 		if (container.parentElement) {
 			// Detect changes in size.
 			const resizeObserver = new ResizeObserver(
-				([entry]: readonly ResizeObserverEntry[]) => {
+				(entries: readonly ResizeObserverEntry[]) => {
+					const entry = entries[ZERO];
+
 					if (entry) {
 						// console.log("Resize", entry.contentRect);
 					}
@@ -507,8 +507,15 @@ class ScrollState {
 	}
 
 	private updateScrollX(barsDimensions: Readonly<BarsDimensions>): number {
-		const { clientWidth, scrollLeft, scrollWidth } = this.container;
-		const { scrollX, timeEnd, timeMax, timeMin, timeStart } = this;
+		const container = this.container;
+		const clientWidth = container.clientWidth;
+		const scrollLeft = container.scrollLeft;
+		const scrollWidth = container.scrollWidth;
+		const scrollX = this.scrollX;
+		const timeEnd = this.timeEnd;
+		const timeMax = this.timeMax;
+		const timeMin = this.timeMin;
+		const timeStart = this.timeStart;
 
 		const windowRange = timeEnd - timeStart;
 
@@ -573,7 +580,7 @@ class ScrollState {
 		// The value is rounded to the nearest integer to align with the behavior of
 		// browser scrolling.
 		const newScrollX = Math.round(
-			clamp(
+			clampMinWins(
 				scrollCenter,
 				maxContentScroll - maxTimeDistance,
 				minContentScroll + minTimeDistance,
@@ -612,12 +619,16 @@ class ScrollState {
 		onTimeChange: TimeChangeHandler | undefined,
 	): ScrollState {
 		// console.log("onScrollHandler");
-		const { scrollX, scrollY, timeEnd, timeMax, timeMin, timeStart } = this;
-		const {
-			clientWidth: viewportWidth,
-			scrollLeft,
-			scrollTop,
-		} = this.container;
+		const scrollX = this.scrollX;
+		const scrollY = this.scrollY;
+		const timeEnd = this.timeEnd;
+		const timeMax = this.timeMax;
+		const timeMin = this.timeMin;
+		const timeStart = this.timeStart;
+		const container = this.container;
+		const viewportWidth = container.clientWidth;
+		const scrollLeft = container.scrollLeft;
+		const scrollTop = container.scrollTop;
 
 		let newTimeStart = this.timeStart;
 		let newTimeEnd = this.timeEnd;
@@ -760,21 +771,30 @@ enum BarSide {
 	Top = "top",
 }
 
-const ResizeDivider = ({
-	className,
-	onResize,
-	side,
-}: Readonly<{
-	className?: string;
-	onResize: (target: Readonly<Coordinates>, side: BarSide) => void;
-	side: BarSide;
-}>): ReactNode => {
+const ResizeDivider = (
+	properties: Readonly<{
+		className?: string;
+		onResize: (target: Readonly<Coordinates>, side: BarSide) => void;
+		side: BarSide;
+	}>,
+): ReactNode => {
+	const className = properties.className;
+	const onResize = properties.onResize;
+	const side = properties.side;
+
 	const onStartResizing = (event: ReactMouseEvent): void => {
 		event.stopPropagation();
 
-		const { clientX, clientY, currentTarget } = event;
+		const clientX = event.clientX;
+		const clientY = event.clientY;
+		const currentTarget = event.currentTarget;
 
-		const { bottom, left, right, top } = currentTarget.getBoundingClientRect();
+		const boundingBox = currentTarget.getBoundingClientRect();
+		const bottom = boundingBox.bottom;
+		const left = boundingBox.left;
+		const right = boundingBox.right;
+		const top = boundingBox.top;
+
 		const isInsideBoundingRect =
 			clientX >= left &&
 			clientX <= right &&
@@ -800,7 +820,8 @@ const ResizeDivider = ({
 		const onMoveResizing = (event: MouseEvent): void => {
 			event.stopPropagation();
 
-			const { clientX, clientY } = event;
+			const clientX = event.clientX;
+			const clientY = event.clientY;
 
 			// Maintain the position of the divider relative to the cursor.
 			const target = {
@@ -935,7 +956,12 @@ export const Timeline = forwardRef<
 		initTimeStart: number;
 		onTimeChange?: TimeChangeHandler;
 	}>
->(({ className, initTimeEnd, initTimeStart, onTimeChange }, ref): ReactNode => {
+>((properties, ref): ReactNode => {
+	const className = properties.className;
+	const initTimeEnd = properties.initTimeEnd;
+	const initTimeStart = properties.initTimeStart;
+	const onTimeChange = properties.onTimeChange;
+
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 
@@ -954,7 +980,10 @@ export const Timeline = forwardRef<
 				return;
 			}
 
-			const { timeEnd, timeMax, timeMin, timeStart } = scrollState;
+			const timeEnd = scrollState.timeEnd;
+			const timeMax = scrollState.timeMax;
+			const timeMin = scrollState.timeMin;
+			const timeStart = scrollState.timeStart;
 
 			const [newTimeStart, newTimeEnd] = clampTimeIntervalProperties(
 				targetTimeStart,

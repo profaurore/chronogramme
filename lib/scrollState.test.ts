@@ -1,13 +1,14 @@
 import { describe, expect, test } from "vitest";
 
 import {
-	DimensionRangeError,
 	HALF,
 	IntervalExtremaError,
-	NotADimensionError,
 	NotANumberError,
 	NotAPositionError,
+	NotASizeError,
 	PositionRangeError,
+	SizeRangeError,
+	ZERO,
 } from "./math.ts";
 import {
 	MissingPropertyError,
@@ -101,7 +102,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if non-numeric",
 							{
-								error: new NotADimensionError("windowSize", "test"),
+								error: new NotASizeError("windowSize", "test"),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -116,7 +117,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotADimensionError("windowSize", NaN),
+								error: new NotASizeError("windowSize", NaN),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -130,10 +131,13 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if negative",
 							{
-								error: new DimensionRangeError(
+								error: new SizeRangeError(
 									"windowSize",
 									-1,
+									ZERO,
+									false,
 									defaultMaxElementSize,
+									true,
 								),
 								parameters: {
 									max: 1,
@@ -148,10 +152,13 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if zero",
 							{
-								error: new DimensionRangeError(
+								error: new SizeRangeError(
 									"windowSize",
 									0,
+									ZERO,
+									false,
 									defaultMaxElementSize,
+									true,
 								),
 								parameters: {
 									max: 1,
@@ -166,7 +173,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if infinite",
 							{
-								error: new NotADimensionError(
+								error: new NotASizeError(
 									"windowSize",
 									Number.POSITIVE_INFINITY,
 								),
@@ -183,7 +190,14 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if greater than maximum element size",
 							{
-								error: new DimensionRangeError("windowSize", 200, 100),
+								error: new SizeRangeError(
+									"windowSize",
+									200,
+									ZERO,
+									false,
+									100,
+									true,
+								),
 								parameters: {
 									max: 1,
 									maxElementSize: 100,
@@ -733,7 +747,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if non-numeric",
 							{
-								error: new NotADimensionError("maxElementSize", "test"),
+								error: new NotASizeError("maxElementSize", "test"),
 								parameters: {
 									max: 1,
 									maxElementSize:
@@ -749,7 +763,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotADimensionError("maxElementSize", NaN),
+								error: new NotASizeError("maxElementSize", NaN),
 								parameters: {
 									max: 1,
 									maxElementSize: NaN,
@@ -764,7 +778,14 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if negative",
 							{
-								error: new DimensionRangeError("maxElementSize", -1),
+								error: new SizeRangeError(
+									"maxElementSize",
+									-1,
+									ZERO,
+									false,
+									Number.MAX_VALUE,
+									true,
+								),
 								parameters: {
 									max: 1,
 									maxElementSize: -1,
@@ -779,7 +800,14 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if zero",
 							{
-								error: new DimensionRangeError("maxElementSize", 0),
+								error: new SizeRangeError(
+									"maxElementSize",
+									0,
+									ZERO,
+									false,
+									Number.MAX_VALUE,
+									true,
+								),
 								parameters: {
 									max: 1,
 									maxElementSize: 0,
@@ -794,7 +822,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if infinite",
 							{
-								error: new NotADimensionError(
+								error: new NotASizeError(
 									"maxElementSize",
 									Number.POSITIVE_INFINITY,
 								),
@@ -861,7 +889,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if non-numeric",
 							{
-								error: new NotADimensionError("resyncThresholdSize", "test"),
+								error: new NotASizeError("resyncThresholdSize", "test"),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -877,7 +905,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotADimensionError("resyncThresholdSize", NaN),
+								error: new NotASizeError("resyncThresholdSize", NaN),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -892,10 +920,13 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if negative",
 							{
-								error: new DimensionRangeError(
+								error: new SizeRangeError(
 									"resyncThresholdSize",
 									-1,
+									ZERO,
+									false,
 									HALF * Number.MAX_VALUE,
+									true,
 								),
 								parameters: {
 									max: 1,
@@ -911,10 +942,13 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if zero",
 							{
-								error: new DimensionRangeError(
+								error: new SizeRangeError(
 									"resyncThresholdSize",
 									0,
+									ZERO,
+									false,
 									HALF * Number.MAX_VALUE,
+									true,
 								),
 								parameters: {
 									max: 1,
@@ -930,7 +964,7 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if infinite",
 							{
-								error: new NotADimensionError(
+								error: new NotASizeError(
 									"resyncThresholdSize",
 									Number.POSITIVE_INFINITY,
 								),
@@ -994,7 +1028,8 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { error, parameters } = testParams;
+					const error = testParams.error;
+					const parameters = testParams.parameters;
 
 					const receivedError = getError(() => new ScrollState(parameters));
 
@@ -1731,7 +1766,8 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { expected, parameters } = testParams;
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
 
 					const state = new ScrollState(parameters);
 
@@ -1965,7 +2001,8 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { error, update } = testParams;
+					const error = testParams.error;
+					const update = testParams.update;
 
 					const state = new ScrollState({
 						max: 1,
@@ -2366,7 +2403,9 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { expected, parameters, update } = testParams;
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
 
 					const state = new ScrollState(parameters);
 					const resultState = state.setExtrema(update.min, update.max);
@@ -2614,7 +2653,8 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { error, update } = testParams;
+					const error = testParams.error;
+					const update = testParams.update;
 
 					const state = new ScrollState({
 						max: 1,
@@ -3229,7 +3269,9 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { expected, parameters, update } = testParams;
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
 
 					const expectedRange = parameters.max - parameters.min;
 					const expectedWindowRange = Math.min(
@@ -3273,7 +3315,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if not defined",
 					{
-						error: new NotADimensionError("windowSize", undefined),
+						error: new NotASizeError("windowSize", undefined),
 						update: {
 							windowSize: undefined as unknown as number,
 						},
@@ -3283,7 +3325,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if non-numeric",
 					{
-						error: new NotADimensionError("windowSize", "test"),
+						error: new NotASizeError("windowSize", "test"),
 						update: {
 							windowSize: "test" as unknown as number,
 						},
@@ -3293,7 +3335,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotADimensionError("windowSize", NaN),
+						error: new NotASizeError("windowSize", NaN),
 						update: {
 							windowSize: NaN as unknown as number,
 						},
@@ -3303,7 +3345,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if negative",
 					{
-						error: new DimensionRangeError("windowSize", -1, 100),
+						error: new SizeRangeError("windowSize", -1, ZERO, false, 100, true),
 						update: {
 							windowSize: -1 as unknown as number,
 						},
@@ -3313,7 +3355,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if zero",
 					{
-						error: new DimensionRangeError("windowSize", 0, 100),
+						error: new SizeRangeError("windowSize", 0, ZERO, false, 100, true),
 						update: {
 							windowSize: 0 as unknown as number,
 						},
@@ -3323,10 +3365,7 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if infinite",
 					{
-						error: new NotADimensionError(
-							"windowSize",
-							Number.POSITIVE_INFINITY,
-						),
+						error: new NotASizeError("windowSize", Number.POSITIVE_INFINITY),
 						update: {
 							windowSize: Number.POSITIVE_INFINITY,
 						},
@@ -3336,7 +3375,14 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if greater than maximum element size",
 					{
-						error: new DimensionRangeError("windowSize", 200, 100),
+						error: new SizeRangeError(
+							"windowSize",
+							200,
+							ZERO,
+							false,
+							100,
+							true,
+						),
 						update: {
 							windowSize: 200,
 						},
@@ -3365,7 +3411,8 @@ describe("TimelineScroll", () => {
 			];
 
 			test.each(testList)("%s", (_testTitle, testParams) => {
-				const { error, update } = testParams;
+				const error = testParams.error;
+				const update = testParams.update;
 
 				const state = new ScrollState({
 					max: 1,
@@ -3666,7 +3713,9 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { expected, parameters, update } = testParams;
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
 
 					const expectedRange = parameters.max - parameters.min;
 					const expectedWindowRange =
@@ -3789,7 +3838,8 @@ describe("TimelineScroll", () => {
 			];
 
 			test.each(testList)("%s", (_testTitle, testParams) => {
-				const { error, update } = testParams;
+				const error = testParams.error;
+				const update = testParams.update;
 
 				const state = new ScrollState({
 					max: 2,
@@ -4790,7 +4840,9 @@ describe("TimelineScroll", () => {
 
 			describe.each(testGroups)("%s", (_groupTitle, testList) => {
 				test.each(testList)("%s", (_testTitle, testParams) => {
-					const { expected, parameters, update } = testParams;
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
 
 					const expectedRange = parameters.max - parameters.min;
 					const expectedWindowRange =

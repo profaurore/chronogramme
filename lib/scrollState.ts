@@ -3,7 +3,7 @@ import {
 	HALF,
 	ZERO,
 	clampInterval,
-	validateInterval,
+	validateNumberInterval,
 	validatePosition,
 	validateSize,
 } from "./math.ts";
@@ -74,35 +74,44 @@ export class ScrollState {
 			optionalParameters,
 		);
 
-		const {
-			max,
-			maxElementSize = defaultMaxElementSize,
-			min,
-			resyncThresholdSize = defaultResyncThresholdSize,
-			windowMax,
-			windowMin,
-			windowSize,
-		} = parameters;
+		const max = parameters.max;
+		const maxElementSize = parameters.maxElementSize ?? defaultMaxElementSize;
+		const min = parameters.min;
+		const resyncThresholdSize =
+			parameters.resyncThresholdSize ?? defaultResyncThresholdSize;
+		const windowMax = parameters.windowMax;
+		const windowMin = parameters.windowMin;
+		const windowSize = parameters.windowSize;
 
-		validateSize("maxElementSize", maxElementSize);
+		validateSize(
+			"maxElementSize",
+			maxElementSize,
+			ZERO,
+			false,
+			Number.MAX_VALUE,
+			true,
+		);
 		this.#maxElementSize = maxElementSize;
 
 		validateSize(
 			"resyncThresholdSize",
 			resyncThresholdSize,
+			ZERO,
+			false,
 			HALF * Number.MAX_VALUE,
+			true,
 		);
 		this.#resyncThresholdSize = resyncThresholdSize;
 
-		validateSize("windowSize", windowSize, maxElementSize);
+		validateSize("windowSize", windowSize, ZERO, false, maxElementSize, true);
 		this.#windowSize = windowSize;
 
-		validateInterval("min", "max", "extrema", [min, max]);
+		validateNumberInterval("min", "max", "extrema", [min, max]);
 		this.#min = min;
 		this.#max = max;
 		this.#range = max - min;
 
-		validateInterval("windowMin", "windowMax", "windowExtrema", [
+		validateNumberInterval("windowMin", "windowMax", "windowExtrema", [
 			windowMin,
 			windowMax,
 		]);
@@ -143,7 +152,7 @@ export class ScrollState {
 		this.#windowMax = newWindowMax;
 		this.#windowRange = newWindowMax - newWindowMin;
 
-		this.setComputedDimensions();
+		this.setComputedSizes();
 	}
 
 	private resetScrollState(): void {
@@ -196,7 +205,7 @@ export class ScrollState {
 		this.#isMaxTerminal = isFullRange || endToMaxSize <= halfScrollPosition;
 	}
 
-	private setComputedDimensions(): void {
+	private setComputedSizes(): void {
 		const range = this.#range;
 		const windowRange = this.#windowRange;
 		const windowSize = this.#windowSize;
@@ -209,16 +218,13 @@ export class ScrollState {
 		this.#size = pixelPerUnit * range;
 	}
 
-	public setExtrema(minimum: number, maximum: number): this {
-		validateInterval("min", "max", "extrema", [minimum, maximum]);
+	public setExtrema(min: number, max: number): this {
+		validateNumberInterval("min", "max", "extrema", [min, max]);
 
-		const min = this.#min;
-		const max = this.#max;
-
-		if (minimum !== min && maximum !== max) {
-			this.#min = minimum;
-			this.#max = maximum;
-			this.#range = maximum - minimum;
+		if (min !== this.#min || max !== this.#max) {
+			this.#min = min;
+			this.#max = max;
+			this.#range = max - min;
 			this.clampWindowToRange();
 
 			this.resetScrollState();
@@ -278,16 +284,16 @@ export class ScrollState {
 		return this;
 	}
 
-	public setWindowExtrema(minimum: number, maximum: number): this {
-		validateInterval("windowMin", "windowMax", "windowExtrema", [
-			minimum,
-			maximum,
+	public setWindowExtrema(windowMin: number, windowMax: number): this {
+		validateNumberInterval("windowMin", "windowMax", "windowExtrema", [
+			windowMin,
+			windowMax,
 		]);
 
-		if (minimum !== this.#windowMin || maximum !== this.#windowMax) {
-			this.#windowMin = minimum;
-			this.#windowMax = maximum;
-			this.#windowRange = maximum - minimum;
+		if (windowMin !== this.#windowMin || windowMax !== this.#windowMax) {
+			this.#windowMin = windowMin;
+			this.#windowMax = windowMax;
+			this.#windowRange = windowMax - windowMin;
 			this.clampWindowToRange();
 
 			this.resetScrollState();
@@ -297,12 +303,19 @@ export class ScrollState {
 	}
 
 	public setWindowSize(windowSize: number): this {
-		validateSize("windowSize", windowSize, this.#maxElementSize);
+		validateSize(
+			"windowSize",
+			windowSize,
+			ZERO,
+			false,
+			this.#maxElementSize,
+			true,
+		);
 
 		if (windowSize !== this.#windowSize) {
 			this.#windowSize = windowSize;
 
-			this.setComputedDimensions();
+			this.setComputedSizes();
 
 			this.resetScrollState();
 		}

@@ -7,5 +7,6 @@ export default defineConfig({
 			include: ["lib"],
 			reporter: ["html", "text", "text-summary"],
 		},
+		exclude: ["eslint", "node_modules"],
 	},
 });

@@ -13,7 +13,7 @@ export class Singleton<T> {
 	}
 
 	public subscribe(): T {
-		let { data } = this;
+		let data = this.data;
 
 		if (data === null) {
 			data = { count: ZERO, instance: this.build() };
@@ -26,7 +26,7 @@ export class Singleton<T> {
 	}
 
 	public unsubscribe(callback?: (instance: T) => void): void {
-		const { data } = this;
+		const data = this.data;
 
 		if (data) {
 			data.count -= UNIT;

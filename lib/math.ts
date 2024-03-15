@@ -21,15 +21,19 @@ const MEAN_ZERO_VALUES = 0;
 /**
  * Clamps a value between two values.
  *
- * - If the value is less than `minimum`, `minimum` is returned.
- * - If the value is more than `maximum`, `maximum` is returned.
+ * - If the value is less than the minimum, the minimum is returned.
+ * - If the value is more than the maximum, the maximum is returned.
+ * - Otherwise, the value is returned.
+ *
+ * If the maximum value is less than the minimum value, the minimum value is
+ * returned.
  *
  * @param value The value to be clamped. Must be a finite or infinite number.
  * @param minimum The minimum value. Must be a finite or infinite number.
  * @param maximum The maximum value. Must be a finite or infinite number.
- * @returns The value, bound between `minimum` and `maximum`.
+ * @returns The clamped value.
  */
-export const clamp = (
+export const clampMinWins = (
 	value: number,
 	minimum: number,
 	maximum: number,
@@ -46,6 +50,39 @@ export const clamp = (
 
 	return clamped;
 };
+
+/**
+ * Clamps a value between two values.
+ *
+ * - If the value is less than the minimum, the minimum is returned.
+ * - If the value is more than the maximum, the maximum is returned.
+ * - Otherwise, the value is returned.
+ *
+ * If the maximum value is less than the minimum value, the maximum value is
+ * returned.
+ *
+ * @param value The value to be clamped. Must be a finite or infinite number.
+ * @param minimum The minimum value. Must be a finite or infinite number.
+ * @param maximum The maximum value. Must be a finite or infinite number.
+ * @returns The clamped value.
+ */
+// export const clampMaxWins = (
+// 	value: number,
+// 	minimum: number,
+// 	maximum: number,
+// ): number => {
+// 	let clamped;
+
+// 	if (value >= maximum) {
+// 		clamped = maximum;
+// 	} else if (value <= minimum) {
+// 		clamped = minimum;
+// 	} else {
+// 		clamped = value;
+// 	}
+
+// 	return clamped;
+// };
 
 /**
  * Clamps an interval between two values.
@@ -102,20 +139,24 @@ export const mean = (...values: readonly number[]): number => {
 
 const isNumber = (value: unknown): value is number => typeof value === "number";
 
-export class NotADimensionError extends Error {
+export class NotASizeError extends Error {
 	public readonly value: unknown;
 
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super("Dimension is not a finite number.");
+		super("Size is not a finite number.");
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
 	}
 }
 
-export class DimensionRangeError extends Error {
+export class SizeRangeError extends Error {
+	public readonly inclusiveMaximum: boolean;
+
+	public readonly inclusiveMinimum: boolean;
+
 	public readonly maximum: number;
 
 	public readonly minimum: number;
@@ -124,13 +165,22 @@ export class DimensionRangeError extends Error {
 
 	public readonly valueName: string;
 
-	public constructor(valueName: string, value: number, maximum?: number) {
-		super("Dimension is outside the valid range.");
+	public constructor(
+		valueName: string,
+		value: number,
+		minimum: number,
+		inclusiveMinimum: boolean,
+		maximum: number,
+		inclusiveMaximum: boolean,
+	) {
+		super("Size is outside the valid range.");
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
-		this.minimum = ZERO;
-		this.maximum = maximum ?? Number.MAX_VALUE;
+		this.minimum = minimum;
+		this.inclusiveMinimum = inclusiveMinimum;
+		this.maximum = maximum;
+		this.inclusiveMaximum = inclusiveMaximum;
 	}
 }
 
@@ -187,14 +237,36 @@ export class NotANumberError extends Error {
 export const validateSize: (
 	valueName: string,
 	value: unknown,
-	maximum?: number,
-) => asserts value is number = (valueName, value, maximum) => {
-	if (!isNumber(value) || Number.isNaN(value) || !Number.isFinite(value)) {
-		throw new NotADimensionError(valueName, value);
+	minimum: number,
+	inclusiveMinimum: boolean,
+	maximum: number,
+	inclusiveMaximum: boolean,
+) => asserts value is number = (
+	valueName,
+	value,
+	minimum,
+	inclusiveMinimum,
+	maximum,
+	inclusiveMaximum,
+) => {
+	if (!isNumber(value) || !Number.isFinite(value)) {
+		throw new NotASizeError(valueName, value);
 	}
 
-	if (value <= ZERO || (maximum !== undefined && value > maximum)) {
-		throw new DimensionRangeError(valueName, value, maximum);
+	if (
+		(inclusiveMinimum && value < minimum) ||
+		(!inclusiveMinimum && value <= minimum) ||
+		(inclusiveMaximum && value > maximum) ||
+		(!inclusiveMaximum && value >= maximum)
+	) {
+		throw new SizeRangeError(
+			valueName,
+			value,
+			minimum,
+			inclusiveMinimum,
+			maximum,
+			inclusiveMaximum,
+		);
 	}
 };
 
@@ -204,7 +276,7 @@ export const validatePosition: (
 	minimum: number,
 	maximum: number,
 ) => asserts value is number = (valueName, value, minimum, maximum) => {
-	if (!isNumber(value) || Number.isNaN(value) || !Number.isFinite(value)) {
+	if (!isNumber(value) || !Number.isFinite(value)) {
 		throw new NotAPositionError(valueName, value);
 	}
 
@@ -226,7 +298,7 @@ const validateNumber: (
 	valueName: string,
 	value: unknown,
 ) => asserts value is number = (valueName, value) => {
-	if (!isNumber(value) || Number.isNaN(value) || !Number.isFinite(value)) {
+	if (!isNumber(value) || !Number.isFinite(value)) {
 		throw new NotANumberError(valueName, value);
 	}
 };
@@ -247,7 +319,7 @@ export class IntervalExtremaError extends Error {
 	}
 }
 
-export const validateInterval: (
+export const validateNumberInterval: (
 	minName: string,
 	maxName: string,
 	extremaName: string,
@@ -267,3 +339,24 @@ export const validateInterval: (
 		throw new IntervalExtremaError(extremaName, intervalMin, intervalMax);
 	}
 };
+
+// export const validateSizeInterval: (
+// 	minName: string,
+// 	maxName: string,
+// 	extremaName: string,
+// 	interval: readonly [unknown, unknown],
+// ) => asserts interval is Interval = (
+// 	minName,
+// 	maxName,
+// 	extremaName,
+// 	interval,
+// ) => {
+// 	const [intervalMin, intervalMax] = interval;
+
+// 	validateSize(minName, intervalMin, ZERO, true, Number.MAX_VALUE, true);
+// 	validateSize(maxName, intervalMax, ZERO, true, Number.MAX_VALUE, true);
+
+// 	if (intervalMin >= intervalMax) {
+// 		throw new IntervalExtremaError(extremaName, intervalMin, intervalMax);
+// 	}
+// };

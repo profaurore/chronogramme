@@ -126,26 +126,27 @@ export class Timeline2 extends HTMLElement {
 		content.appendChild(bottomLeftBar);
 		content.appendChild(bottomRightBar);
 
+		const dividerMoveHandler = (event: MouseEvent): void => {
+			this.barResizeHandler(event);
+		};
+
 		// Dividers
-		const topDivider = document.createElement("div");
-		topDivider.className = "cg-divider-top";
+		const dividers = [];
 
-		const leftDivider = document.createElement("div");
-		leftDivider.className = "cg-divider-left";
+		for (const side of ["top", "left", "right", "bottom"]) {
+			const name = `divider-${side}`;
 
-		const rightDivider = document.createElement("div");
-		rightDivider.className = "cg-divider-right";
-
-		const bottomDivider = document.createElement("div");
-		bottomDivider.className = "cg-divider-bottom";
+			const divider = document.createElement("slot");
+			divider.name = name;
+			divider.setAttribute("part", name);
+			divider.addEventListener("mousedown", dividerMoveHandler);
+			dividers.push(divider);
+		}
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
 		shadow.appendChild(content);
-		shadow.appendChild(topDivider);
-		shadow.appendChild(leftDivider);
-		shadow.appendChild(rightDivider);
-		shadow.appendChild(bottomDivider);
+		shadow.append(...dividers);
 
 		this.#shadow = shadow;
 
@@ -173,6 +174,11 @@ export class Timeline2 extends HTMLElement {
 		}
 	}
 
+	private barResizeHandler(event: MouseEvent): void {
+		// eslint-disable-next-line no-console
+		console.log("resize", event, this);
+	}
+
 	// @ts-expect-error Protected method used by HTMLElement
 	private connectedCallback(): void {
 		// Properties set before the Web Component was properly configured.
@@ -183,6 +189,14 @@ export class Timeline2 extends HTMLElement {
 		// } else {
 		//   this.windowTime = getTimeInterval();
 		// }
+
+		const defaultResizeHandles = this.getAttribute("defaultResizeHandles");
+
+		if (defaultResizeHandles !== null && defaultResizeHandles !== "") {
+			this.#shadow.querySelectorAll('[part^="divider-"]').forEach((divider) => {
+				divider.classList.add("default");
+			});
+		}
 
 		const timeExtrema = this.getAttribute("timeExtrema");
 
@@ -226,21 +240,22 @@ export class Timeline2 extends HTMLElement {
 	}
 
 	private onResizeHandler(): void {
-		const { clientWidth } = this;
+		const clientWidth = this.clientWidth;
 		const leftBarWidth = this.#leftBarWidth;
 		const rightBarWidth = this.#rightBarWidth;
 		const viewState = this.#viewState;
 
 		viewState.setWindowSize(clientWidth - leftBarWidth - rightBarWidth);
 
-		const { scrollPos, scrollSize } = viewState;
+		const scrollPos = viewState.scrollPos;
+		const scrollSize = viewState.scrollSize;
 		this.setStyleVariable("--timeline-width", `${scrollSize}px`);
 		this.#contentElement.scrollTo({ left: scrollPos });
 	}
 
 	private scrollHandler(): void {
 		const viewState = this.#viewState;
-		const { scrollLeft } = this.#contentElement;
+		const scrollLeft = this.#contentElement.scrollLeft;
 
 		this.stateChangeHandler(() => viewState.setScrollPos(scrollLeft));
 	}
@@ -251,15 +266,15 @@ export class Timeline2 extends HTMLElement {
 
 	private stateChangeHandler(fn: () => void): void {
 		const viewState = this.#viewState;
-		const {
-			scrollPos: prevScrollPos,
-			windowMax: prevWindowMax,
-			windowMin: prevWindowMin,
-		} = viewState;
+		const prevScrollPos = viewState.scrollPos;
+		const prevWindowMax = viewState.windowMax;
+		const prevWindowMin = viewState.windowMin;
 
 		fn();
 
-		const { scrollPos, windowMax, windowMin } = viewState;
+		const scrollPos = viewState.scrollPos;
+		const windowMax = viewState.windowMax;
+		const windowMin = viewState.windowMin;
 
 		if (windowMin !== prevWindowMin || windowMax !== prevWindowMax) {
 			this.dispatchEvent(
