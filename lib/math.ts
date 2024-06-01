@@ -66,23 +66,23 @@ export const clampMinWins = (
  * @param maximum The maximum value. Must be a finite or infinite number.
  * @returns The clamped value.
  */
-// export const clampMaxWins = (
-// 	value: number,
-// 	minimum: number,
-// 	maximum: number,
-// ): number => {
-// 	let clamped;
+export const clampMaxWins = (
+	value: number,
+	minimum: number,
+	maximum: number,
+): number => {
+	let clamped;
 
-// 	if (value >= maximum) {
-// 		clamped = maximum;
-// 	} else if (value <= minimum) {
-// 		clamped = minimum;
-// 	} else {
-// 		clamped = value;
-// 	}
+	if (value >= maximum) {
+		clamped = maximum;
+	} else if (value <= minimum) {
+		clamped = minimum;
+	} else {
+		clamped = value;
+	}
 
-// 	return clamped;
-// };
+	return clamped;
+};
 
 /**
  * Clamps an interval between two values.
@@ -340,23 +340,23 @@ export const validateNumberInterval: (
 	}
 };
 
-// export const validateSizeInterval: (
-// 	minName: string,
-// 	maxName: string,
-// 	extremaName: string,
-// 	interval: readonly [unknown, unknown],
-// ) => asserts interval is Interval = (
-// 	minName,
-// 	maxName,
-// 	extremaName,
-// 	interval,
-// ) => {
-// 	const [intervalMin, intervalMax] = interval;
+export const validateSizeInterval: (
+	minName: string,
+	maxName: string,
+	extremaName: string,
+	interval: readonly [unknown, unknown],
+) => asserts interval is Interval = (
+	minName,
+	maxName,
+	extremaName,
+	interval,
+) => {
+	const [intervalMin, intervalMax] = interval;
 
-// 	validateSize(minName, intervalMin, ZERO, true, Number.MAX_VALUE, true);
-// 	validateSize(maxName, intervalMax, ZERO, true, Number.MAX_VALUE, true);
+	validateSize(minName, intervalMin, ZERO, true, Number.MAX_VALUE, true);
+	validateSize(maxName, intervalMax, ZERO, true, Number.MAX_VALUE, true);
 
-// 	if (intervalMin >= intervalMax) {
-// 		throw new IntervalExtremaError(extremaName, intervalMin, intervalMax);
-// 	}
-// };
+	if (intervalMin >= intervalMax) {
+		throw new IntervalExtremaError(extremaName, intervalMin, intervalMax);
+	}
+};

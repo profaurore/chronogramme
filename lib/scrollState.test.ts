@@ -16,19 +16,10 @@ import {
 	UnknownPropertyError,
 } from "./object.ts";
 import { ScrollState, defaultMaxElementSize } from "./scrollState.ts";
+import { getError } from "./testUtils.ts";
 import { TIME_MAX, TIME_MIN } from "./time.ts";
 
 type ScrollStateParameters = ConstructorParameters<typeof ScrollState>[0];
-
-const getError = <TError>(call: () => unknown): TError | undefined => {
-	try {
-		call();
-	} catch (error: unknown) {
-		return error as TError;
-	}
-
-	return undefined;
-};
 
 describe("TimelineScroll", () => {
 	describe("Constructor", () => {
@@ -47,7 +38,7 @@ describe("TimelineScroll", () => {
 					"Parameters",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new NotAnObjectError("parameters", undefined),
 								parameters: undefined as unknown as ScrollStateParameters,
@@ -86,7 +77,7 @@ describe("TimelineScroll", () => {
 					"windowSize",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new MissingPropertyError("parameters", "windowSize"),
 								parameters: {
@@ -245,7 +236,7 @@ describe("TimelineScroll", () => {
 					"min",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new MissingPropertyError("parameters", "min"),
 								parameters: {
@@ -350,7 +341,7 @@ describe("TimelineScroll", () => {
 					"max",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new MissingPropertyError("parameters", "max"),
 								parameters: {
@@ -488,7 +479,7 @@ describe("TimelineScroll", () => {
 					"windowMin",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new MissingPropertyError("parameters", "windowMin"),
 								parameters: {
@@ -600,7 +591,7 @@ describe("TimelineScroll", () => {
 					"windowMax",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new MissingPropertyError("parameters", "windowMax"),
 								parameters: {
@@ -838,7 +829,7 @@ describe("TimelineScroll", () => {
 						],
 
 						[
-							"Accepts if not defined",
+							"Accepts if undefined",
 							{
 								error: null,
 								parameters: {
@@ -980,7 +971,7 @@ describe("TimelineScroll", () => {
 						],
 
 						[
-							"Accepts if not defined",
+							"Accepts if undefined",
 							{
 								error: null,
 								parameters: {
@@ -1811,7 +1802,7 @@ describe("TimelineScroll", () => {
 					"min",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new NotANumberError("min", undefined),
 								update: {
@@ -1893,7 +1884,7 @@ describe("TimelineScroll", () => {
 					"max",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new NotANumberError("max", undefined),
 								update: {
@@ -2451,7 +2442,7 @@ describe("TimelineScroll", () => {
 					"windowMin",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new NotANumberError("windowMin", undefined),
 								update: {
@@ -2539,7 +2530,7 @@ describe("TimelineScroll", () => {
 					"windowMax",
 					[
 						[
-							"Errors if not defined",
+							"Errors if undefined",
 							{
 								error: new NotANumberError("windowMax", undefined),
 								update: {
@@ -3313,7 +3304,7 @@ describe("TimelineScroll", () => {
 				}>,
 			])[] = [
 				[
-					"Errors if not defined",
+					"Errors if undefined",
 					{
 						error: new NotASizeError("windowSize", undefined),
 						update: {
@@ -3752,7 +3743,7 @@ describe("TimelineScroll", () => {
 				}>,
 			])[] = [
 				[
-					"Errors if not defined",
+					"Errors if undefined",
 					{
 						error: new NotAPositionError("scrollPos", undefined),
 						update: {

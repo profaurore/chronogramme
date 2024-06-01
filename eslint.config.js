@@ -380,7 +380,7 @@ const config = [
 				"@typescript-eslint/no-loop-func": "error",
 				"@typescript-eslint/no-magic-numbers": [
 					"error",
-					{ ignoreTypeIndexes: true },
+					{ ignoreArrayIndexes: true, ignoreTypeIndexes: true },
 				],
 				"@typescript-eslint/no-require-imports": "error",
 				"@typescript-eslint/no-unnecessary-qualifier": "warn",
