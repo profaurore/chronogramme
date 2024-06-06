@@ -63,8 +63,10 @@ export const validateObject: (
 
 	for (const property in value) {
 		if (
-			!requiredProperties.includes(property) &&
-			!optionalProperties.includes(property)
+			!(
+				requiredProperties.includes(property) ||
+				optionalProperties.includes(property)
+			)
 		) {
 			throw new UnknownPropertyError(valueName, property);
 		}

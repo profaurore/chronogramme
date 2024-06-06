@@ -108,13 +108,13 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("windowSize", NaN),
+								error: new NotASizeError("windowSize", Number.NaN),
 								parameters: {
 									max: 1,
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
-									windowSize: NaN,
+									windowSize: Number.NaN,
 								},
 							},
 						],
@@ -266,10 +266,10 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("min", NaN),
+								error: new NotANumberError("min", Number.NaN),
 								parameters: {
 									max: 1,
-									min: NaN,
+									min: Number.NaN,
 									windowMax: 1,
 									windowMin: 0,
 									windowSize: 100,
@@ -371,9 +371,9 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("max", NaN),
+								error: new NotANumberError("max", Number.NaN),
 								parameters: {
-									max: NaN,
+									max: Number.NaN,
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
@@ -510,12 +510,12 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("windowMin", NaN),
+								error: new NotANumberError("windowMin", Number.NaN),
 								parameters: {
 									max: 1,
 									min: 0,
 									windowMax: 1,
-									windowMin: NaN,
+									windowMin: Number.NaN,
 									windowSize: 100,
 								},
 							},
@@ -622,11 +622,11 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("windowMax", NaN),
+								error: new NotANumberError("windowMax", Number.NaN),
 								parameters: {
 									max: 1,
 									min: 0,
-									windowMax: NaN,
+									windowMax: Number.NaN,
 									windowMin: 0,
 									windowSize: 100,
 								},
@@ -754,10 +754,10 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("maxElementSize", NaN),
+								error: new NotASizeError("maxElementSize", Number.NaN),
 								parameters: {
 									max: 1,
-									maxElementSize: NaN,
+									maxElementSize: Number.NaN,
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
@@ -896,11 +896,11 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("resyncThresholdSize", NaN),
+								error: new NotASizeError("resyncThresholdSize", Number.NaN),
 								parameters: {
 									max: 1,
 									min: 0,
-									resyncThresholdSize: NaN,
+									resyncThresholdSize: Number.NaN,
 									windowMax: 1,
 									windowMin: 0,
 									windowSize: 100,
@@ -1826,10 +1826,10 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("min", NaN),
+								error: new NotANumberError("min", Number.NaN),
 								update: {
 									max: 1,
-									min: NaN as unknown as number,
+									min: Number.NaN as unknown as number,
 								},
 							},
 						],
@@ -1908,9 +1908,9 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("max", NaN),
+								error: new NotANumberError("max", Number.NaN),
 								update: {
-									max: NaN as unknown as number,
+									max: Number.NaN as unknown as number,
 									min: 0,
 								},
 							},
@@ -2466,10 +2466,10 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("windowMin", NaN),
+								error: new NotANumberError("windowMin", Number.NaN),
 								update: {
 									windowMax: 1,
-									windowMin: NaN as unknown as number,
+									windowMin: Number.NaN as unknown as number,
 								},
 							},
 						],
@@ -2554,9 +2554,9 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotANumberError("windowMax", NaN),
+								error: new NotANumberError("windowMax", Number.NaN),
 								update: {
-									windowMax: NaN as unknown as number,
+									windowMax: Number.NaN as unknown as number,
 									windowMin: 0,
 								},
 							},
@@ -3326,9 +3326,9 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotASizeError("windowSize", NaN),
+						error: new NotASizeError("windowSize", Number.NaN),
 						update: {
-							windowSize: NaN as unknown as number,
+							windowSize: Number.NaN as unknown as number,
 						},
 					},
 				],
@@ -3765,9 +3765,9 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotAPositionError("scrollPos", NaN),
+						error: new NotAPositionError("scrollPos", Number.NaN),
 						update: {
-							scrollPos: NaN as unknown as number,
+							scrollPos: Number.NaN as unknown as number,
 						},
 					},
 				],

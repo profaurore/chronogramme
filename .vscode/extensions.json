@@ -1,7 +1,6 @@
 {
 	"recommendations": [
-		"dbaeumer.vscode-eslint",
-		"esbenp.prettier-vscode",
+		"biomejs.biome",
 		"oouo-diogo-perdigao.docthis",
 		"styled-components.vscode-styled-components",
 		"stylelint.vscode-stylelint",

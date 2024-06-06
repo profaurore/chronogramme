@@ -58,7 +58,7 @@ describe.each([
 	if (isChecked) {
 		test("NaN start time throws an error", () => {
 			const test = (): void => {
-				fn(NaN, TIME_MAX, TIME_MIN, TIME_MAX);
+				fn(Number.NaN, TIME_MAX, TIME_MIN, TIME_MAX);
 			};
 
 			expect(test).toThrowError(
@@ -68,7 +68,7 @@ describe.each([
 
 		test("NaN end time throws an error", () => {
 			const test = (): void => {
-				fn(TIME_MIN, NaN, TIME_MIN, TIME_MAX);
+				fn(TIME_MIN, Number.NaN, TIME_MIN, TIME_MAX);
 			};
 
 			expect(test).toThrowError(new Error("timeEnd must be a finite number."));

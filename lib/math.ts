@@ -15,9 +15,6 @@ export const DOUBLE = 2;
 /** One hundred percent. */
 export const UNIT_PERCENT = 100;
 
-/** Mean value of zero items. */
-const MEAN_ZERO_VALUES = 0;
-
 /**
  * Clamps a value between two values.
  *
@@ -38,7 +35,7 @@ export const clampMinWins = (
 	minimum: number,
 	maximum: number,
 ): number => {
-	let clamped;
+	let clamped: number;
 
 	if (value <= minimum) {
 		clamped = minimum;
@@ -71,7 +68,7 @@ export const clampMaxWins = (
 	minimum: number,
 	maximum: number,
 ): number => {
-	let clamped;
+	let clamped: number;
 
 	if (value >= maximum) {
 		clamped = maximum;
@@ -134,7 +131,12 @@ export const clampInterval = (
 export const mean = (...values: readonly number[]): number => {
 	const ratio = UNIT / values.length;
 
-	return values.reduce((acc, value) => acc + ratio * value, MEAN_ZERO_VALUES);
+	let mean = ZERO;
+	for (const value of values) {
+		mean += ratio * value;
+	}
+
+	return mean;
 };
 
 const isNumber = (value: unknown): value is number => typeof value === "number";
@@ -249,7 +251,7 @@ export const validateSize: (
 	maximum,
 	inclusiveMaximum,
 ) => {
-	if (!isNumber(value) || !Number.isFinite(value)) {
+	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotASizeError(valueName, value);
 	}
 
@@ -276,7 +278,7 @@ export const validatePosition: (
 	minimum: number,
 	maximum: number,
 ) => asserts value is number = (valueName, value, minimum, maximum) => {
-	if (!isNumber(value) || !Number.isFinite(value)) {
+	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotAPositionError(valueName, value);
 	}
 
@@ -298,7 +300,7 @@ const validateNumber: (
 	valueName: string,
 	value: unknown,
 ) => asserts value is number = (valueName, value) => {
-	if (!isNumber(value) || !Number.isFinite(value)) {
+	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotANumberError(valueName, value);
 	}
 };

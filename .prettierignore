@@ -1,7 +1,0 @@
-.editorconfig
-.gitignore
-.husky
-.npmignore
-.prettierignore
-dist
-yarn.lock

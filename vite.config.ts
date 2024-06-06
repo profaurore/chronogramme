@@ -1,8 +1,8 @@
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import linaria from "@linaria/vite";
 import react from "@vitejs/plugin-react-swc";
 import wyw from "@wyw-in-js/vite";
-import { resolve } from "path";
-import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 

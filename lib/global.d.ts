@@ -3,8 +3,10 @@ import type { DetailedHTMLProps, HTMLAttributes } from "react";
 import type { Timeline2 } from "./Timeline2.tsx";
 
 declare global {
-	namespace JSX {
+	// biome-ignore lint/style/noNamespace: Required for web components.
+	namespace React.JSX {
 		interface IntrinsicElements {
+			// biome-ignore lint/correctness/noUndeclaredVariables: Required for name.
 			[Timeline2.webComponentName]: Omit<
 				DetailedHTMLProps<HTMLAttributes<Timeline2>, Timeline2>,
 				"className"

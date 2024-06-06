@@ -69,7 +69,9 @@ const daysInWeek = 7;
 export const getTimeInterval = (start?: number, end?: number): TimeInterval => {
 	if (start !== undefined && end !== undefined && end > start) {
 		return [start, end];
-	} else if (start !== undefined || end === undefined) {
+	}
+
+	if (start !== undefined || end === undefined) {
 		const startDate = new Date(start ?? Date.now());
 
 		return [
@@ -96,7 +98,7 @@ export const parseTimeInterval = (
 
 	const [parsedStart, parsedEnd] = value
 		.split(",", numParts)
-		.map((value) => parseInt(value, decimal));
+		.map((value) => Number.parseInt(value, decimal));
 
 	if (parsedStart === undefined || parsedEnd === undefined) {
 		throw new TypeError(`${name} must be formatted as "[minimum],[maximum]".`);

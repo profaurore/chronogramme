@@ -166,16 +166,17 @@ export class Timeline2 extends HTMLElement {
 		newValue: string,
 	): void {
 		switch (name) {
-			case "windowTime":
+			case "windowTime": {
 				this.setTimeWindowExtrema(
 					...parseTimeInterval("Window Time", newValue),
 				);
 				break;
+			}
 		}
 	}
 
 	private barResizeHandler(event: MouseEvent): void {
-		// eslint-disable-next-line no-console
+		// biome-ignore lint/suspicious/noConsoleLog: Temporary placeholder.
 		console.log("resize", event, this);
 	}
 
@@ -193,9 +194,11 @@ export class Timeline2 extends HTMLElement {
 		const defaultResizeHandles = this.getAttribute("defaultResizeHandles");
 
 		if (defaultResizeHandles !== null && defaultResizeHandles !== "") {
-			this.#shadow.querySelectorAll('[part^="divider-"]').forEach((divider) => {
+			const dividers = this.#shadow.querySelectorAll('[part^="divider-"]');
+
+			for (const divider of dividers) {
 				divider.classList.add("default");
-			});
+			}
 		}
 
 		const timeExtrema = this.getAttribute("timeExtrema");

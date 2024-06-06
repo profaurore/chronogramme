@@ -100,9 +100,9 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("endMax", NaN),
+								error: new NotASizeError("endMax", Number.NaN),
 								parameters: {
-									endMax: NaN,
+									endMax: Number.NaN,
 									endMin: 5,
 									endSize: 100,
 									middleMin: 130,
@@ -233,10 +233,10 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("endMin", NaN),
+								error: new NotASizeError("endMin", Number.NaN),
 								parameters: {
 									endMax: 150,
-									endMin: NaN,
+									endMin: Number.NaN,
 									endSize: 100,
 									middleMin: 130,
 									size: 600,
@@ -405,11 +405,11 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("endSize", NaN),
+								error: new NotASizeError("endSize", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
-									endSize: NaN,
+									endSize: Number.NaN,
 									middleMin: 130,
 									size: 600,
 									startMax: 350,
@@ -548,12 +548,12 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("middleMin", NaN),
+								error: new NotASizeError("middleMin", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
 									endSize: 100,
-									middleMin: NaN,
+									middleMin: Number.NaN,
 									size: 600,
 									startMax: 350,
 									startMin: 250,
@@ -755,14 +755,17 @@ describe("StickyBarState", () => {
 						[
 							"Errors if return's end size value is NaN",
 							{
-								error: new NotASizeError("resizeStrategy().endSize", NaN),
+								error: new NotASizeError(
+									"resizeStrategy().endSize",
+									Number.NaN,
+								),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
 									endSize: 100,
 									middleMin: 130,
 									resizeStrategy: () => ({
-										endSize: NaN,
+										endSize: Number.NaN,
 										startSize: 300,
 									}),
 									size: 600,
@@ -883,7 +886,10 @@ describe("StickyBarState", () => {
 						[
 							"Errors if return's start size value is NaN",
 							{
-								error: new NotASizeError("resizeStrategy().startSize", NaN),
+								error: new NotASizeError(
+									"resizeStrategy().startSize",
+									Number.NaN,
+								),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -891,7 +897,7 @@ describe("StickyBarState", () => {
 									middleMin: 130,
 									resizeStrategy: () => ({
 										endSize: 100,
-										startSize: NaN,
+										startSize: Number.NaN,
 									}),
 									size: 600,
 									startMax: 350,
@@ -1446,13 +1452,13 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("size", NaN),
+								error: new NotASizeError("size", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
 									endSize: 100,
 									middleMin: 130,
-									size: NaN,
+									size: Number.NaN,
 									startMax: 350,
 									startMin: 250,
 									startSize: 300,
@@ -1563,14 +1569,14 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("startMax", NaN),
+								error: new NotASizeError("startMax", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
 									endSize: 100,
 									middleMin: 130,
 									size: 600,
-									startMax: NaN,
+									startMax: Number.NaN,
 									startMin: 250,
 									startSize: 300,
 								},
@@ -1696,7 +1702,7 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("startMin", NaN),
+								error: new NotASizeError("startMin", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -1704,7 +1710,7 @@ describe("StickyBarState", () => {
 									middleMin: 130,
 									size: 600,
 									startMax: 350,
-									startMin: NaN,
+									startMin: Number.NaN,
 									startSize: 300,
 								},
 							},
@@ -1868,7 +1874,7 @@ describe("StickyBarState", () => {
 						[
 							"Errors if NaN",
 							{
-								error: new NotASizeError("startSize", NaN),
+								error: new NotASizeError("startSize", Number.NaN),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -1877,7 +1883,7 @@ describe("StickyBarState", () => {
 									size: 600,
 									startMax: 350,
 									startMin: 250,
-									startSize: NaN,
+									startSize: Number.NaN,
 								},
 							},
 						],
@@ -2234,9 +2240,9 @@ describe("StickyBarState", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotASizeError("endSize", NaN),
+						error: new NotASizeError("endSize", Number.NaN),
 						update: {
-							endSize: NaN as unknown as number,
+							endSize: Number.NaN as unknown as number,
 						},
 					},
 				],
@@ -2328,10 +2334,13 @@ describe("StickyBarState", () => {
 				[
 					"Errors if side resize strategy return's bar size is NaN",
 					{
-						error: new NotASizeError("sideResizeStrategy().barSize", NaN),
+						error: new NotASizeError(
+							"sideResizeStrategy().barSize",
+							Number.NaN,
+						),
 						parameters: {
 							sideResizeStrategy: () => ({
-								barSize: NaN,
+								barSize: Number.NaN,
 								otherBarSize: undefined,
 							}),
 						},
@@ -2402,11 +2411,14 @@ describe("StickyBarState", () => {
 				[
 					"Errors if side resize strategy return's other bar size is NaN",
 					{
-						error: new NotASizeError("sideResizeStrategy().otherBarSize", NaN),
+						error: new NotASizeError(
+							"sideResizeStrategy().otherBarSize",
+							Number.NaN,
+						),
 						parameters: {
 							sideResizeStrategy: () => ({
 								barSize: undefined,
-								otherBarSize: NaN,
+								otherBarSize: Number.NaN,
 							}),
 						},
 						update: {
@@ -2878,9 +2890,9 @@ describe("StickyBarState", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotASizeError("size", NaN),
+						error: new NotASizeError("size", Number.NaN),
 						update: {
-							size: NaN as unknown as number,
+							size: Number.NaN as unknown as number,
 						},
 					},
 				],
@@ -3186,9 +3198,9 @@ describe("StickyBarState", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotASizeError("startSize", NaN),
+						error: new NotASizeError("startSize", Number.NaN),
 						update: {
-							startSize: NaN as unknown as number,
+							startSize: Number.NaN as unknown as number,
 						},
 					},
 				],
@@ -3280,10 +3292,13 @@ describe("StickyBarState", () => {
 				[
 					"Errors if side resize strategy return's bar size is NaN",
 					{
-						error: new NotASizeError("sideResizeStrategy().barSize", NaN),
+						error: new NotASizeError(
+							"sideResizeStrategy().barSize",
+							Number.NaN,
+						),
 						parameters: {
 							sideResizeStrategy: () => ({
-								barSize: NaN,
+								barSize: Number.NaN,
 								otherBarSize: undefined,
 							}),
 						},
@@ -3354,11 +3369,14 @@ describe("StickyBarState", () => {
 				[
 					"Errors if side resize strategy return's other bar size is NaN",
 					{
-						error: new NotASizeError("sideResizeStrategy().otherBarSize", NaN),
+						error: new NotASizeError(
+							"sideResizeStrategy().otherBarSize",
+							Number.NaN,
+						),
 						parameters: {
 							sideResizeStrategy: () => ({
 								barSize: undefined,
-								otherBarSize: NaN,
+								otherBarSize: Number.NaN,
 							}),
 						},
 						update: {

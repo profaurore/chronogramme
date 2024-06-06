@@ -125,9 +125,15 @@ export const App = (): ReactNode => {
 	return (
 		<>
 			<div className={buttonsClass}>
-				<button onClick={onStartOfTimeClickHandler}>Start of time</button>
-				<button onClick={onNowClickHandler}>Now</button>
-				<button onClick={onEndOfTimeClickHandler}>End of time</button>
+				<button onClick={onStartOfTimeClickHandler} type="button">
+					Start of time
+				</button>
+				<button onClick={onNowClickHandler} type="button">
+					Now
+				</button>
+				<button onClick={onEndOfTimeClickHandler} type="button">
+					End of time
+				</button>
 			</div>
 
 			<div>{datesString2}</div>
@@ -138,7 +144,7 @@ export const App = (): ReactNode => {
 					ref={timeline2Ref}
 					timeExtrema={[TIME_MIN, TIME_MAX]}
 					windowTime={[initTimeStart2, initTimeEnd2]}
-				></cg-timeline>
+				/>
 			</div>
 
 			<div>{datesString}</div>

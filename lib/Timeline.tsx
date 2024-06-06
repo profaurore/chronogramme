@@ -1,6 +1,3 @@
-// eslint-disable-next-line eslint-comments/disable-enable-pair
-/* eslint-disable @typescript-eslint/prefer-readonly-parameter-types */
-
 import { css, cx } from "@linaria/core";
 import {
 	type CSSProperties,
@@ -543,7 +540,7 @@ class ScrollState {
 			scrollX < leftScrollUpdateThreshold * clientWidth ||
 			scrollX > rightScrollUpdateThreshold * clientWidth;
 
-		if (!isViewportNearTimeBounds && !isViewportNearContentBounds) {
+		if (!(isViewportNearTimeBounds || isViewportNearContentBounds)) {
 			return scrollX;
 		}
 
@@ -868,7 +865,7 @@ const barResizeHandler = (
 	let timelineMinSize: number;
 
 	switch (dimension) {
-		case BarSide.Bottom:
+		case BarSide.Bottom: {
 			containerSize = container.clientHeight;
 			barMinSize = verticalBarMinHeight;
 			otherBarSize = barsDimensions.top;
@@ -876,16 +873,18 @@ const barResizeHandler = (
 				container.clientTop + container.clientHeight - targetCoordinates.y;
 			timelineMinSize = timelineMinHeight;
 			break;
+		}
 
-		case BarSide.Left:
+		case BarSide.Left: {
 			containerSize = container.clientWidth;
 			barMinSize = horizontalBarMinWidth;
 			otherBarSize = barsDimensions.right;
 			targetSize = targetCoordinates.x - container.clientLeft;
 			timelineMinSize = timelineMinWidth;
 			break;
+		}
 
-		case BarSide.Right:
+		case BarSide.Right: {
 			containerSize = container.clientWidth;
 			barMinSize = horizontalBarMinWidth;
 			otherBarSize = barsDimensions.left;
@@ -893,14 +892,16 @@ const barResizeHandler = (
 				container.clientLeft + container.clientWidth - targetCoordinates.x;
 			timelineMinSize = timelineMinWidth;
 			break;
+		}
 
-		case BarSide.Top:
+		case BarSide.Top: {
 			containerSize = container.clientHeight;
 			barMinSize = verticalBarMinHeight;
 			otherBarSize = barsDimensions.bottom;
 			targetSize = targetCoordinates.y - container.clientTop;
 			timelineMinSize = timelineMinHeight;
 			break;
+		}
 	}
 
 	// The maximum width is defined by the maximum available size assuming the
@@ -923,7 +924,7 @@ const barResizeHandler = (
 	};
 };
 
-export interface DimensionCSSProperties extends CSSProperties {
+interface DimensionCSSProperties extends CSSProperties {
 	"--bottom-bar-height": string;
 	"--left-bar-width": string;
 	"--right-bar-width": string;
@@ -932,7 +933,7 @@ export interface DimensionCSSProperties extends CSSProperties {
 }
 
 type BarsDimensions = {
-	[key in BarSide]: number;
+	[Key in BarSide]: number;
 };
 
 export type TimeChangeHandler = (
@@ -1044,6 +1045,9 @@ export const Timeline = forwardRef<
 	};
 
 	// Configure component on mount.
+	// This effect sets up the initial state of the component. Since it depends
+	// on the initial values of some states.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: See above.
 	useLayoutEffect(() => {
 		const content = contentRef.current;
 
@@ -1058,10 +1062,6 @@ export const Timeline = forwardRef<
 
 			setScrollState(newScrollState);
 		}
-
-		// This effect sets up the initial state of the component. Since it depends
-		// on the initial values of some states.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const dimensionStyles: DimensionCSSProperties = {

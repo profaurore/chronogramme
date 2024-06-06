@@ -2,12 +2,12 @@ export default {
 	extends: ["stylelint-config-html", "stylelint-config-standard"],
 	ignoreFiles: [
 		".*",
-		".husky/**/*",
 		".vscode/**/*",
 		"**/*.json",
 		"**/*.jsonc",
 		"**/*.log",
 		"**/*.tsbuildinfo",
+		"**/*.yml",
 		"coverage/**/*",
 		"dist/**/*",
 		"node_modules/**/*",

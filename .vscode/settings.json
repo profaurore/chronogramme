@@ -2,10 +2,7 @@
 	// Rulers
 	"editor.rulers": [80],
 	// Linting
-	"eslint.enable": true,
-	"eslint.format.enable": false,
-	"eslint.experimental.useFlatConfig": true,
-	"eslint.packageManager": "yarn",
+	"biome.enabled": true,
 	"stylelint.validate": [
 		"CommonJS",
 		"css",
@@ -17,16 +14,15 @@
 	],
 	"stylelint.packageManager": "yarn",
 	"stylelint.configFile": "stylelint.config.js",
-	// Prettier
-	"editor.tabSize": 2,
 	// Comments in JSON
 	"json.validate.enable": false,
 	// Formatting
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.defaultFormatter": "biomejs.biome",
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": "explicit"
+		"source.fixAll": "explicit"
 	},
+	"editor.tabSize": 2,
 	"javascript.preferences.importModuleSpecifier": "shortest",
 	"typescript.preferences.importModuleSpecifier": "shortest",
 	"javascript.preferences.importModuleSpecifierEnding": "js",

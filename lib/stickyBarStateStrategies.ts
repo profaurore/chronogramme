@@ -8,6 +8,28 @@ interface FlexSegment {
 	min: number;
 }
 
+interface CalculationFlexSegment {
+	factor: number;
+	max: number;
+	min: number;
+	size: number;
+}
+
+function prepareFlexSegment(segment: FlexSegment): CalculationFlexSegment {
+	const idealSize = segment.idealSize;
+
+	if (idealSize === undefined) {
+		return { factor: ZERO, max: ZERO, min: ZERO, size: ZERO };
+	}
+
+	return {
+		factor: idealSize,
+		max: segment.max,
+		min: segment.min,
+		size: idealSize,
+	};
+}
+
 const flexSegments = (
 	segments: readonly [
 		Readonly<FlexSegment>,
@@ -20,105 +42,59 @@ const flexSegments = (
 	const segment1 = segments[1];
 	const segment2 = segments[2];
 
-	const segment0IdealSize = segment0.idealSize;
-	const segment1IdealSize = segment1.idealSize;
-	const segment2IdealSize = segment2.idealSize;
-
-	interface CalculationFlexSegment {
-		factor: number;
-		max: number;
-		min: number;
-		size: number;
-	}
-
 	const localSegments: [
 		CalculationFlexSegment,
 		CalculationFlexSegment,
 		CalculationFlexSegment,
 	] = [
-		segment0IdealSize === undefined
-			? { factor: ZERO, max: ZERO, min: ZERO, size: ZERO }
-			: {
-					factor: segment0IdealSize,
-					max: segment0.max,
-					min: segment0.min,
-					size: segment0IdealSize,
-				},
-		segment1IdealSize === undefined
-			? { factor: ZERO, max: ZERO, min: ZERO, size: ZERO }
-			: {
-					factor: segment1IdealSize,
-					max: segment1.max,
-					min: segment1.min,
-					size: segment1IdealSize,
-				},
-		segment2IdealSize === undefined
-			? { factor: ZERO, max: ZERO, min: ZERO, size: ZERO }
-			: {
-					factor: segment2IdealSize,
-					max: segment2.max,
-					min: segment2.min,
-					size: segment2IdealSize,
-				},
+		prepareFlexSegment(segment0),
+		prepareFlexSegment(segment1),
+		prepareFlexSegment(segment2),
 	];
 
-	// This array and `segments` will reference the same objects.
-	const sortableSegments = localSegments.slice();
+	// The number of segments that have a non-zero flex factor.
+	let numFlexibleSegments = ZERO;
+	for (const segment of localSegments) {
+		numFlexibleSegments += Math.sign(segment.factor);
+	}
 
-	let numFlexibleSegments = localSegments.reduce(
-		(acc, segment) => acc + Math.abs(Math.sign(segment.factor)),
-		ZERO,
-	);
-
-	let usedRemainingSize = true;
-
-	while (numFlexibleSegments > ZERO && usedRemainingSize) {
-		// Sort the segments from largest to smallest absolute size before
-		// calculating the remaining size to minimize floating point error.
-		sortableSegments.sort((a, b) => Math.abs(b.size) - Math.abs(a.size));
-
+	while (numFlexibleSegments > ZERO) {
 		let remainingSize = targetSize;
 		let factorsSum = ZERO;
 
-		for (const segment of sortableSegments) {
+		for (const segment of localSegments) {
 			remainingSize -= segment.size;
 			factorsSum += segment.factor;
 		}
 
 		const ratio = remainingSize / factorsSum;
 
-		if (ratio === ZERO) {
-			break;
-		}
-
-		usedRemainingSize = false;
-
 		for (const segment of localSegments) {
 			const factor = segment.factor;
 
-			if (factor) {
-				const size = segment.size;
-				const min = segment.min;
-				const max = segment.max;
+			if (!factor) {
+				continue;
+			}
 
-				const targetSize = size + factor * ratio;
-				const clampedSize = clampMaxWins(targetSize, min, max);
-				segment.size = clampedSize;
+			const size = segment.size;
+			const min = segment.min;
+			const max = segment.max;
 
-				usedRemainingSize ||= clampedSize !== size;
+			const targetSize = size + factor * ratio;
+			const clampedSize = clampMaxWins(targetSize, min, max);
+			segment.size = clampedSize;
 
-				if (clampedSize !== targetSize) {
-					segment.factor = ZERO;
-					numFlexibleSegments -= UNIT;
-				}
+			if (clampedSize === size || clampedSize !== targetSize) {
+				segment.factor = ZERO;
+				numFlexibleSegments -= UNIT;
 			}
 		}
 	}
 
 	return [
-		segment0IdealSize === undefined ? undefined : localSegments[0].size,
-		segment1IdealSize === undefined ? undefined : localSegments[1].size,
-		segment2IdealSize === undefined ? undefined : localSegments[2].size,
+		segment0.idealSize === undefined ? undefined : localSegments[0].size,
+		segment1.idealSize === undefined ? undefined : localSegments[1].size,
+		segment2.idealSize === undefined ? undefined : localSegments[2].size,
 	];
 };
 
@@ -227,7 +203,7 @@ export const consumeSideResizeStrategy: SideResizeStrategy = (
 	const otherBarSize = isStart ? state.endSize : state.startSize;
 	const otherBarMin = isStart ? state.endMin : state.startMin;
 
-	let newBarSize;
+	let newBarSize: number | undefined;
 	let newOtherBarSize = otherBarSize;
 
 	if (targetSize === undefined) {
@@ -270,7 +246,7 @@ export const constraintSideResizeStrategy: SideResizeStrategy = (
 	const max = isStart ? state.startMax : state.endMax;
 	const otherBarSize = isStart ? state.endSize : state.startSize;
 
-	let newBarSize;
+	let newBarSize: number | undefined;
 
 	if (targetSize === undefined) {
 		newBarSize = undefined;

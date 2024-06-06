@@ -1,1 +1,1 @@
-export * from "./Timeline.tsx";
+export { Timeline } from "./Timeline.tsx";

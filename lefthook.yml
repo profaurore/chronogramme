@@ -1,0 +1,33 @@
+output:
+  - summary
+  - failure
+
+pre-push:
+  commands:
+    packages-audit:
+      run: yarn audit
+
+pre-commit:
+  commands:
+    code-fix:
+      run: yarn biome check --apply .
+      stage_fixed: true
+    css-fix:
+      run: yarn stylelint --fix {staged_files}
+      stage_fixed: true
+    checks:
+      run: yarn lefthook run checks
+
+checks:
+  parallel: true
+  commands:
+    code-check:
+      run: yarn biome check .
+    css-check:
+      run: yarn stylelint {staged_files}
+    dead-check:
+      run: yarn knip
+    tests:
+      run: yarn vitest run
+    typescript:
+      run: yarn tsc

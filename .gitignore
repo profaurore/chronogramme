@@ -12,8 +12,8 @@ dist
 dist-ssr
 *.local
 *.tsbuildinfo
-.eslintcache
 coverage
+.husky/*
 
 # Editor directories and files
 .vscode/*

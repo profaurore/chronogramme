@@ -1,26 +1,17 @@
 {
 	"entry": ["src/main.tsx", "lib/main.ts"],
+	"ignoreBinaries": ["audit"],
 	"ignoreDependencies": [
 		// For Vite
 		"@babel/preset-react",
 		"@babel/preset-typescript",
-
-		// For Knip
-		"@pnpm/logger",
-
-		// For ESLint (eslint.config.js)
-		"@typescript-eslint/eslint-plugin",
-		"eslint-plugin-eslint-comments",
-		"eslint-plugin-jsonc",
-		"eslint-plugin-react-hooks",
-		"eslint-plugin-vitest",
 
 		// For Stylelint (stylelint.config.js)
 		"postcss",
 		"postcss-jsx",
 		"postcss-markdown",
 		"postcss-styled-syntax",
-		"postcss-syntax",
+		"postcss-syntax"
 	],
-	"project": ["lib/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+	"project": ["lib/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"]
 }
