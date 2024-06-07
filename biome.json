@@ -53,6 +53,9 @@
 			"include": ["*.config.*"],
 			"linter": {
 				"rules": {
+					"correctness": {
+						"noNodejsModules": "off"
+					},
 					"style": {
 						"noDefaultExport": "off"
 					}

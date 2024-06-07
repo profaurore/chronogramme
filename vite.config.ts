@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import linaria from "@linaria/vite";
 import react from "@vitejs/plugin-react-swc";
 import wyw from "@wyw-in-js/vite";
 import { defineConfig } from "vite";
@@ -32,11 +31,6 @@ export default defineConfig({
 			include: ["**/*.{ts,tsx}"],
 		}),
 		react(),
-		linaria({
-			babelOptions: {
-				presets: ["@babel/preset-typescript", "@babel/preset-react"],
-			},
-		}),
 		dts({ entryRoot: "lib", include: ["lib"] }),
 	],
 });
