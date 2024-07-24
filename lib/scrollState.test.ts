@@ -15,7 +15,7 @@ import {
 	NotAnObjectError,
 	UnknownPropertyError,
 } from "./object.ts";
-import { ScrollState, defaultMaxElementSize } from "./scrollState.ts";
+import { DEFAULT_MAX_ELEMENT_SIZE, ScrollState } from "./scrollState.ts";
 import { getError } from "./testUtils.ts";
 import { TIME_MAX, TIME_MIN } from "./time.ts";
 
@@ -56,7 +56,18 @@ describe("TimelineScroll", () => {
 						[
 							"Contains an unknown key",
 							{
-								error: new UnknownPropertyError("parameters", "incorrectKey"),
+								error: new UnknownPropertyError(
+									"parameters",
+									{
+										max: 1,
+										min: 0,
+										windowMax: 0,
+										windowMin: 0,
+										windowSize: 100,
+										incorrectKey: true,
+									},
+									"incorrectKey",
+								),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -79,7 +90,11 @@ describe("TimelineScroll", () => {
 						[
 							"Errors if undefined",
 							{
-								error: new MissingPropertyError("parameters", "windowSize"),
+								error: new MissingPropertyError(
+									"parameters",
+									{ max: 1, min: 0, windowMax: 1, windowMin: 0 },
+									"windowSize",
+								),
 								parameters: {
 									max: 1,
 									min: 0,
@@ -126,8 +141,8 @@ describe("TimelineScroll", () => {
 									"windowSize",
 									-1,
 									ZERO,
-									false,
-									defaultMaxElementSize,
+									true,
+									DEFAULT_MAX_ELEMENT_SIZE,
 									true,
 								),
 								parameters: {
@@ -141,14 +156,14 @@ describe("TimelineScroll", () => {
 						],
 
 						[
-							"Errors if zero",
+							"Errors if less zero",
 							{
 								error: new SizeRangeError(
 									"windowSize",
+									-Number.MIN_VALUE,
 									0,
-									ZERO,
-									false,
-									defaultMaxElementSize,
+									true,
+									DEFAULT_MAX_ELEMENT_SIZE,
 									true,
 								),
 								parameters: {
@@ -156,7 +171,7 @@ describe("TimelineScroll", () => {
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
-									windowSize: 0,
+									windowSize: -Number.MIN_VALUE,
 								},
 							},
 						],
@@ -185,7 +200,7 @@ describe("TimelineScroll", () => {
 									"windowSize",
 									200,
 									ZERO,
-									false,
+									true,
 									100,
 									true,
 								),
@@ -201,7 +216,7 @@ describe("TimelineScroll", () => {
 						],
 
 						[
-							"Accepts the minimum non-zero number",
+							"Accepts zero",
 							{
 								error: null,
 								parameters: {
@@ -210,7 +225,7 @@ describe("TimelineScroll", () => {
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
-									windowSize: Number.MIN_VALUE,
+									windowSize: 0,
 								},
 							},
 						],
@@ -235,20 +250,6 @@ describe("TimelineScroll", () => {
 				[
 					"min",
 					[
-						[
-							"Errors if undefined",
-							{
-								error: new MissingPropertyError("parameters", "min"),
-								parameters: {
-									max: 1,
-									windowMax: 1,
-									windowMin: 0,
-									windowSize: 100,
-									...({} as Pick<ScrollStateParameters, "min">),
-								},
-							},
-						],
-
 						[
 							"Errors if non-numeric",
 							{
@@ -306,6 +307,19 @@ describe("TimelineScroll", () => {
 						],
 
 						[
+							"Accepts if undefined",
+							{
+								error: null,
+								parameters: {
+									max: 1,
+									windowMax: 1,
+									windowMin: 0,
+									windowSize: 100,
+								},
+							},
+						],
+
+						[
 							"Accepts the minimum time",
 							{
 								error: null,
@@ -340,20 +354,6 @@ describe("TimelineScroll", () => {
 				[
 					"max",
 					[
-						[
-							"Errors if undefined",
-							{
-								error: new MissingPropertyError("parameters", "max"),
-								parameters: {
-									min: 0,
-									windowMax: 1,
-									windowMin: 0,
-									windowSize: 100,
-									...({} as Pick<ScrollStateParameters, "max">),
-								},
-							},
-						],
-
 						[
 							"Errors if non-numeric",
 							{
@@ -402,6 +402,19 @@ describe("TimelineScroll", () => {
 								error: new NotANumberError("max", Number.POSITIVE_INFINITY),
 								parameters: {
 									max: Number.POSITIVE_INFINITY,
+									min: 0,
+									windowMax: 1,
+									windowMin: 0,
+									windowSize: 100,
+								},
+							},
+						],
+
+						[
+							"Accepts if undefined",
+							{
+								error: null,
+								parameters: {
 									min: 0,
 									windowMax: 1,
 									windowMin: 0,
@@ -479,20 +492,6 @@ describe("TimelineScroll", () => {
 					"windowMin",
 					[
 						[
-							"Errors if undefined",
-							{
-								error: new MissingPropertyError("parameters", "windowMin"),
-								parameters: {
-									max: 0,
-									min: 0,
-									windowMax: 1,
-									windowSize: 100,
-									...({} as Pick<ScrollStateParameters, "windowMin">),
-								},
-							},
-						],
-
-						[
 							"Errors if non-numeric",
 							{
 								error: new NotANumberError("windowMin", "test"),
@@ -556,6 +555,19 @@ describe("TimelineScroll", () => {
 						],
 
 						[
+							"Accepts if undefined",
+							{
+								error: null,
+								parameters: {
+									max: 1,
+									min: 0,
+									windowMax: 1,
+									windowSize: 100,
+								},
+							},
+						],
+
+						[
 							"Accepts the minimum time",
 							{
 								error: null,
@@ -590,20 +602,6 @@ describe("TimelineScroll", () => {
 				[
 					"windowMax",
 					[
-						[
-							"Errors if undefined",
-							{
-								error: new MissingPropertyError("parameters", "windowMax"),
-								parameters: {
-									max: 0,
-									min: 0,
-									windowMin: 0,
-									windowSize: 100,
-									...({} as Pick<ScrollStateParameters, "windowMax">),
-								},
-							},
-						],
-
 						[
 							"Errors if non-numeric",
 							{
@@ -661,6 +659,19 @@ describe("TimelineScroll", () => {
 									max: 1,
 									min: 0,
 									windowMax: Number.POSITIVE_INFINITY,
+									windowMin: 0,
+									windowSize: 100,
+								},
+							},
+						],
+
+						[
+							"Accepts if undefined",
+							{
+								error: null,
+								parameters: {
+									max: 1,
+									min: 0,
 									windowMin: 0,
 									windowSize: 100,
 								},
@@ -1762,14 +1773,26 @@ describe("TimelineScroll", () => {
 
 					const state = new ScrollState(parameters);
 
-					const expectedRange = parameters.max - parameters.min;
+					const expectedRange =
+						(parameters.max ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.min ?? Number.MIN_SAFE_INTEGER);
 
-					const expectedWindowMin = expected.windowMin ?? parameters.windowMin;
-					const expectedWindowMax = expected.windowMax ?? parameters.windowMax;
+					const expectedWindowMin =
+						expected.windowMin ??
+						parameters.windowMin ??
+						Number.MIN_SAFE_INTEGER;
+					const expectedWindowMax =
+						expected.windowMax ??
+						parameters.windowMax ??
+						Number.MAX_SAFE_INTEGER;
 					const expectedWindowRange = expectedWindowMax - expectedWindowMin;
 
-					expect(state.min).toBeCloseTo(parameters.min);
-					expect(state.max).toBeCloseTo(parameters.max);
+					expect(state.min).toBeCloseTo(
+						parameters.min ?? Number.MIN_SAFE_INTEGER,
+					);
+					expect(state.max).toBeCloseTo(
+						parameters.max ?? Number.MAX_SAFE_INTEGER,
+					);
 					expect(state.windowMin).toBeCloseTo(expectedWindowMin);
 					expect(state.windowMax).toBeCloseTo(expectedWindowMax);
 					expect(state.range).toBeCloseTo(expectedRange);
@@ -1792,8 +1815,8 @@ describe("TimelineScroll", () => {
 					Readonly<{
 						error: Readonly<Error> | null;
 						update: Readonly<{
-							max: number;
-							min: number;
+							max: number | undefined;
+							min: number | undefined;
 						}>;
 					}>,
 				])[],
@@ -1801,17 +1824,6 @@ describe("TimelineScroll", () => {
 				[
 					"min",
 					[
-						[
-							"Errors if undefined",
-							{
-								error: new NotANumberError("min", undefined),
-								update: {
-									max: 1,
-									min: undefined as unknown as number,
-								},
-							},
-						],
-
 						[
 							"Errors if non-numeric",
 							{
@@ -1857,6 +1869,17 @@ describe("TimelineScroll", () => {
 						],
 
 						[
+							"Accepts if undefined",
+							{
+								error: null,
+								update: {
+									max: 1,
+									min: undefined,
+								},
+							},
+						],
+
+						[
 							"Accepts the minimum number",
 							{
 								error: null,
@@ -1883,17 +1906,6 @@ describe("TimelineScroll", () => {
 				[
 					"max",
 					[
-						[
-							"Errors if undefined",
-							{
-								error: new NotANumberError("max", undefined),
-								update: {
-									max: undefined as unknown as number,
-									min: 0,
-								},
-							},
-						],
-
 						[
 							"Errors if non-numeric",
 							{
@@ -1933,6 +1945,17 @@ describe("TimelineScroll", () => {
 								error: new NotANumberError("max", Number.POSITIVE_INFINITY),
 								update: {
 									max: Number.POSITIVE_INFINITY,
+									min: 0,
+								},
+							},
+						],
+
+						[
+							"Accepts if undefined",
+							{
+								error: null,
+								update: {
+									max: undefined,
 									min: 0,
 								},
 							},
@@ -2403,8 +2426,14 @@ describe("TimelineScroll", () => {
 
 					const expectedRange = update.max - update.min;
 
-					const expectedWindowMin = expected.windowMin ?? parameters.windowMin;
-					const expectedWindowMax = expected.windowMax ?? parameters.windowMax;
+					const expectedWindowMin =
+						expected.windowMin ??
+						parameters.windowMin ??
+						Number.MIN_SAFE_INTEGER;
+					const expectedWindowMax =
+						expected.windowMax ??
+						parameters.windowMax ??
+						Number.MAX_SAFE_INTEGER;
 					const expectedWindowRange = expectedWindowMax - expectedWindowMin;
 
 					expect(state).toBe(resultState);
@@ -2423,902 +2452,23 @@ describe("TimelineScroll", () => {
 		});
 	});
 
-	describe("setWindowExtrema", () => {
-		describe("Input Validation", () => {
-			const testGroups: readonly (readonly [
-				string,
-				readonly (readonly [
-					string,
-					Readonly<{
-						error: Readonly<Error> | null;
-						update: Readonly<{
-							windowMax: number;
-							windowMin: number;
-						}>;
-					}>,
-				])[],
-			])[] = [
-				[
-					"windowMin",
-					[
-						[
-							"Errors if undefined",
-							{
-								error: new NotANumberError("windowMin", undefined),
-								update: {
-									windowMax: 1,
-									windowMin: undefined as unknown as number,
-								},
-							},
-						],
-
-						[
-							"Errors if non-numeric",
-							{
-								error: new NotANumberError("windowMin", "test"),
-								update: {
-									windowMax: 1,
-									windowMin: "test" as unknown as number,
-								},
-							},
-						],
-
-						[
-							"Errors if NaN",
-							{
-								error: new NotANumberError("windowMin", Number.NaN),
-								update: {
-									windowMax: 1,
-									windowMin: Number.NaN as unknown as number,
-								},
-							},
-						],
-
-						[
-							"Errors if negative infinity",
-							{
-								error: new NotANumberError(
-									"windowMin",
-									Number.NEGATIVE_INFINITY,
-								),
-								update: {
-									windowMax: 1,
-									windowMin: Number.NEGATIVE_INFINITY,
-								},
-							},
-						],
-
-						[
-							"Errors if positive infinity",
-							{
-								error: new NotANumberError(
-									"windowMin",
-									Number.POSITIVE_INFINITY,
-								),
-								update: {
-									windowMax: 1,
-									windowMin: Number.POSITIVE_INFINITY as unknown as number,
-								},
-							},
-						],
-
-						[
-							"Accepts the minimum number",
-							{
-								error: null,
-								update: {
-									windowMax: 1,
-									windowMin: -Number.MAX_VALUE,
-								},
-							},
-						],
-
-						[
-							"Accepts the number before the maximum number",
-							{
-								error: null,
-								update: {
-									windowMax: Number.MAX_VALUE,
-									windowMin: Number.MAX_VALUE - 2 ** 970,
-								},
-							},
-						],
-					],
-				],
-
-				[
-					"windowMax",
-					[
-						[
-							"Errors if undefined",
-							{
-								error: new NotANumberError("windowMax", undefined),
-								update: {
-									windowMax: undefined as unknown as number,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Errors if non-numeric",
-							{
-								error: new NotANumberError("windowMax", "test"),
-								update: {
-									windowMax: "test" as unknown as number,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Errors if NaN",
-							{
-								error: new NotANumberError("windowMax", Number.NaN),
-								update: {
-									windowMax: Number.NaN as unknown as number,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Errors if negative infinity",
-							{
-								error: new NotANumberError(
-									"windowMax",
-									Number.NEGATIVE_INFINITY,
-								),
-								update: {
-									windowMax: Number.NEGATIVE_INFINITY,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Errors if positive infinity",
-							{
-								error: new NotANumberError(
-									"windowMax",
-									Number.POSITIVE_INFINITY,
-								),
-								update: {
-									windowMax: Number.POSITIVE_INFINITY,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Accepts the number after the minimum number",
-							{
-								error: null,
-								update: {
-									windowMax: -Number.MAX_VALUE + 2 ** 970,
-									windowMin: -Number.MAX_VALUE,
-								},
-							},
-						],
-
-						[
-							"Accepts the maximum number",
-							{
-								error: null,
-								update: {
-									windowMax: Number.MAX_VALUE,
-									windowMin: 0,
-								},
-							},
-						],
-					],
-				],
-
-				[
-					"windowRange",
-					[
-						[
-							"Minimum is equal to maximum",
-							{
-								error: new IntervalExtremaError("windowExtrema", 0, 0),
-								update: {
-									windowMax: 0,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Minimum is greater than maximum",
-							{
-								error: new IntervalExtremaError("windowExtrema", 1, 0),
-								update: {
-									windowMax: 0,
-									windowMin: 1,
-								},
-							},
-						],
-					],
-				],
-			];
-
-			describe.each(testGroups)("%s", (_groupTitle, testList) => {
-				test.each(testList)("%s", (_testTitle, testParams) => {
-					const error = testParams.error;
-					const update = testParams.update;
-
-					const state = new ScrollState({
-						max: 1,
-						min: 0,
-						windowMax: 1,
-						windowMin: 0,
-						windowSize: 100,
-					});
-
-					const receivedError = getError(() =>
-						state.setWindowExtrema(update.windowMin, update.windowMax),
-					);
-
-					if (error) {
-						expect(receivedError).toBeInstanceOf(Error);
-						expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
-							...error,
-						});
-					} else {
-						expect(receivedError).toBeUndefined();
-					}
-				});
-			});
-		});
-
-		describe("Result", () => {
-			const testGroups: readonly (readonly [
-				string,
-				readonly (readonly [
-					string,
-					Readonly<{
-						expected: Readonly<{
-							scrollPos: number;
-							scrollSize: number;
-							size: number;
-							windowMax: number;
-							windowMin: number;
-						}>;
-						parameters: ScrollStateParameters;
-						update: Readonly<{
-							windowMax: number;
-							windowMin: number;
-						}>;
-					}>,
-				])[],
-			])[] = [
-				[
-					"Shrink",
-					[
-						[
-							"Window before minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 10,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: -10,
-									windowMin: -15,
-								},
-							},
-						],
-
-						[
-							"Window containing minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 10,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 7,
-									windowMin: 2,
-								},
-							},
-						],
-
-						[
-							"Window start at minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 10,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 10,
-									windowMin: 5,
-								},
-							},
-						],
-
-						[
-							"Window start between minimum and maximum",
-							{
-								expected: {
-									scrollPos: 10,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 20,
-									windowMin: 15,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 20,
-									windowMin: 15,
-								},
-							},
-						],
-
-						[
-							"Window end at maximum",
-							{
-								expected: {
-									scrollPos: 20,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 30,
-									windowMin: 25,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 30,
-									windowMin: 25,
-								},
-							},
-						],
-
-						[
-							"Window containing maximum",
-							{
-								expected: {
-									scrollPos: 20,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 30,
-									windowMin: 25,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 33,
-									windowMin: 28,
-								},
-							},
-						],
-
-						[
-							"Window after maximum",
-							{
-								expected: {
-									scrollPos: 20,
-									scrollSize: 25,
-									size: 25,
-									windowMax: 30,
-									windowMin: 25,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 40,
-									windowMin: 35,
-								},
-							},
-						],
-					],
-				],
-				[
-					"Preserve",
-					[
-						[
-							"Window before minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 15,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: -5,
-									windowMin: -15,
-								},
-							},
-						],
-
-						[
-							"Window containing minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 15,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 10,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Window start at minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 15,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 15,
-									windowMin: 5,
-								},
-							},
-						],
-
-						[
-							"Window start between minimum and maximum",
-							{
-								expected: {
-									scrollPos: 5,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 25,
-									windowMin: 15,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 25,
-									windowMin: 15,
-								},
-							},
-						],
-
-						[
-							"Window end at maximum",
-							{
-								expected: {
-									scrollPos: 8,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 30,
-									windowMin: 20,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 30,
-									windowMin: 20,
-								},
-							},
-						],
-
-						[
-							"Window containing maximum",
-							{
-								expected: {
-									scrollPos: 8,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 30,
-									windowMin: 20,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 35,
-									windowMin: 25,
-								},
-							},
-						],
-
-						[
-							"Window after maximum",
-							{
-								expected: {
-									scrollPos: 8,
-									scrollSize: 13,
-									size: 12.5,
-									windowMax: 30,
-									windowMin: 20,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 45,
-									windowMin: 35,
-								},
-							},
-						],
-					],
-				],
-				[
-					"Expand",
-					[
-						[
-							"Window before minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 20,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: -5,
-									windowMin: -20,
-								},
-							},
-						],
-
-						[
-							"Window containing minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 20,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 15,
-									windowMin: 0,
-								},
-							},
-						],
-
-						[
-							"Window start at minimum",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 20,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 20,
-									windowMin: 5,
-								},
-							},
-						],
-
-						[
-							"Window start between minimum and maximum",
-							{
-								expected: {
-									scrollPos: 2,
-									scrollSize: 9,
-									size: 8,
-									windowMax: 25,
-									windowMin: 10,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 25,
-									windowMin: 10,
-								},
-							},
-						],
-
-						[
-							"Window end at maximum",
-							{
-								expected: {
-									scrollPos: 3,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 29,
-									windowMin: 14,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 29,
-									windowMin: 14,
-								},
-							},
-						],
-
-						[
-							"Window containing maximum",
-							{
-								expected: {
-									scrollPos: 3,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 29,
-									windowMin: 14,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 40,
-									windowMin: 25,
-								},
-							},
-						],
-
-						[
-							"Window after maximum",
-							{
-								expected: {
-									scrollPos: 3,
-									scrollSize: 8,
-									size: 8,
-									windowMax: 29,
-									windowMin: 14,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 50,
-									windowMin: 35,
-								},
-							},
-						],
-
-						[
-							"Window range equal to range",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 5,
-									size: 5,
-									windowMax: 29,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 59,
-									windowMin: 35,
-								},
-							},
-						],
-
-						[
-							"Window range greater than range",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 5,
-									size: 5,
-									windowMax: 29,
-									windowMin: 5,
-								},
-								parameters: {
-									max: 29,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowMax: 100,
-									windowMin: 0,
-								},
-							},
-						],
-					],
-				],
-			];
-
-			describe.each(testGroups)("%s", (_groupTitle, testList) => {
-				test.each(testList)("%s", (_testTitle, testParams) => {
-					const expected = testParams.expected;
-					const parameters = testParams.parameters;
-					const update = testParams.update;
-
-					const expectedRange = parameters.max - parameters.min;
-					const expectedWindowRange = Math.min(
-						update.windowMax - update.windowMin,
-						expectedRange,
-					);
-
-					const state = new ScrollState(parameters);
-					const resultState = state.setWindowExtrema(
-						update.windowMin,
-						update.windowMax,
-					);
-
-					expect(state).toBe(resultState);
-					expect(state.min).toBeCloseTo(parameters.min);
-					expect(state.max).toBeCloseTo(parameters.max);
-					expect(state.windowMin).toBeCloseTo(expected.windowMin);
-					expect(state.windowMax).toBeCloseTo(expected.windowMax);
-					expect(state.range).toBeCloseTo(expectedRange);
-					expect(state.size).toBeCloseTo(expected.size);
-					expect(state.windowRange).toBeCloseTo(expectedWindowRange);
-					expect(state.windowSize).toEqual(parameters.windowSize);
-					expect(state.scrollPos).toEqual(expected.scrollPos);
-					expect(state.scrollSize).toEqual(expected.scrollSize);
-				});
-			});
-		});
-	});
-
-	describe("setWindowSize", () => {
+	describe("setMaxElementSize", () => {
 		describe("Input Validation", () => {
 			const testList: readonly (readonly [
 				string,
 				Readonly<{
 					error: Readonly<Error> | null;
 					update: Readonly<{
-						windowSize: number;
+						maxElementSize: number | undefined;
 					}>;
 				}>,
 			])[] = [
 				[
-					"Errors if undefined",
-					{
-						error: new NotASizeError("windowSize", undefined),
-						update: {
-							windowSize: undefined as unknown as number,
-						},
-					},
-				],
-
-				[
 					"Errors if non-numeric",
 					{
-						error: new NotASizeError("windowSize", "test"),
+						error: new NotASizeError("maxElementSize", "test"),
 						update: {
-							windowSize: "test" as unknown as number,
+							maxElementSize: "test" as unknown as number,
 						},
 					},
 				],
@@ -3326,29 +2476,26 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if NaN",
 					{
-						error: new NotASizeError("windowSize", Number.NaN),
+						error: new NotASizeError("maxElementSize", Number.NaN),
 						update: {
-							windowSize: Number.NaN as unknown as number,
+							maxElementSize: Number.NaN,
 						},
 					},
 				],
 
 				[
-					"Errors if negative",
+					"Errors if less than the window size",
 					{
-						error: new SizeRangeError("windowSize", -1, ZERO, false, 100, true),
+						error: new SizeRangeError(
+							"maxElementSize",
+							49,
+							50,
+							true,
+							Number.MAX_VALUE,
+							true,
+						),
 						update: {
-							windowSize: -1 as unknown as number,
-						},
-					},
-				],
-
-				[
-					"Errors if zero",
-					{
-						error: new SizeRangeError("windowSize", 0, ZERO, false, 100, true),
-						update: {
-							windowSize: 0 as unknown as number,
+							maxElementSize: 49,
 						},
 					},
 				],
@@ -3356,46 +2503,42 @@ describe("TimelineScroll", () => {
 				[
 					"Errors if infinite",
 					{
-						error: new NotASizeError("windowSize", Number.POSITIVE_INFINITY),
-						update: {
-							windowSize: Number.POSITIVE_INFINITY,
-						},
-					},
-				],
-
-				[
-					"Errors if greater than maximum element size",
-					{
-						error: new SizeRangeError(
-							"windowSize",
-							200,
-							ZERO,
-							false,
-							100,
-							true,
+						error: new NotASizeError(
+							"maxElementSize",
+							Number.POSITIVE_INFINITY,
 						),
 						update: {
-							windowSize: 200,
+							maxElementSize: Number.POSITIVE_INFINITY,
 						},
 					},
 				],
 
 				[
-					"Accepts the minimum non-zero number",
+					"Accepts if undefined",
 					{
 						error: null,
 						update: {
-							windowSize: Number.MIN_VALUE,
+							maxElementSize: undefined,
 						},
 					},
 				],
 
 				[
-					"Accepts maximum element size",
+					"Accepts the window size",
 					{
 						error: null,
 						update: {
-							windowSize: 100,
+							maxElementSize: 100,
+						},
+					},
+				],
+
+				[
+					"Accepts maximum number",
+					{
+						error: null,
+						update: {
+							maxElementSize: Number.MAX_VALUE,
 						},
 					},
 				],
@@ -3415,7 +2558,7 @@ describe("TimelineScroll", () => {
 				});
 
 				const receivedError = getError(() =>
-					state.setWindowSize(update.windowSize),
+					state.setMaxElementSize(update.maxElementSize),
 				);
 
 				if (error) {
@@ -3430,303 +2573,320 @@ describe("TimelineScroll", () => {
 		});
 
 		describe("Result", () => {
-			const testGroups: readonly (readonly [
+			const testList: readonly (readonly [
 				string,
-				readonly (readonly [
-					string,
-					Readonly<{
-						expected: Readonly<{
-							scrollPos: number;
-							scrollSize: number;
-							size: number;
-						}>;
-						parameters: ScrollStateParameters;
-						update: Readonly<{
-							windowSize: number;
-						}>;
-					}>,
-				])[],
+				Readonly<{
+					expected: Readonly<{
+						scrollPos: number;
+						scrollSize: number;
+						size: number;
+					}>;
+					update: Readonly<{
+						maxElementSize: number;
+					}>;
+				}>,
 			])[] = [
 				[
-					"No Scroll",
-					[
-						[
-							"Shrink",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 1,
-									size: 1,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 30,
-									windowMin: 5,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 1,
-								},
-							},
-						],
-
-						[
-							"Preserve",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 5,
-									size: 5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 30,
-									windowMin: 5,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 5,
-								},
-							},
-						],
-
-						[
-							"Expand",
-							{
-								expected: {
-									scrollPos: 0,
-									scrollSize: 20,
-									size: 20,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 30,
-									windowMin: 5,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 20,
-								},
-							},
-						],
-					],
+					"Shrink",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 75,
+							size: 150,
+						},
+						update: {
+							maxElementSize: 75,
+						},
+					},
 				],
+
 				[
-					"Static Scroll",
-					[
-						[
-							"Shrink",
-							{
-								expected: {
-									scrollPos: 1,
-									scrollSize: 3,
-									size: 2.5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 1,
-								},
-							},
-						],
-
-						[
-							"Preserve",
-							{
-								expected: {
-									scrollPos: 3,
-									scrollSize: 13,
-									size: 12.5,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 5,
-								},
-							},
-						],
-
-						[
-							"Expand to static scroll",
-							{
-								expected: {
-									scrollPos: 5,
-									scrollSize: 25,
-									size: 25,
-								},
-								parameters: {
-									max: 30,
-									min: 5,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 5,
-								},
-								update: {
-									windowSize: 10,
-								},
-							},
-						],
-
-						[
-							"Expand to virtual scroll",
-							{
-								expected: {
-									scrollPos: 5,
-									scrollSize: 20,
-									size: 100,
-								},
-								parameters: {
-									max: 105,
-									maxElementSize: 20,
-									min: 5,
-									resyncThresholdSize: 2,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 1,
-								},
-								update: {
-									windowSize: 10,
-								},
-							},
-						],
-					],
+					"Preserve",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 100,
+							size: 150,
+						},
+						update: {
+							maxElementSize: 100,
+						},
+					},
 				],
+
 				[
-					"Virtual Scroll",
-					[
-						[
-							"Shrink",
-							{
-								expected: {
-									scrollPos: 5,
-									scrollSize: 20,
-									size: 100,
-								},
-								parameters: {
-									max: 105,
-									maxElementSize: 20,
-									min: 5,
-									resyncThresholdSize: 2,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 20,
-								},
-								update: {
-									windowSize: 10,
-								},
-							},
-						],
-
-						[
-							"Preserve",
-							{
-								expected: {
-									scrollPos: 4,
-									scrollSize: 28,
-									size: 200,
-								},
-								parameters: {
-									max: 105,
-									maxElementSize: 20,
-									min: 5,
-									resyncThresholdSize: 2,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 20,
-								},
-								update: {
-									windowSize: 20,
-								},
-							},
-						],
-
-						[
-							"Expand to virtual scroll",
-							{
-								expected: {
-									scrollPos: 4,
-									scrollSize: 28,
-									size: 200,
-								},
-								parameters: {
-									max: 105,
-									maxElementSize: 20,
-									min: 5,
-									resyncThresholdSize: 2,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 15,
-								},
-								update: {
-									windowSize: 20,
-								},
-							},
-						],
-
-						[
-							"Expand to static scroll",
-							{
-								expected: {
-									scrollPos: 1,
-									scrollSize: 11,
-									size: 10,
-								},
-								parameters: {
-									max: 105,
-									maxElementSize: 20,
-									min: 5,
-									resyncThresholdSize: 2,
-									windowMax: 20,
-									windowMin: 10,
-									windowSize: 20,
-								},
-								update: {
-									windowSize: 1,
-								},
-							},
-						],
-					],
+					"Expand",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 150,
+							size: 150,
+						},
+						update: {
+							maxElementSize: 200,
+						},
+					},
 				],
 			];
 
-			describe.each(testGroups)("%s", (_groupTitle, testList) => {
-				test.each(testList)("%s", (_testTitle, testParams) => {
-					const expected = testParams.expected;
-					const parameters = testParams.parameters;
-					const update = testParams.update;
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const expected = testParams.expected;
+				const parameters = {
+					max: 3,
+					maxElementSize: 100,
+					min: 0,
+					resyncThresholdSize: 5,
+					windowMax: 1,
+					windowMin: 0,
+					windowSize: 50,
+				};
+				const update = testParams.update;
 
-					const expectedRange = parameters.max - parameters.min;
-					const expectedWindowRange =
-						parameters.windowMax - parameters.windowMin;
+				const expectedRange = parameters.max - parameters.min;
+				const expectedWindowRange = parameters.windowMax - parameters.windowMin;
 
-					const state = new ScrollState(parameters);
-					const resultState = state.setWindowSize(update.windowSize);
+				const state = new ScrollState(parameters);
+				state.setMaxElementSize(update.maxElementSize);
 
-					expect(state).toBe(resultState);
-					expect(state.min).toBeCloseTo(parameters.min);
-					expect(state.max).toBeCloseTo(parameters.max);
-					expect(state.windowMin).toBeCloseTo(parameters.windowMin);
-					expect(state.windowMax).toBeCloseTo(parameters.windowMax);
-					expect(state.range).toBeCloseTo(expectedRange);
-					expect(state.size).toBeCloseTo(expected.size);
-					expect(state.windowRange).toBeCloseTo(expectedWindowRange);
-					expect(state.windowSize).toEqual(update.windowSize);
-					expect(state.scrollPos).toEqual(expected.scrollPos);
-					expect(state.scrollSize).toEqual(expected.scrollSize);
+				expect(state.min).toBeCloseTo(parameters.min);
+				expect(state.max).toBeCloseTo(parameters.max);
+				expect(state.windowMin).toBeCloseTo(parameters.windowMin);
+				expect(state.windowMax).toBeCloseTo(parameters.windowMax);
+				expect(state.range).toBeCloseTo(expectedRange);
+				expect(state.size).toBeCloseTo(expected.size);
+				expect(state.windowRange).toBeCloseTo(expectedWindowRange);
+				expect(state.windowSize).toEqual(parameters.windowSize);
+				expect(state.scrollPos).toEqual(expected.scrollPos);
+				expect(state.scrollSize).toEqual(expected.scrollSize);
+				expect(state.maxElementSize).toEqual(update.maxElementSize);
+			});
+		});
+	});
+
+	describe("setResyncThresholdSize", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					update: Readonly<{
+						resyncThresholdSize: number | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if non-numeric",
+					{
+						error: new NotASizeError("resyncThresholdSize", "test"),
+						update: {
+							resyncThresholdSize: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if NaN",
+					{
+						error: new NotASizeError("resyncThresholdSize", Number.NaN),
+						update: {
+							resyncThresholdSize: Number.NaN,
+						},
+					},
+				],
+
+				[
+					"Errors if zero",
+					{
+						error: new SizeRangeError(
+							"resyncThresholdSize",
+							0,
+							ZERO,
+							false,
+							HALF * Number.MAX_VALUE,
+							true,
+						),
+						update: {
+							resyncThresholdSize: 0,
+						},
+					},
+				],
+
+				[
+					"Errors if greater than half of the maximum size",
+					{
+						error: new SizeRangeError(
+							"resyncThresholdSize",
+							HALF * Number.MAX_VALUE + 1e292,
+							ZERO,
+							false,
+							HALF * Number.MAX_VALUE,
+							true,
+						),
+						update: {
+							resyncThresholdSize: HALF * Number.MAX_VALUE + 1e292,
+						},
+					},
+				],
+
+				[
+					"Errors if infinite",
+					{
+						error: new NotASizeError(
+							"resyncThresholdSize",
+							Number.POSITIVE_INFINITY,
+						),
+						update: {
+							resyncThresholdSize: Number.POSITIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							resyncThresholdSize: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts the value immediately greater than zero",
+					{
+						error: null,
+						update: {
+							resyncThresholdSize: Number.MIN_VALUE,
+						},
+					},
+				],
+
+				[
+					"Accepts half of the maximum size",
+					{
+						error: null,
+						update: {
+							resyncThresholdSize: HALF * Number.MAX_VALUE,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const update = testParams.update;
+
+				const state = new ScrollState({
+					max: 1,
+					maxElementSize: 100,
+					min: 0,
+					windowMax: 1,
+					windowMin: 0,
+					windowSize: 50,
 				});
+
+				const receivedError = getError(() =>
+					state.setResyncThresholdSize(update.resyncThresholdSize),
+				);
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					expected: Readonly<{
+						scrollPos: number;
+						scrollSize: number;
+						size: number;
+					}>;
+					update: Readonly<{
+						resyncThresholdSize: number;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Shrink",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 150,
+							size: 150,
+						},
+						update: {
+							resyncThresholdSize: 75,
+						},
+					},
+				],
+
+				[
+					"Preserve",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 150,
+							size: 150,
+						},
+						update: {
+							resyncThresholdSize: 100,
+						},
+					},
+				],
+
+				[
+					"Expand",
+					{
+						expected: {
+							scrollPos: 0,
+							scrollSize: 150,
+							size: 150,
+						},
+						update: {
+							resyncThresholdSize: 200,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const expected = testParams.expected;
+				const parameters = {
+					max: 3,
+					maxElementSize: 400,
+					min: 0,
+					resyncThresholdSize: 100,
+					windowMax: 1,
+					windowMin: 0,
+					windowSize: 50,
+				};
+				const update = testParams.update;
+
+				const expectedRange = parameters.max - parameters.min;
+				const expectedWindowRange = parameters.windowMax - parameters.windowMin;
+
+				const state = new ScrollState(parameters);
+				state.setResyncThresholdSize(update.resyncThresholdSize);
+
+				expect(state.min).toBeCloseTo(parameters.min);
+				expect(state.max).toBeCloseTo(parameters.max);
+				expect(state.windowMin).toBeCloseTo(parameters.windowMin);
+				expect(state.windowMax).toBeCloseTo(parameters.windowMax);
+				expect(state.range).toBeCloseTo(expectedRange);
+				expect(state.size).toBeCloseTo(expected.size);
+				expect(state.windowRange).toBeCloseTo(expectedWindowRange);
+				expect(state.windowSize).toEqual(parameters.windowSize);
+				expect(state.scrollPos).toEqual(expected.scrollPos);
+				expect(state.scrollSize).toEqual(expected.scrollSize);
+				expect(state.resyncThresholdSize).toEqual(update.resyncThresholdSize);
 			});
 		});
 	});
@@ -4835,9 +3995,12 @@ describe("TimelineScroll", () => {
 					const parameters = testParams.parameters;
 					const update = testParams.update;
 
-					const expectedRange = parameters.max - parameters.min;
+					const expectedRange =
+						(parameters.max ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.min ?? Number.MIN_SAFE_INTEGER);
 					const expectedWindowRange =
-						parameters.windowMax - parameters.windowMin;
+						(parameters.windowMax ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.windowMin ?? Number.MIN_SAFE_INTEGER);
 
 					const state = new ScrollState(parameters);
 					const resultState = update.scrollPos.reduce<ScrollState>(
@@ -4846,14 +4009,1343 @@ describe("TimelineScroll", () => {
 					);
 
 					expect(state).toBe(resultState);
-					expect(state.min).toBeCloseTo(parameters.min);
-					expect(state.max).toBeCloseTo(parameters.max);
+					expect(state.min).toBeCloseTo(
+						parameters.min ?? Number.MIN_SAFE_INTEGER,
+					);
+					expect(state.max).toBeCloseTo(
+						parameters.max ?? Number.MAX_SAFE_INTEGER,
+					);
 					expect(state.windowMin).toEqual(expected.windowMin);
 					expect(state.windowMax).toEqual(expected.windowMax);
 					expect(state.range).toBeCloseTo(expectedRange);
 					expect(state.size).toBeCloseTo(expected.size);
 					expect(state.windowRange).toBeCloseTo(expectedWindowRange);
 					expect(state.windowSize).toEqual(parameters.windowSize);
+					expect(state.scrollPos).toEqual(expected.scrollPos);
+					expect(state.scrollSize).toEqual(expected.scrollSize);
+				});
+			});
+		});
+	});
+
+	describe("setWindowExtrema", () => {
+		describe("Input Validation", () => {
+			const testGroups: readonly (readonly [
+				string,
+				readonly (readonly [
+					string,
+					Readonly<{
+						error: Readonly<Error> | null;
+						update: Readonly<{
+							windowMax: number | undefined;
+							windowMin: number | undefined;
+						}>;
+					}>,
+				])[],
+			])[] = [
+				[
+					"windowMin",
+					[
+						[
+							"Errors if non-numeric",
+							{
+								error: new NotANumberError("windowMin", "test"),
+								update: {
+									windowMax: 1,
+									windowMin: "test" as unknown as number,
+								},
+							},
+						],
+
+						[
+							"Errors if NaN",
+							{
+								error: new NotANumberError("windowMin", Number.NaN),
+								update: {
+									windowMax: 1,
+									windowMin: Number.NaN as unknown as number,
+								},
+							},
+						],
+
+						[
+							"Errors if negative infinity",
+							{
+								error: new NotANumberError(
+									"windowMin",
+									Number.NEGATIVE_INFINITY,
+								),
+								update: {
+									windowMax: 1,
+									windowMin: Number.NEGATIVE_INFINITY,
+								},
+							},
+						],
+
+						[
+							"Errors if positive infinity",
+							{
+								error: new NotANumberError(
+									"windowMin",
+									Number.POSITIVE_INFINITY,
+								),
+								update: {
+									windowMax: 1,
+									windowMin: Number.POSITIVE_INFINITY as unknown as number,
+								},
+							},
+						],
+
+						[
+							"Accepts if undefined",
+							{
+								error: null,
+								update: {
+									windowMax: 1,
+									windowMin: undefined,
+								},
+							},
+						],
+
+						[
+							"Accepts the minimum number",
+							{
+								error: null,
+								update: {
+									windowMax: 1,
+									windowMin: -Number.MAX_VALUE,
+								},
+							},
+						],
+
+						[
+							"Accepts the number before the maximum number",
+							{
+								error: null,
+								update: {
+									windowMax: Number.MAX_VALUE,
+									windowMin: Number.MAX_VALUE - 2 ** 970,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"windowMax",
+					[
+						[
+							"Errors if non-numeric",
+							{
+								error: new NotANumberError("windowMax", "test"),
+								update: {
+									windowMax: "test" as unknown as number,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Errors if NaN",
+							{
+								error: new NotANumberError("windowMax", Number.NaN),
+								update: {
+									windowMax: Number.NaN as unknown as number,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Errors if negative infinity",
+							{
+								error: new NotANumberError(
+									"windowMax",
+									Number.NEGATIVE_INFINITY,
+								),
+								update: {
+									windowMax: Number.NEGATIVE_INFINITY,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Errors if positive infinity",
+							{
+								error: new NotANumberError(
+									"windowMax",
+									Number.POSITIVE_INFINITY,
+								),
+								update: {
+									windowMax: Number.POSITIVE_INFINITY,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Accepts if undefined",
+							{
+								error: null,
+								update: {
+									windowMax: undefined,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Accepts the number after the minimum number",
+							{
+								error: null,
+								update: {
+									windowMax: -Number.MAX_VALUE + 2 ** 970,
+									windowMin: -Number.MAX_VALUE,
+								},
+							},
+						],
+
+						[
+							"Accepts the maximum number",
+							{
+								error: null,
+								update: {
+									windowMax: Number.MAX_VALUE,
+									windowMin: 0,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"windowRange",
+					[
+						[
+							"Minimum is equal to maximum",
+							{
+								error: new IntervalExtremaError("windowExtrema", 0, 0),
+								update: {
+									windowMax: 0,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Minimum is greater than maximum",
+							{
+								error: new IntervalExtremaError("windowExtrema", 1, 0),
+								update: {
+									windowMax: 0,
+									windowMin: 1,
+								},
+							},
+						],
+					],
+				],
+			];
+
+			describe.each(testGroups)("%s", (_groupTitle, testList) => {
+				test.each(testList)("%s", (_testTitle, testParams) => {
+					const error = testParams.error;
+					const update = testParams.update;
+
+					const state = new ScrollState({
+						max: 1,
+						min: 0,
+						windowMax: 1,
+						windowMin: 0,
+						windowSize: 100,
+					});
+
+					const receivedError = getError(() =>
+						state.setWindowExtrema(update.windowMin, update.windowMax),
+					);
+
+					if (error) {
+						expect(receivedError).toBeInstanceOf(Error);
+						expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+							...error,
+						});
+					} else {
+						expect(receivedError).toBeUndefined();
+					}
+				});
+			});
+		});
+
+		describe("Result", () => {
+			const testGroups: readonly (readonly [
+				string,
+				readonly (readonly [
+					string,
+					Readonly<{
+						expected: Readonly<{
+							scrollPos: number;
+							scrollSize: number;
+							size: number;
+							windowMax: number;
+							windowMin: number;
+						}>;
+						parameters: ScrollStateParameters;
+						update: Readonly<{
+							windowMax: number;
+							windowMin: number;
+						}>;
+					}>,
+				])[],
+			])[] = [
+				[
+					"Shrink",
+					[
+						[
+							"Window before minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 10,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: -10,
+									windowMin: -15,
+								},
+							},
+						],
+
+						[
+							"Window containing minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 10,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 7,
+									windowMin: 2,
+								},
+							},
+						],
+
+						[
+							"Window start at minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 10,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 10,
+									windowMin: 5,
+								},
+							},
+						],
+
+						[
+							"Window start between minimum and maximum",
+							{
+								expected: {
+									scrollPos: 10,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 20,
+									windowMin: 15,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 20,
+									windowMin: 15,
+								},
+							},
+						],
+
+						[
+							"Window end at maximum",
+							{
+								expected: {
+									scrollPos: 20,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 30,
+									windowMin: 25,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 30,
+									windowMin: 25,
+								},
+							},
+						],
+
+						[
+							"Window containing maximum",
+							{
+								expected: {
+									scrollPos: 20,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 30,
+									windowMin: 25,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 33,
+									windowMin: 28,
+								},
+							},
+						],
+
+						[
+							"Window after maximum",
+							{
+								expected: {
+									scrollPos: 20,
+									scrollSize: 25,
+									size: 25,
+									windowMax: 30,
+									windowMin: 25,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 40,
+									windowMin: 35,
+								},
+							},
+						],
+					],
+				],
+				[
+					"Preserve",
+					[
+						[
+							"Window before minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 15,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: -5,
+									windowMin: -15,
+								},
+							},
+						],
+
+						[
+							"Window containing minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 15,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 10,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Window start at minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 15,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 15,
+									windowMin: 5,
+								},
+							},
+						],
+
+						[
+							"Window start between minimum and maximum",
+							{
+								expected: {
+									scrollPos: 5,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 25,
+									windowMin: 15,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 25,
+									windowMin: 15,
+								},
+							},
+						],
+
+						[
+							"Window end at maximum",
+							{
+								expected: {
+									scrollPos: 8,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 30,
+									windowMin: 20,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 30,
+									windowMin: 20,
+								},
+							},
+						],
+
+						[
+							"Window containing maximum",
+							{
+								expected: {
+									scrollPos: 8,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 30,
+									windowMin: 20,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 35,
+									windowMin: 25,
+								},
+							},
+						],
+
+						[
+							"Window after maximum",
+							{
+								expected: {
+									scrollPos: 8,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 30,
+									windowMin: 20,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 45,
+									windowMin: 35,
+								},
+							},
+						],
+					],
+				],
+				[
+					"Expand",
+					[
+						[
+							"Window before minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 20,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: -5,
+									windowMin: -20,
+								},
+							},
+						],
+
+						[
+							"Window containing minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 20,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 15,
+									windowMin: 0,
+								},
+							},
+						],
+
+						[
+							"Window start at minimum",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 20,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 20,
+									windowMin: 5,
+								},
+							},
+						],
+
+						[
+							"Window start between minimum and maximum",
+							{
+								expected: {
+									scrollPos: 2,
+									scrollSize: 9,
+									size: 8,
+									windowMax: 25,
+									windowMin: 10,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 25,
+									windowMin: 10,
+								},
+							},
+						],
+
+						[
+							"Window end at maximum",
+							{
+								expected: {
+									scrollPos: 3,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 29,
+									windowMin: 14,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 29,
+									windowMin: 14,
+								},
+							},
+						],
+
+						[
+							"Window containing maximum",
+							{
+								expected: {
+									scrollPos: 3,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 29,
+									windowMin: 14,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 40,
+									windowMin: 25,
+								},
+							},
+						],
+
+						[
+							"Window after maximum",
+							{
+								expected: {
+									scrollPos: 3,
+									scrollSize: 8,
+									size: 8,
+									windowMax: 29,
+									windowMin: 14,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 50,
+									windowMin: 35,
+								},
+							},
+						],
+
+						[
+							"Window range equal to range",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 5,
+									size: 5,
+									windowMax: 29,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 59,
+									windowMin: 35,
+								},
+							},
+						],
+
+						[
+							"Window range greater than range",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 5,
+									size: 5,
+									windowMax: 29,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 29,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 100,
+									windowMin: 0,
+								},
+							},
+						],
+					],
+				],
+			];
+
+			describe.each(testGroups)("%s", (_groupTitle, testList) => {
+				test.each(testList)("%s", (_testTitle, testParams) => {
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
+
+					const expectedRange =
+						(parameters.max ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.min ?? Number.MIN_SAFE_INTEGER);
+					const expectedWindowRange = Math.min(
+						update.windowMax - update.windowMin,
+						expectedRange,
+					);
+
+					const state = new ScrollState(parameters);
+					const resultState = state.setWindowExtrema(
+						update.windowMin,
+						update.windowMax,
+					);
+
+					expect(state).toBe(resultState);
+					expect(state.min).toBeCloseTo(
+						parameters.min ?? Number.MIN_SAFE_INTEGER,
+					);
+					expect(state.max).toBeCloseTo(
+						parameters.max ?? Number.MAX_SAFE_INTEGER,
+					);
+					expect(state.windowMin).toBeCloseTo(expected.windowMin);
+					expect(state.windowMax).toBeCloseTo(expected.windowMax);
+					expect(state.range).toBeCloseTo(expectedRange);
+					expect(state.size).toBeCloseTo(expected.size);
+					expect(state.windowRange).toBeCloseTo(expectedWindowRange);
+					expect(state.windowSize).toEqual(parameters.windowSize);
+					expect(state.scrollPos).toEqual(expected.scrollPos);
+					expect(state.scrollSize).toEqual(expected.scrollSize);
+				});
+			});
+		});
+	});
+
+	describe("setWindowSize", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					update: Readonly<{
+						windowSize: number;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if undefined",
+					{
+						error: new NotASizeError("windowSize", undefined),
+						update: {
+							windowSize: undefined as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if non-numeric",
+					{
+						error: new NotASizeError("windowSize", "test"),
+						update: {
+							windowSize: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if NaN",
+					{
+						error: new NotASizeError("windowSize", Number.NaN),
+						update: {
+							windowSize: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if negative",
+					{
+						error: new SizeRangeError("windowSize", -1, ZERO, true, 100, true),
+						update: {
+							windowSize: -1 as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if less than zero",
+					{
+						error: new SizeRangeError(
+							"windowSize",
+							-Number.MIN_VALUE,
+							ZERO,
+							true,
+							100,
+							true,
+						),
+						update: {
+							windowSize: -Number.MIN_VALUE,
+						},
+					},
+				],
+
+				[
+					"Errors if infinite",
+					{
+						error: new NotASizeError("windowSize", Number.POSITIVE_INFINITY),
+						update: {
+							windowSize: Number.POSITIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if greater than maximum element size",
+					{
+						error: new SizeRangeError("windowSize", 200, ZERO, true, 100, true),
+						update: {
+							windowSize: 200,
+						},
+					},
+				],
+
+				[
+					"Accepts the minimum non-zero number",
+					{
+						error: null,
+						update: {
+							windowSize: Number.MIN_VALUE,
+						},
+					},
+				],
+
+				[
+					"Accepts maximum element size",
+					{
+						error: null,
+						update: {
+							windowSize: 100,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const update = testParams.update;
+
+				const state = new ScrollState({
+					max: 1,
+					maxElementSize: 100,
+					min: 0,
+					windowMax: 1,
+					windowMin: 0,
+					windowSize: 50,
+				});
+
+				const receivedError = getError(() =>
+					state.setWindowSize(update.windowSize),
+				);
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testGroups: readonly (readonly [
+				string,
+				readonly (readonly [
+					string,
+					Readonly<{
+						expected: Readonly<{
+							scrollPos: number;
+							scrollSize: number;
+							size: number;
+						}>;
+						parameters: ScrollStateParameters;
+						update: Readonly<{
+							windowSize: number;
+						}>;
+					}>,
+				])[],
+			])[] = [
+				[
+					"No Scroll",
+					[
+						[
+							"Shrink",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 1,
+									size: 1,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 30,
+									windowMin: 5,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 1,
+								},
+							},
+						],
+
+						[
+							"Preserve",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 5,
+									size: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 30,
+									windowMin: 5,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 5,
+								},
+							},
+						],
+
+						[
+							"Expand",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 20,
+									size: 20,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 30,
+									windowMin: 5,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 20,
+								},
+							},
+						],
+					],
+				],
+				[
+					"Static Scroll",
+					[
+						[
+							"Shrink",
+							{
+								expected: {
+									scrollPos: 1,
+									scrollSize: 3,
+									size: 2.5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 1,
+								},
+							},
+						],
+
+						[
+							"Preserve",
+							{
+								expected: {
+									scrollPos: 3,
+									scrollSize: 13,
+									size: 12.5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 5,
+								},
+							},
+						],
+
+						[
+							"Expand to static scroll",
+							{
+								expected: {
+									scrollPos: 5,
+									scrollSize: 25,
+									size: 25,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									windowSize: 10,
+								},
+							},
+						],
+
+						[
+							"Expand to virtual scroll",
+							{
+								expected: {
+									scrollPos: 5,
+									scrollSize: 20,
+									size: 100,
+								},
+								parameters: {
+									max: 105,
+									maxElementSize: 20,
+									min: 5,
+									resyncThresholdSize: 2,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 1,
+								},
+								update: {
+									windowSize: 10,
+								},
+							},
+						],
+					],
+				],
+				[
+					"Virtual Scroll",
+					[
+						[
+							"Shrink",
+							{
+								expected: {
+									scrollPos: 5,
+									scrollSize: 20,
+									size: 100,
+								},
+								parameters: {
+									max: 105,
+									maxElementSize: 20,
+									min: 5,
+									resyncThresholdSize: 2,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 20,
+								},
+								update: {
+									windowSize: 10,
+								},
+							},
+						],
+
+						[
+							"Preserve",
+							{
+								expected: {
+									scrollPos: 4,
+									scrollSize: 28,
+									size: 200,
+								},
+								parameters: {
+									max: 105,
+									maxElementSize: 20,
+									min: 5,
+									resyncThresholdSize: 2,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 20,
+								},
+								update: {
+									windowSize: 20,
+								},
+							},
+						],
+
+						[
+							"Expand to virtual scroll",
+							{
+								expected: {
+									scrollPos: 4,
+									scrollSize: 28,
+									size: 200,
+								},
+								parameters: {
+									max: 105,
+									maxElementSize: 20,
+									min: 5,
+									resyncThresholdSize: 2,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 15,
+								},
+								update: {
+									windowSize: 20,
+								},
+							},
+						],
+
+						[
+							"Expand to static scroll",
+							{
+								expected: {
+									scrollPos: 1,
+									scrollSize: 11,
+									size: 10,
+								},
+								parameters: {
+									max: 105,
+									maxElementSize: 20,
+									min: 5,
+									resyncThresholdSize: 2,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 20,
+								},
+								update: {
+									windowSize: 1,
+								},
+							},
+						],
+					],
+				],
+			];
+
+			describe.each(testGroups)("%s", (_groupTitle, testList) => {
+				test.each(testList)("%s", (_testTitle, testParams) => {
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
+
+					const expectedRange =
+						(parameters.max ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.min ?? Number.MIN_SAFE_INTEGER);
+					const expectedWindowRange =
+						(parameters.windowMax ?? Number.MAX_SAFE_INTEGER) -
+						(parameters.windowMin ?? Number.MIN_SAFE_INTEGER);
+
+					const state = new ScrollState(parameters);
+					const resultState = state.setWindowSize(update.windowSize);
+
+					expect(state).toBe(resultState);
+					expect(state.min).toBeCloseTo(
+						parameters.min ?? Number.MIN_SAFE_INTEGER,
+					);
+					expect(state.max).toBeCloseTo(
+						parameters.max ?? Number.MAX_SAFE_INTEGER,
+					);
+					expect(state.windowMin).toBeCloseTo(
+						parameters.windowMin ?? Number.MIN_SAFE_INTEGER,
+					);
+					expect(state.windowMax).toBeCloseTo(
+						parameters.windowMax ?? Number.MAX_SAFE_INTEGER,
+					);
+					expect(state.range).toBeCloseTo(expectedRange);
+					expect(state.size).toBeCloseTo(expected.size);
+					expect(state.windowRange).toBeCloseTo(expectedWindowRange);
+					expect(state.windowSize).toEqual(update.windowSize);
 					expect(state.scrollPos).toEqual(expected.scrollPos);
 					expect(state.scrollSize).toEqual(expected.scrollSize);
 				});

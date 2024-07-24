@@ -8,22 +8,16 @@ import {
 	useState,
 } from "react";
 
-import {
-	type TimeChangeHandler,
-	Timeline,
-	type TimelineRef,
-} from "../lib/Timeline.tsx";
-import { TimeChangeEventDetail, type Timeline2 } from "../lib/Timeline2.tsx";
+import type { Scroller } from "../lib/Scroller.tsx";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 import "./App.css";
+import { WindowChangeEventDetail } from "../lib/events.ts";
 
 const timelineClass = css`
 	height: 400px;
 	margin-bottom: 1em;
 	max-height: 80vh;
-	max-width: 100%;
 	outline: 1px solid #f00;
-	width: 800px;
 
 	&::part(divider-top),
 	&::part(divider-left),
@@ -40,11 +34,17 @@ const buttonsClass = css`
 
 const daysInWeek = 7;
 
-const formatter = new Intl.DateTimeFormat(undefined, {
-	dateStyle: "short",
-	timeStyle: "medium",
+const formatter = new Intl.DateTimeFormat("en-CA", {
+	year: "numeric",
+	month: "2-digit",
+	day: "2-digit",
+	hour: "2-digit",
+	hourCycle: "h23",
+	minute: "2-digit",
+	second: "2-digit",
+	era: "short",
 });
-const formatDate = (time: number): string => formatter.format(new Date(time));
+const formatDate = (time: number): string => formatter.format(time);
 
 const formatDateRange = (start: number, end: number): string =>
 	`${formatDate(start)} - ${formatDate(end)}`;
@@ -55,54 +55,49 @@ const datesFromStartDate = (start: number): [number, number] => [
 ];
 
 export const App = (): ReactNode => {
-	const timelineRef = useRef<TimelineRef>(null);
-	const timeline2Ref = useRef<Timeline2>(null);
+	const timelineRef = useRef<Scroller>(null);
 
-	const [initTimeStart, initTimeEnd] = useMemo<[number, number]>(
-		() => datesFromStartDate(Date.now()),
-		[],
+	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
+		datesFromStartDate(Date.now()),
 	);
-	const [initTimeStart2, initTimeEnd2] = useMemo<[number, number]>(
-		() => datesFromStartDate(Date.now()),
-		[],
-	);
+	const [[extremaStart, extremaEnd], setExtrema] = useState<[number, number]>([
+		TIME_MIN,
+		TIME_MAX,
+	]);
 
-	const [datesString, setDatesString] = useState<string>(() =>
-		formatDateRange(initTimeStart, initTimeEnd),
-	);
-	const [datesString2, setDatesString2] = useState<string>(() =>
-		formatDateRange(initTimeStart2, initTimeEnd2),
-	);
+	// Bug report: https://github.com/biomejs/biome/issues/3512
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
+	const windowString = useMemo(() => {
+		return formatDateRange(windowStart, windowEnd);
+	}, [windowEnd, windowStart]);
 
-	const onTimeChangeHandler: TimeChangeHandler = (times) => {
-		const timeEnd = times.timeEnd;
-		const timeStart = times.timeStart;
+	// Bug report: https://github.com/biomejs/biome/issues/3512
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
+	const extremaString = useMemo(() => {
+		return formatDateRange(extremaStart, extremaEnd);
+	}, [extremaEnd, extremaStart]);
 
-		setDatesString(formatDateRange(timeStart, timeEnd));
-	};
+	useEffect(() => {
+		const x = setTimeout(() => {
+			setWindow([3000, 7000]);
+			setExtrema([0, 10000]);
+		}, 1000000);
+
+		return () => {
+			clearTimeout(x);
+		};
+	});
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setTime(...datesFromStartDate(TIME_MIN));
-
-		timeline2Ref.current?.setTimeWindowExtrema(...datesFromStartDate(TIME_MIN));
+		timelineRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
 	};
 
 	const onNowClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setTime(...datesFromStartDate(Date.now()));
-
-		timeline2Ref.current?.setTimeWindowExtrema(
-			...datesFromStartDate(Date.now()),
-		);
+		timelineRef.current?.setHWindow(...datesFromStartDate(Date.now()));
 	};
 
 	const onEndOfTimeClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setTime(
-			...datesFromStartDate(
-				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
-			),
-		);
-
-		timeline2Ref.current?.setTimeWindowExtrema(
+		timelineRef.current?.setHWindow(
 			...datesFromStartDate(
 				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
 			),
@@ -110,16 +105,25 @@ export const App = (): ReactNode => {
 	};
 
 	useEffect(() => {
-		timeline2Ref.current?.addEventListener("timeChange", (e) => {
-			if (
-				e instanceof CustomEvent &&
-				e.detail instanceof TimeChangeEventDetail
-			) {
-				setDatesString2(
-					formatDateRange(e.detail.timeWindowMin, e.detail.timeWindowMax),
-				);
-			}
-		});
+		const timeline = timelineRef.current;
+		if (timeline) {
+			const windowChangeHandler: EventListener = (e) => {
+				if (
+					e instanceof CustomEvent &&
+					e.detail instanceof WindowChangeEventDetail
+				) {
+					setWindow([e.detail.hWindowMin, e.detail.hWindowMax]);
+				}
+			};
+
+			timeline.addEventListener("windowChange", windowChangeHandler);
+
+			return () => {
+				timeline.removeEventListener("windowChange", windowChangeHandler);
+			};
+		}
+
+		return undefined;
 	}, []);
 
 	return (
@@ -136,25 +140,27 @@ export const App = (): ReactNode => {
 				</button>
 			</div>
 
-			<div>{datesString2}</div>
+			<div>Extrema: {extremaString}</div>
+			<div>Window: {windowString}</div>
 			<div>
-				<cg-timeline
+				<cg-scroller
 					class={timelineClass}
-					defaultResizeHandles
-					ref={timeline2Ref}
-					timeExtrema={[TIME_MIN, TIME_MAX]}
-					windowTime={[initTimeStart2, initTimeEnd2]}
+					default-resize-handles
+					h-end-extrema={[50, 150]}
+					h-end-size={100}
+					h-window={[windowStart, windowEnd]}
+					h-extrema={[extremaStart, extremaEnd]}
+					h-start-extrema={[50, 150]}
+					h-start-size={100}
+					ref={timelineRef}
+					v-end-extrema={[50, 150]}
+					v-end-size={100}
+					v-extrema={[0, 1000]}
+					v-start-extrema={[50, 150]}
+					v-start-size={100}
+					v-window={[0, 100]}
 				/>
 			</div>
-
-			<div>{datesString}</div>
-			<Timeline
-				className={timelineClass}
-				initTimeEnd={initTimeEnd}
-				initTimeStart={initTimeStart}
-				onTimeChange={onTimeChangeHandler}
-				ref={timelineRef}
-			/>
 		</>
 	);
 };

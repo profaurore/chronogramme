@@ -864,6 +864,7 @@ const barResizeHandler = (
 
 	let timelineMinSize: number;
 
+	// biome-ignore lint/nursery/useDefaultSwitchClause: Exhaustive cases.
 	switch (dimension) {
 		case BarSide.Bottom: {
 			containerSize = container.clientHeight;
@@ -936,7 +937,7 @@ type BarsDimensions = {
 	[Key in BarSide]: number;
 };
 
-export type TimeChangeHandler = (
+type TimeChangeHandler = (
 	times: Readonly<{
 		lastTimeEnd: number;
 		lastTimeStart: number;
@@ -945,7 +946,7 @@ export type TimeChangeHandler = (
 	}>,
 ) => void;
 
-export interface TimelineRef {
+interface TimelineRef {
 	setTime: (timeStart: number, timeEnd: number) => void;
 }
 

@@ -1,4 +1,9 @@
 export type Interval = [minimum: number, maximum: number];
+export type IntervalString = `${number},${number}`;
+type OptionalInterval = [
+	minimum: number | undefined,
+	maximum: number | undefined,
+];
 
 /** Math */
 export const ZERO = 0;
@@ -147,7 +152,7 @@ export class NotASizeError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super("Size is not a finite number.");
+		super(`Size is not a finite number. Given: ${value}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -175,7 +180,9 @@ export class SizeRangeError extends Error {
 		maximum: number,
 		inclusiveMaximum: boolean,
 	) {
-		super("Size is outside the valid range.");
+		super(
+			`Size is outside the valid range. Expected: ${minimum} ${inclusiveMinimum ? "≤" : "<"} x ${inclusiveMaximum ? "≤" : "<"} ${maximum}; Given: ${value}.`,
+		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -192,7 +199,7 @@ export class NotAPositionError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super("Position is not a finite number.");
+		super(`Position is not a finite number. Given: ${value}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -214,7 +221,9 @@ export class PositionRangeError extends Error {
 		minimum: number,
 		maximum: number,
 	) {
-		super("Position is outside the valid range.");
+		super(
+			`Position is outside the valid range. Expected: ${minimum} < x < ${maximum}; Given: ${value}.`,
+		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -229,7 +238,7 @@ export class NotANumberError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super("Value is not a finite number.");
+		super(`Value is not a finite number. Given: ${value}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -313,7 +322,9 @@ export class IntervalExtremaError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, minimum: number, maximum: number) {
-		super("Interval minimum must be less than maximum.");
+		super(
+			`Interval minimum must be less than maximum. Given: ${minimum}–${maximum}.`,
+		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.minimum = minimum;
@@ -358,7 +369,39 @@ export const validateSizeInterval: (
 	validateSize(minName, intervalMin, ZERO, true, Number.MAX_VALUE, true);
 	validateSize(maxName, intervalMax, ZERO, true, Number.MAX_VALUE, true);
 
-	if (intervalMin >= intervalMax) {
+	if (intervalMin > intervalMax) {
 		throw new IntervalExtremaError(extremaName, intervalMin, intervalMax);
 	}
+};
+
+// parses, but does not validate
+export const parseIntegerAttribute = (
+	value: string | null,
+): number | undefined => {
+	return value === null
+		? undefined
+		: Number.parseInt(value, PARSE_INTERVAL_RADIX);
+};
+
+const PARSE_INTERVAL_NUM_PARTS = 2;
+const PARSE_INTERVAL_RADIX = 10;
+
+// parses, but does not validate
+export const parseIntervalAttribute = (
+	name: string,
+	value: string | null,
+): OptionalInterval => {
+	if (value === null) {
+		return [undefined, undefined];
+	}
+
+	const [parsedStart, parsedEnd] = value
+		.split(",", PARSE_INTERVAL_NUM_PARTS)
+		.map((value) => Number.parseFloat(value));
+
+	if (parsedStart === undefined || parsedEnd === undefined) {
+		throw new TypeError(`${name} must be formatted as "[minimum],[maximum]".`);
+	}
+
+	return [parsedStart, parsedEnd];
 };

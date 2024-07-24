@@ -1,17 +1,15 @@
-import { validateFunction } from "./function";
+import { SIDE_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
+import { RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
+import { validateFunction } from "./function.ts";
 import {
 	SizeRangeError,
 	ZERO,
 	validateSize,
 	validateSizeInterval,
-} from "./math";
-import { validateObject } from "./object";
-import {
-	consumeSideResizeStrategy,
-	proportionalResizeStrategy,
-} from "./stickyBarStateStrategies";
+} from "./math.ts";
+import { validateObject } from "./object.ts";
 
-export interface StickyBarStateParameters {
+export interface BarStateParameters {
 	endMax?: number;
 	endMin?: number;
 	endSize?: number;
@@ -40,19 +38,19 @@ const optionalParameters = [
 ] as const;
 
 /** The strategy used when the container is resized. */
-export type ResizeStrategy = (
-	state: Readonly<StickyBarState>,
-	targetSize: number,
-) => { endSize?: number | undefined; startSize?: number | undefined };
+export type ResizeStrategy = (state: Readonly<BarState>) => {
+	endSize?: number | undefined;
+	startSize?: number | undefined;
+};
 
 /** The strategy used when a side is expanded beyond it's available space. */
 export type SideResizeStrategy = (
-	state: Readonly<StickyBarState>,
+	state: Readonly<BarState>,
 	isStart: boolean,
 	targetSize: number | undefined,
 ) => { barSize?: number | undefined; otherBarSize?: number | undefined };
 
-export class StickyBarState {
+export class BarState {
 	#endIdeal: number | undefined;
 
 	#endMax: number;
@@ -71,8 +69,6 @@ export class StickyBarState {
 
 	#size: number;
 
-	#sizeIdeal: number;
-
 	#startIdeal: number | undefined;
 
 	#startMax: number;
@@ -81,7 +77,7 @@ export class StickyBarState {
 
 	#startSize: number | undefined;
 
-	public constructor(parameters: Readonly<StickyBarStateParameters>) {
+	public constructor(parameters: Readonly<BarStateParameters>) {
 		validateObject(
 			"parameters",
 			parameters,
@@ -93,17 +89,15 @@ export class StickyBarState {
 		const endMin = parameters.endMin ?? ZERO;
 		const endSize = parameters.endSize;
 		const middleMin = parameters.middleMin ?? ZERO;
-		const resizeStrategy =
-			parameters.resizeStrategy ?? proportionalResizeStrategy;
+		const resizeStrategy = parameters.resizeStrategy ?? RESIZE_STRATEGY_DEFAULT;
 		const sideResizeStrategy =
-			parameters.sideResizeStrategy ?? consumeSideResizeStrategy;
+			parameters.sideResizeStrategy ?? SIDE_RESIZE_STRATEGY_DEFAULT;
 		const size = parameters.size;
 		const startMax = parameters.startMax ?? Number.MAX_VALUE;
 		const startMin = parameters.startMin ?? ZERO;
 		const startSize = parameters.startSize;
 
 		validateSize("size", size, ZERO, true, Number.MAX_VALUE, true);
-		this.#sizeIdeal = size;
 		this.#size = size;
 
 		validateSizeInterval("startMin", "startMax", "startExtrema", [
@@ -151,26 +145,11 @@ export class StickyBarState {
 	}
 
 	private recalcSides(): void {
-		const size = this.#size;
-		const middleMin = this.#middleMin;
-		const startMin = this.#startMin;
-		const endMin = this.#endMin;
+		const newSizes = this.#resizeStrategy(this);
+		this.validateResizeStrategyReturn(newSizes);
 
-		const minSizeWithBars = middleMin + startMin + endMin;
-
-		if (size < minSizeWithBars) {
-			this.#startSize = undefined;
-			this.#endSize = undefined;
-		} else if (size > minSizeWithBars) {
-			const newSizes = this.#resizeStrategy(this, size);
-			this.validateResizeStrategyReturn(newSizes);
-
-			this.#startSize = newSizes.startSize;
-			this.#endSize = newSizes.endSize;
-		} else {
-			this.#startSize = startMin;
-			this.#endSize = endMin;
-		}
+		this.#startSize = newSizes.startSize;
+		this.#endSize = newSizes.endSize;
 	}
 
 	private setSidesSizeAndIdeal(
@@ -185,7 +164,6 @@ export class StickyBarState {
 		this.#endSize = endSize;
 		this.#endIdeal = endSize;
 
-		this.#sizeIdeal = size;
 		this.#middleIdeal = size - (startSize ?? ZERO) - (endSize ?? ZERO);
 	}
 
@@ -228,7 +206,7 @@ export class StickyBarState {
 		const containerSize = this.#size;
 		const middleMin = this.#middleMin;
 
-		const sumBarMax = containerSize - middleMin;
+		const sumBarMax = Math.max(ZERO, containerSize - middleMin);
 		const sumBarsSize = (startSize ?? ZERO) + (endSize ?? ZERO);
 
 		if (sumBarsSize > sumBarMax) {
@@ -300,6 +278,13 @@ export class StickyBarState {
 		}
 	}
 
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `startSize`
+	 */
 	public setEndExtrema(
 		endMin: number | undefined = ZERO,
 		endMax: number | undefined = Number.MAX_VALUE,
@@ -312,6 +297,16 @@ export class StickyBarState {
 		this.recalcSides();
 	}
 
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endIdeal`
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `sizeIdeal`
+	 * - `startIdeal`
+	 * - `startSize`
+	 */
 	public setEndSize(endSize: number | undefined): void {
 		if (endSize !== undefined) {
 			validateSize("endSize", endSize, ZERO, true, Number.MAX_VALUE, true);
@@ -334,7 +329,14 @@ export class StickyBarState {
 		this.setSidesSizeAndIdeal(newSizes.otherBarSize, newSizes.barSize);
 	}
 
-	public setMiddleMin(middleMin: number | undefined): void {
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `startSize`
+	 */
+	public setMiddleMin(middleMin: number | undefined = ZERO): void {
 		validateSize("middleMin", middleMin, ZERO, true, Number.MAX_VALUE, true);
 
 		const size = this.#size;
@@ -350,15 +352,29 @@ export class StickyBarState {
 		this.recalcSides();
 	}
 
-	public setResizeStrategy(resizeStrategy: ResizeStrategy | undefined): void {
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `startSize`
+	 */
+	public setResizeStrategy(
+		resizeStrategy: ResizeStrategy | undefined = RESIZE_STRATEGY_DEFAULT,
+	): void {
 		validateFunction<ResizeStrategy>("resizeStrategy", resizeStrategy);
 		this.#resizeStrategy = resizeStrategy;
 
 		this.recalcSides();
 	}
 
+	/**
+	 * This method has no side effects.
+	 */
 	public setSideResizeStrategy(
-		sideResizeStrategy: SideResizeStrategy | undefined,
+		sideResizeStrategy:
+			| SideResizeStrategy
+			| undefined = SIDE_RESIZE_STRATEGY_DEFAULT,
 	): void {
 		validateFunction<SideResizeStrategy>(
 			"sideResizeStrategy",
@@ -367,6 +383,13 @@ export class StickyBarState {
 		this.#sideResizeStrategy = sideResizeStrategy;
 	}
 
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `startSize`
+	 */
 	public setSize(size: number): void {
 		validateSize("size", size, ZERO, true, Number.MAX_VALUE, true);
 
@@ -375,6 +398,13 @@ export class StickyBarState {
 		this.recalcSides();
 	}
 
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `startSize`
+	 */
 	public setStartExtrema(
 		startMin: number | undefined = ZERO,
 		startMax: number | undefined = Number.MAX_VALUE,
@@ -390,6 +420,16 @@ export class StickyBarState {
 		this.recalcSides();
 	}
 
+	/**
+	 * The value of these fields may change as a side effect of calling this
+	 * method.
+	 * - `endIdeal`
+	 * - `endSize`
+	 * - `middleSize`
+	 * - `sizeIdeal`
+	 * - `startIdeal`
+	 * - `startSize`
+	 */
 	public setStartSize(startSize: number | undefined): void {
 		if (startSize !== undefined) {
 			validateSize("startSize", startSize, ZERO, true, Number.MAX_VALUE, true);
@@ -450,10 +490,6 @@ export class StickyBarState {
 
 	public get size(): number {
 		return this.#size;
-	}
-
-	public get sizeIdeal(): number {
-		return this.#sizeIdeal;
 	}
 
 	public get startIdeal(): number | undefined {

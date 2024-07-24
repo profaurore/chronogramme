@@ -1,25 +1,52 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { NotAFunctionError } from "./function";
+import {
+	BarState,
+	type BarStateParameters,
+	type ResizeStrategy,
+	type SideResizeStrategy,
+} from "./barState.ts";
+import type * as barStateUtilsImport from "./barStateUtils.ts";
+import { NotAFunctionError } from "./function.ts";
 import {
 	IntervalExtremaError,
 	NotASizeError,
 	SizeRangeError,
 	ZERO,
-} from "./math";
+} from "./math.ts";
 import {
 	MissingPropertyError,
 	NotAnObjectError,
 	UnknownPropertyError,
-} from "./object";
-import {
-	type SideResizeStrategy,
-	StickyBarState,
-	type StickyBarStateParameters,
-} from "./stickyBarState";
-import { getError } from "./testUtils";
+} from "./object.ts";
+import { getError } from "./testUtils.ts";
 
-describe("StickyBarState", () => {
+const mockedResizeStrategyDefault = vi.fn();
+const mockedSideResizeStrategyDefault = vi.fn();
+
+vi.mock("./barStateUtils.ts", async (importOriginal) => {
+	const original = await importOriginal<typeof barStateUtilsImport>();
+
+	return {
+		...original,
+
+		// biome-ignore lint/style/useNamingConvention: Mocked constant.
+		get RESIZE_STRATEGY_DEFAULT() {
+			return mockedResizeStrategyDefault.mockImplementation(
+				original.RESIZE_STRATEGY_DEFAULT,
+			);
+		},
+
+		// biome-ignore lint/style/useNamingConvention: Mocked constant.
+		get SIDE_RESIZE_STRATEGY_DEFAULT() {
+			return mockedSideResizeStrategyDefault.mockImplementation(
+				original.SIDE_RESIZE_STRATEGY_DEFAULT,
+			);
+		},
+	};
+});
+
+describe("BarState", () => {
 	describe("Constructor", () => {
 		describe("Input Validation", () => {
 			const testGroups: readonly (readonly [
@@ -28,7 +55,7 @@ describe("StickyBarState", () => {
 					string,
 					Readonly<{
 						error: Readonly<Error> | null;
-						parameters: StickyBarStateParameters;
+						parameters: BarStateParameters;
 					}>,
 				])[],
 			])[] = [
@@ -39,7 +66,7 @@ describe("StickyBarState", () => {
 							"Errors if undefined",
 							{
 								error: new NotAnObjectError("parameters", undefined),
-								parameters: undefined as unknown as StickyBarStateParameters,
+								parameters: undefined as unknown as BarStateParameters,
 							},
 						],
 
@@ -47,14 +74,28 @@ describe("StickyBarState", () => {
 							"Errors if not an object",
 							{
 								error: new NotAnObjectError("parameters", 123),
-								parameters: 123 as unknown as StickyBarStateParameters,
+								parameters: 123 as unknown as BarStateParameters,
 							},
 						],
 
 						[
 							"Contains an unknown key",
 							{
-								error: new UnknownPropertyError("parameters", "incorrectKey"),
+								error: new UnknownPropertyError(
+									"parameters",
+									{
+										endMax: 150,
+										endMin: 5,
+										endSize: 100,
+										middleMin: 130,
+										size: 600,
+										startMax: 350,
+										startMin: 250,
+										startSize: 300,
+										incorrectKey: true,
+									},
+									"incorrectKey",
+								),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -83,7 +124,7 @@ describe("StickyBarState", () => {
 								error: new NotASizeError("endMax", "test"),
 								parameters: {
 									endMax: "test" as unknown as Exclude<
-										StickyBarStateParameters["endMax"],
+										BarStateParameters["endMax"],
 										undefined
 									>,
 									endMin: 5,
@@ -217,7 +258,7 @@ describe("StickyBarState", () => {
 								parameters: {
 									endMax: 150,
 									endMin: "test" as unknown as Exclude<
-										StickyBarStateParameters["endMin"],
+										BarStateParameters["endMin"],
 										undefined
 									>,
 									endSize: 100,
@@ -346,7 +387,7 @@ describe("StickyBarState", () => {
 						[
 							"Minimum is equal to maximum",
 							{
-								error: new IntervalExtremaError("endExtrema", 0, 0),
+								error: new SizeRangeError("endSize", 100, 0, true, 0, true),
 								parameters: {
 									endMax: 0,
 									endMin: 0,
@@ -390,7 +431,7 @@ describe("StickyBarState", () => {
 									endMax: 150,
 									endMin: 5,
 									endSize: "test" as unknown as Exclude<
-										StickyBarStateParameters["endSize"],
+										BarStateParameters["endSize"],
 										undefined
 									>,
 									middleMin: 130,
@@ -534,7 +575,7 @@ describe("StickyBarState", () => {
 									endMin: 5,
 									endSize: 100,
 									middleMin: "test" as unknown as Exclude<
-										StickyBarStateParameters["middleMin"],
+										BarStateParameters["middleMin"],
 										undefined
 									>,
 									size: 600,
@@ -637,7 +678,7 @@ describe("StickyBarState", () => {
 						],
 
 						[
-							"Accepts the number before the maximum number",
+							"Accepts the maximum number",
 							{
 								error: null,
 								parameters: {
@@ -668,7 +709,7 @@ describe("StickyBarState", () => {
 									endSize: 100,
 									middleMin: 130,
 									resizeStrategy: "test" as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -689,7 +730,7 @@ describe("StickyBarState", () => {
 									endSize: 100,
 									middleMin: 130,
 									resizeStrategy: (() => "test") as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -705,6 +746,7 @@ describe("StickyBarState", () => {
 							{
 								error: new UnknownPropertyError(
 									"resizeStrategy()",
+									{ endSize: 100, startSize: 300, incorrectKey: true },
 									"incorrectKey",
 								),
 								parameters: {
@@ -741,7 +783,7 @@ describe("StickyBarState", () => {
 										endSize: "test",
 										startSize: 300,
 									})) as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -820,7 +862,7 @@ describe("StickyBarState", () => {
 										endSize: Number.POSITIVE_INFINITY,
 										startSize: 300,
 									})) as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -872,7 +914,7 @@ describe("StickyBarState", () => {
 										endSize: 100,
 										startSize: "test",
 									})) as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -951,7 +993,7 @@ describe("StickyBarState", () => {
 										endSize: 100,
 										startSize: Number.POSITIVE_INFINITY,
 									})) as unknown as Exclude<
-										StickyBarStateParameters["resizeStrategy"],
+										BarStateParameters["resizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -1379,7 +1421,7 @@ describe("StickyBarState", () => {
 									endSize: 100,
 									middleMin: 130,
 									sideResizeStrategy: "test" as unknown as Exclude<
-										StickyBarStateParameters["sideResizeStrategy"],
+										BarStateParameters["sideResizeStrategy"],
 										undefined
 									>,
 									size: 600,
@@ -1406,6 +1448,27 @@ describe("StickyBarState", () => {
 								},
 							},
 						],
+
+						[
+							"Accepts if a function",
+							{
+								error: null,
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									sideResizeStrategy: () => ({
+										barSize: undefined,
+										otherBarSize: undefined,
+									}),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+							},
+						],
 					],
 				],
 
@@ -1415,7 +1478,19 @@ describe("StickyBarState", () => {
 						[
 							"Errors if undefined",
 							{
-								error: new MissingPropertyError("parameters", "size"),
+								error: new MissingPropertyError(
+									"parameters",
+									{
+										endMax: 150,
+										endMin: 5,
+										endSize: 100,
+										middleMin: 130,
+										startMax: 350,
+										startMin: 250,
+										startSize: 300,
+									},
+									"size",
+								),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -1424,7 +1499,7 @@ describe("StickyBarState", () => {
 									startMax: 350,
 									startMin: 250,
 									startSize: 300,
-									...({} as Pick<StickyBarStateParameters, "size">),
+									...({} as Pick<BarStateParameters, "size">),
 								},
 							},
 						],
@@ -1439,7 +1514,7 @@ describe("StickyBarState", () => {
 									endSize: 100,
 									middleMin: 130,
 									size: "test" as unknown as Exclude<
-										StickyBarStateParameters["size"],
+										BarStateParameters["size"],
 										undefined
 									>,
 									startMax: 350,
@@ -1557,7 +1632,7 @@ describe("StickyBarState", () => {
 									middleMin: 130,
 									size: 600,
 									startMax: "test" as unknown as Exclude<
-										StickyBarStateParameters["startMax"],
+										BarStateParameters["startMax"],
 										undefined
 									>,
 									startMin: 250,
@@ -1691,7 +1766,7 @@ describe("StickyBarState", () => {
 									size: 600,
 									startMax: 350,
 									startMin: "test" as unknown as Exclude<
-										StickyBarStateParameters["startMin"],
+										BarStateParameters["startMin"],
 										undefined
 									>,
 									startSize: 300,
@@ -1815,7 +1890,7 @@ describe("StickyBarState", () => {
 						[
 							"Minimum is equal to maximum",
 							{
-								error: new IntervalExtremaError("startExtrema", 0, 0),
+								error: new SizeRangeError("startSize", 300, 0, true, 0, true),
 								parameters: {
 									endMax: 150,
 									endMin: 5,
@@ -1864,7 +1939,7 @@ describe("StickyBarState", () => {
 									startMax: 350,
 									startMin: 250,
 									startSize: "test" as unknown as Exclude<
-										StickyBarStateParameters["startSize"],
+										BarStateParameters["startSize"],
 										undefined
 									>,
 								},
@@ -2011,7 +2086,7 @@ describe("StickyBarState", () => {
 					const error = testParams.error;
 					const parameters = testParams.parameters;
 
-					const receivedError = getError(() => new StickyBarState(parameters));
+					const receivedError = getError(() => new BarState(parameters));
 
 					if (error) {
 						expect(receivedError).toBeInstanceOf(Error);
@@ -2037,19 +2112,17 @@ describe("StickyBarState", () => {
 						middleIdeal: number;
 						middleMin: number;
 						middleSize: number;
-						resizeStrategyCalled: boolean;
 						size: number;
-						sizeIdeal: number;
 						startIdeal: number;
 						startMax: number;
 						startMin: number;
 						startSize: number | undefined;
 					}>;
-					parameters: StickyBarStateParameters;
+					parameters: BarStateParameters;
 				}>,
 			])[] = [
 				[
-					"Greater than minimums",
+					"Sides greater than minimums",
 					{
 						expected: {
 							endIdeal: 100,
@@ -2059,9 +2132,7 @@ describe("StickyBarState", () => {
 							middleIdeal: 200,
 							middleMin: 130,
 							middleSize: 205,
-							resizeStrategyCalled: true,
 							size: 600,
-							sizeIdeal: 600,
 							startIdeal: 300,
 							startMax: 350,
 							startMin: 250,
@@ -2088,7 +2159,7 @@ describe("StickyBarState", () => {
 					},
 				],
 				[
-					"Equal to minimums",
+					"Sides equal to minimums",
 					{
 						expected: {
 							endIdeal: 100,
@@ -2098,9 +2169,7 @@ describe("StickyBarState", () => {
 							middleIdeal: 130,
 							middleMin: 130,
 							middleSize: 130,
-							resizeStrategyCalled: false,
 							size: 385,
-							sizeIdeal: 385,
 							startIdeal: 300,
 							startMax: 350,
 							startMin: 250,
@@ -2127,19 +2196,17 @@ describe("StickyBarState", () => {
 					},
 				],
 				[
-					"Less than minimums",
+					"Start collapsed and end not collapsed",
 					{
 						expected: {
 							endIdeal: 100,
 							endMax: 150,
 							endMin: 5,
-							endSize: undefined,
+							endSize: 5,
 							middleIdeal: 130,
 							middleMin: 130,
 							middleSize: 200,
-							resizeStrategyCalled: false,
-							size: 200,
-							sizeIdeal: 200,
+							size: 205,
 							startIdeal: 300,
 							startMax: 350,
 							startMin: 250,
@@ -2151,8 +2218,82 @@ describe("StickyBarState", () => {
 							endSize: 100,
 							middleMin: 130,
 							resizeStrategy: vi.fn(() => ({
-								endSize: 120,
-								startSize: 275,
+								endSize: 5,
+								startSize: undefined,
+							})),
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 110,
+								otherBarSize: 115,
+							})),
+							size: 205,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+					},
+				],
+				[
+					"Start not collapsed and end collapsed",
+					{
+						expected: {
+							endIdeal: 100,
+							endMax: 150,
+							endMin: 5,
+							endSize: undefined,
+							middleIdeal: 130,
+							middleMin: 130,
+							middleSize: 200,
+							size: 450,
+							startIdeal: 300,
+							startMax: 350,
+							startMin: 250,
+							startSize: 250,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: 250,
+							})),
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 110,
+								otherBarSize: 115,
+							})),
+							size: 450,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+					},
+				],
+				[
+					"Both sides collapsed, minimum size",
+					{
+						expected: {
+							endIdeal: 100,
+							endMax: 150,
+							endMin: 5,
+							endSize: undefined,
+							middleIdeal: 130,
+							middleMin: 130,
+							middleSize: 200,
+							size: 200,
+							startIdeal: 300,
+							startMax: 350,
+							startMin: 250,
+							startSize: undefined,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: undefined,
 							})),
 							sideResizeStrategy: vi.fn(() => ({
 								barSize: 110,
@@ -2165,13 +2306,50 @@ describe("StickyBarState", () => {
 						},
 					},
 				],
+				[
+					"Both sides collapsed, less than minimum size",
+					{
+						expected: {
+							endIdeal: 100,
+							endMax: 150,
+							endMin: 5,
+							endSize: undefined,
+							middleIdeal: 130,
+							middleMin: 130,
+							middleSize: 100,
+							size: 100,
+							startIdeal: 300,
+							startMax: 350,
+							startMin: 250,
+							startSize: undefined,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: undefined,
+							})),
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 110,
+								otherBarSize: 115,
+							})),
+							size: 100,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+					},
+				],
 			];
 
 			test.each(testList)("%s", (_testTitle, testParams) => {
 				const expected = testParams.expected;
 				const parameters = testParams.parameters;
 
-				const state = new StickyBarState(parameters);
+				const state = new BarState(parameters);
 
 				expect(state.endIdeal).toBeCloseTo(expected.endIdeal);
 				expect(state.endMax).toBeCloseTo(expected.endMax);
@@ -2188,20 +2366,12 @@ describe("StickyBarState", () => {
 				expect(state.middleSize).toBeCloseTo(expected.middleSize);
 				expect(state.resizeStrategy).toBe(parameters.resizeStrategy);
 
-				if (expected.resizeStrategyCalled) {
-					expect(state.resizeStrategy).toHaveBeenCalledTimes(1);
-					expect(state.resizeStrategy).toHaveBeenCalledWith(
-						state,
-						parameters.size,
-					);
-				} else {
-					expect(state.resizeStrategy).toHaveBeenCalledTimes(0);
-				}
+				expect(state.resizeStrategy).toHaveBeenCalledTimes(1);
+				expect(state.resizeStrategy).toHaveBeenCalledWith(state);
 
 				expect(state.sideResizeStrategy).toBe(parameters.sideResizeStrategy);
 				expect(state.sideResizeStrategy).toHaveBeenCalledTimes(0);
 				expect(state.size).toBeCloseTo(expected.size);
-				expect(state.sizeIdeal).toBeCloseTo(expected.sizeIdeal);
 				expect(state.startIdeal).toBeCloseTo(expected.startIdeal);
 				expect(state.startMax).toBeCloseTo(expected.startMax);
 				expect(state.startMin).toBeCloseTo(expected.startMin);
@@ -2215,13 +2385,599 @@ describe("StickyBarState", () => {
 		});
 	});
 
+	describe("setEndExtrema", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					parameters?: Readonly<Partial<BarStateParameters>>;
+					update: Readonly<{
+						endMax: number | undefined;
+						endMin: number | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if minimum is non-numeric",
+					{
+						error: new NotASizeError("endMin", "test"),
+						update: {
+							endMax: 123,
+							endMin: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is NaN",
+					{
+						error: new NotASizeError("endMin", Number.NaN),
+						update: {
+							endMax: 123,
+							endMin: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is negative infinity",
+					{
+						error: new NotASizeError("endMin", Number.NEGATIVE_INFINITY),
+						update: {
+							endMax: 123,
+							endMin: Number.NEGATIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is positive infinity",
+					{
+						error: new NotASizeError("endMin", Number.POSITIVE_INFINITY),
+						update: {
+							endMax: 123,
+							endMin: Number.POSITIVE_INFINITY as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is non-numeric",
+					{
+						error: new NotASizeError("endMax", "test"),
+						update: {
+							endMin: 123,
+							endMax: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is NaN",
+					{
+						error: new NotASizeError("endMax", Number.NaN),
+						update: {
+							endMin: 123,
+							endMax: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is negative infinity",
+					{
+						error: new NotASizeError("endMax", Number.NEGATIVE_INFINITY),
+						update: {
+							endMin: 123,
+							endMax: Number.NEGATIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is positive infinity",
+					{
+						error: new NotASizeError("endMax", Number.POSITIVE_INFINITY),
+						update: {
+							endMin: 123,
+							endMax: Number.POSITIVE_INFINITY as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if time min is greater than time max",
+					{
+						error: new IntervalExtremaError("endExtrema", 1, 0),
+						update: {
+							endMax: 0,
+							endMin: 1,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							endMax: undefined,
+							endMin: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts if min is equal to max",
+					{
+						error: null,
+						update: {
+							endMax: 0,
+							endMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts zero and the number after zero",
+					{
+						error: null,
+						update: {
+							endMax: Number.MIN_VALUE,
+							endMin: ZERO,
+						},
+					},
+				],
+
+				[
+					"Accepts the number before the maximum number and the maximum number",
+					{
+						error: null,
+						update: {
+							endMax: Number.MAX_VALUE,
+							endMin: Number.MAX_VALUE - 2 ** 970,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with valid keys, both undefined",
+					{
+						error: null,
+						parameters: {
+							sideResizeStrategy: () => ({
+								barSize: undefined,
+								otherBarSize: undefined,
+							}),
+						},
+						update: {
+							endMax: 100,
+							endMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with zeros",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: ZERO,
+							}),
+							startMin: ZERO,
+						},
+						update: {
+							endMax: 100,
+							endMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with an other bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMax: Number.MAX_VALUE,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: Number.MAX_VALUE,
+								otherBarSize: ZERO,
+							}),
+							size: Number.MAX_VALUE,
+							startMin: ZERO,
+						},
+						update: {
+							endMax: 100,
+							endMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with a bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: Number.MAX_VALUE,
+							}),
+							size: Number.MAX_VALUE,
+							startMax: Number.MAX_VALUE,
+						},
+						update: {
+							endMax: 100,
+							endMin: 0,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const parameters = testParams.parameters;
+				const update = testParams.update;
+
+				const state = new BarState({
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+					...parameters,
+				});
+
+				const receivedError = getError(() => {
+					state.setEndExtrema(update.endMin, update.endMax);
+				});
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testGroups: readonly (readonly [
+				string,
+				readonly (readonly [
+					string,
+					Readonly<{
+						expected: Readonly<{
+							endSize: number | undefined;
+							middleSize: number;
+							startSize: number | undefined;
+						}>;
+						parameters: BarStateParameters;
+						update: Readonly<{
+							endMax: number | undefined;
+							endMin: number | undefined;
+						}>;
+					}>,
+				])[],
+			])[] = [
+				[
+					"Shrink",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 50,
+									middleSize: 250,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 50,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 50,
+									endMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 125,
+									endMin: 50,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 150,
+									middleSize: 150,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 150,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 200,
+									endMin: 150,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"Preserve",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 50,
+									middleSize: 250,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 100,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi
+										.fn()
+										.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+										.mockReturnValue({ endSize: 50, startSize: 300 }),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 50,
+									endMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 170,
+									endMin: 25,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 105,
+									middleSize: 195,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 105,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 250,
+									endMin: 105,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"Expand",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 75,
+									middleSize: 225,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 100,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi
+										.fn()
+										.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+										.mockReturnValue({ endSize: 75, startSize: 300 }),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 75,
+									endMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 200,
+									endMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 105,
+									middleSize: 195,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 105,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									endMax: 300,
+									endMin: 105,
+								},
+							},
+						],
+					],
+				],
+			];
+
+			describe.each(testGroups)("%s", (_groupTitle, testList) => {
+				test.each(testList)("%s", (_testTitle, testParams) => {
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
+
+					const state = new BarState(parameters);
+					state.setEndExtrema(update.endMin, update.endMax);
+
+					expect(state.size).toEqual(parameters.size);
+					expect(state.startMin).toEqual(parameters.startMin);
+					expect(state.startMax).toEqual(parameters.startMax);
+					expect(state.startSize).toEqual(parameters.startSize);
+					expect(state.middleMin).toEqual(parameters.middleMin);
+					expect(state.middleSize).toEqual(expected.middleSize);
+					expect(state.endMin).toEqual(update.endMin);
+					expect(state.endMax).toEqual(update.endMax);
+					expect(state.endSize).toEqual(expected.endSize);
+				});
+			});
+		});
+	});
+
 	describe("setEndSize", () => {
 		describe("Input Validation", () => {
 			const testList: readonly (readonly [
 				string,
 				Readonly<{
 					error: Readonly<Error> | null;
-					parameters?: Readonly<Partial<StickyBarStateParameters>>;
+					parameters?: Readonly<Partial<BarStateParameters>>;
 					update: Readonly<{
 						endSize: number | undefined;
 					}>;
@@ -2300,6 +3056,7 @@ describe("StickyBarState", () => {
 					{
 						error: new UnknownPropertyError(
 							"sideResizeStrategy()",
+							{ incorrectKey: true },
 							"incorrectKey",
 						),
 						parameters: {
@@ -2600,7 +3357,7 @@ describe("StickyBarState", () => {
 				const parameters = testParams.parameters;
 				const update = testParams.update;
 
-				const state = new StickyBarState({
+				const state = new BarState({
 					endMax: 150,
 					endMin: 5,
 					endSize: 100,
@@ -2636,7 +3393,7 @@ describe("StickyBarState", () => {
 						middleSize: number;
 						startSize: number | undefined;
 					}>;
-					parameters: StickyBarStateParameters;
+					parameters: BarStateParameters;
 					update: Readonly<{
 						endSize: number | undefined;
 					}>;
@@ -2655,6 +3412,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: undefined,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2679,6 +3440,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 5,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2703,6 +3468,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 5,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2727,6 +3496,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 50,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2751,6 +3524,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 100,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2775,6 +3552,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 125,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2799,6 +3580,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 150,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2823,6 +3608,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 150,
+								otherBarSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -2840,7 +3629,7 @@ describe("StickyBarState", () => {
 				const parameters = testParams.parameters;
 				const update = testParams.update;
 
-				const state = new StickyBarState(parameters);
+				const state = new BarState(parameters);
 				state.setEndSize(update.endSize);
 
 				expect(state.size).toEqual(parameters.size);
@@ -2852,6 +3641,712 @@ describe("StickyBarState", () => {
 				expect(state.endMin).toEqual(parameters.endMin);
 				expect(state.endMax).toEqual(parameters.endMax);
 				expect(state.endSize).toEqual(expected.endSize);
+			});
+		});
+	});
+
+	describe("setMiddleMin", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					parameters?: Readonly<Partial<BarStateParameters>>;
+					update: Readonly<{
+						middleMin: number | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if non-numeric",
+					{
+						error: new NotASizeError("middleMin", "test"),
+						update: {
+							middleMin: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if NaN",
+					{
+						error: new NotASizeError("middleMin", Number.NaN),
+						update: {
+							middleMin: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if negative infinity",
+					{
+						error: new NotASizeError("middleMin", Number.NEGATIVE_INFINITY),
+						update: {
+							middleMin: Number.NEGATIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if positive infinity",
+					{
+						error: new NotASizeError("middleMin", Number.POSITIVE_INFINITY),
+						update: {
+							middleMin: Number.POSITIVE_INFINITY as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							middleMin: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts zero",
+					{
+						error: null,
+						update: {
+							middleMin: ZERO,
+						},
+					},
+				],
+
+				[
+					"Accepts the number before the maximum number",
+					{
+						error: null,
+						update: {
+							middleMin: Number.MAX_VALUE - 2 ** 970,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with valid keys, both undefined",
+					{
+						error: null,
+						parameters: {
+							sideResizeStrategy: () => ({
+								barSize: undefined,
+								otherBarSize: undefined,
+							}),
+						},
+						update: {
+							middleMin: 300,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with zeros",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: ZERO,
+							}),
+							startMin: ZERO,
+						},
+						update: {
+							middleMin: 300,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with an other bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMax: Number.MAX_VALUE,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: Number.MAX_VALUE,
+								otherBarSize: ZERO,
+							}),
+							size: Number.MAX_VALUE,
+							startMin: ZERO,
+						},
+						update: {
+							middleMin: 300,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with a bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: Number.MAX_VALUE,
+							}),
+							size: Number.MAX_VALUE,
+							startMax: Number.MAX_VALUE,
+						},
+						update: {
+							middleMin: 300,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const parameters = testParams.parameters;
+				const update = testParams.update;
+
+				const state = new BarState({
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+					...parameters,
+				});
+
+				const receivedError = getError(() => {
+					state.setMiddleMin(update.middleMin);
+				});
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					expected: Readonly<{
+						endSize: number | undefined;
+						middleSize: number;
+						startSize: number | undefined;
+					}>;
+					parameters: BarStateParameters;
+					update: Readonly<{
+						middleMin: number | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Shrink to undefined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: undefined,
+						},
+					},
+				],
+
+				[
+					"Shrink to defined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: 50,
+						},
+					},
+				],
+
+				[
+					"No change from undefined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: undefined,
+						},
+					},
+				],
+
+				[
+					"No change from defined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: 130,
+						},
+					},
+				],
+
+				[
+					"No change from undefined with collapsed sides",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+						},
+						update: {
+							middleMin: undefined,
+						},
+					},
+				],
+
+				[
+					"Expand from undefined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: 100,
+						},
+					},
+				],
+
+				[
+					"Expand from defined",
+					{
+						expected: {
+							endSize: 100,
+							middleSize: 200,
+							startSize: 300,
+						},
+						parameters: {
+							endMax: 150,
+							endMin: 5,
+							endSize: 100,
+							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+							size: 600,
+							startMax: 350,
+							startMin: 250,
+							startSize: 300,
+						},
+						update: {
+							middleMin: 200,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const expected = testParams.expected;
+				const parameters = testParams.parameters;
+				const update = testParams.update;
+
+				const state = new BarState(parameters);
+				state.setMiddleMin(update.middleMin);
+
+				expect(state.size).toEqual(parameters.size);
+				expect(state.startMin).toEqual(parameters.startMin);
+				expect(state.startMax).toEqual(parameters.startMax);
+				expect(state.startSize).toEqual(expected.startSize);
+				expect(state.middleMin).toEqual(update.middleMin ?? ZERO);
+				expect(state.middleSize).toEqual(expected.middleSize);
+				expect(state.endMin).toEqual(parameters.endMin);
+				expect(state.endMax).toEqual(parameters.endMax);
+				expect(state.endSize).toEqual(expected.endSize);
+			});
+		});
+	});
+
+	describe("setResizeStrategy", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					update: Readonly<{
+						resizeStrategy: ResizeStrategy | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if not a function",
+					{
+						error: new NotAFunctionError("resizeStrategy", "test"),
+						update: {
+							resizeStrategy: "test" as unknown as Exclude<
+								BarStateParameters["resizeStrategy"],
+								undefined
+							>,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							resizeStrategy: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts if a function",
+					{
+						error: null,
+						update: {
+							resizeStrategy: () => ({
+								endSize: undefined,
+								startSize: undefined,
+							}),
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const update = testParams.update;
+
+				const state = new BarState({
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+				});
+
+				const receivedError = getError(() => {
+					state.setResizeStrategy(update.resizeStrategy);
+				});
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					update: Readonly<{
+						resizeStrategy: ResizeStrategy | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Undefined falls back to the default strategy",
+					{
+						update: {
+							resizeStrategy: undefined,
+						},
+					},
+				],
+
+				[
+					"Defined function",
+					{
+						update: {
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const update = testParams.update;
+				const parameters = {
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+				};
+
+				const state = new BarState(parameters);
+				vi.clearAllMocks();
+				state.setResizeStrategy(update.resizeStrategy);
+
+				expect(state.size).toEqual(parameters.size);
+				expect(state.startMax).toEqual(parameters.startMax);
+				expect(state.startSize).toEqual(parameters.startSize);
+				expect(state.middleMin).toEqual(parameters.middleMin);
+				expect(state.middleSize).toEqual(200);
+				expect(state.endMin).toEqual(parameters.endMin);
+				expect(state.endMax).toEqual(parameters.endMax);
+				expect(state.endSize).toEqual(parameters.endSize);
+
+				expect(state.resizeStrategy).toEqual(
+					update.resizeStrategy ?? mockedResizeStrategyDefault,
+				);
+				expect(state.resizeStrategy).toHaveBeenCalledTimes(1);
+				expect(state.resizeStrategy).toHaveBeenCalledWith(state);
+			});
+		});
+	});
+
+	describe("setSideResizeStrategy", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					update: Readonly<{
+						sideResizeStrategy: SideResizeStrategy | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if not a function",
+					{
+						error: new NotAFunctionError("sideResizeStrategy", "test"),
+						update: {
+							sideResizeStrategy: "test" as unknown as Exclude<
+								BarStateParameters["sideResizeStrategy"],
+								undefined
+							>,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							sideResizeStrategy: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts if a function",
+					{
+						error: null,
+						update: {
+							sideResizeStrategy: () => ({
+								barSize: undefined,
+								otherBarSize: undefined,
+							}),
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const update = testParams.update;
+
+				const state = new BarState({
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+				});
+
+				const receivedError = getError(() => {
+					state.setSideResizeStrategy(update.sideResizeStrategy);
+				});
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					update: Readonly<{
+						sideResizeStrategy: SideResizeStrategy | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Undefined falls back to the default strategy",
+					{
+						update: {
+							sideResizeStrategy: undefined,
+						},
+					},
+				],
+				[
+					"Defined function",
+					{
+						update: {
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: undefined,
+								otherBarSize: undefined,
+							})),
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const update = testParams.update;
+				const parameters = {
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+				};
+				const expected = {
+					middleSize: 200,
+				};
+
+				const state = new BarState(parameters);
+				vi.clearAllMocks();
+				state.setSideResizeStrategy(update.sideResizeStrategy);
+
+				expect(state.size).toEqual(parameters.size);
+				expect(state.startMax).toEqual(parameters.startMax);
+				expect(state.startSize).toEqual(parameters.startSize);
+				expect(state.middleMin).toEqual(parameters.middleMin);
+				expect(state.middleSize).toEqual(expected.middleSize);
+				expect(state.endMin).toEqual(parameters.endMin);
+				expect(state.endMax).toEqual(parameters.endMax);
+				expect(state.endSize).toEqual(parameters.endSize);
+
+				expect(state.sideResizeStrategy).toEqual(
+					update.sideResizeStrategy ?? mockedSideResizeStrategyDefault,
+				);
+				expect(state.sideResizeStrategy).toHaveBeenCalledTimes(0);
 			});
 		});
 	});
@@ -2942,7 +4437,7 @@ describe("StickyBarState", () => {
 				const error = testParams.error;
 				const update = testParams.update;
 
-				const state = new StickyBarState({
+				const state = new BarState({
 					endMax: 150,
 					endMin: 5,
 					endSize: 100,
@@ -2977,7 +4472,7 @@ describe("StickyBarState", () => {
 						middleSize: number;
 						startSize: number | undefined;
 					}>;
-					parameters: StickyBarStateParameters;
+					parameters: BarStateParameters;
 					update: Readonly<{
 						size: number;
 					}>;
@@ -2996,6 +4491,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: undefined,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3020,6 +4519,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: undefined,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3044,6 +4547,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: undefined,
+								startSize: undefined,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3068,6 +4575,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 5,
+								startSize: 250,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3092,6 +4603,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 20,
+								startSize: 250,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3116,6 +4631,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi.fn(() => ({
+								endSize: 100,
+								startSize: 300,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3140,6 +4659,10 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							resizeStrategy: vi
+								.fn()
+								.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+								.mockReturnValue({ endSize: 150, startSize: 350 }),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3157,7 +4680,8 @@ describe("StickyBarState", () => {
 				const parameters = testParams.parameters;
 				const update = testParams.update;
 
-				const state = new StickyBarState(parameters);
+				const state = new BarState(parameters);
+				vi.clearAllMocks();
 				state.setSize(update.size);
 
 				expect(state.size).toEqual(update.size);
@@ -3169,6 +4693,598 @@ describe("StickyBarState", () => {
 				expect(state.endMin).toEqual(parameters.endMin);
 				expect(state.endMax).toEqual(parameters.endMax);
 				expect(state.endSize).toEqual(expected.endSize);
+
+				expect(state.resizeStrategy).toEqual(
+					parameters.resizeStrategy ?? mockedResizeStrategyDefault,
+				);
+				expect(parameters.resizeStrategy).toHaveBeenCalledTimes(1);
+				expect(parameters.resizeStrategy).toHaveBeenCalledWith(state);
+			});
+		});
+	});
+
+	describe("setStartExtrema", () => {
+		describe("Input Validation", () => {
+			const testList: readonly (readonly [
+				string,
+				Readonly<{
+					error: Readonly<Error> | null;
+					parameters?: Readonly<Partial<BarStateParameters>>;
+					update: Readonly<{
+						startMax: number | undefined;
+						startMin: number | undefined;
+					}>;
+				}>,
+			])[] = [
+				[
+					"Errors if minimum is non-numeric",
+					{
+						error: new NotASizeError("startMin", "test"),
+						update: {
+							startMax: 123,
+							startMin: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is NaN",
+					{
+						error: new NotASizeError("startMin", Number.NaN),
+						update: {
+							startMax: 123,
+							startMin: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is negative infinity",
+					{
+						error: new NotASizeError("startMin", Number.NEGATIVE_INFINITY),
+						update: {
+							startMax: 123,
+							startMin: Number.NEGATIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if minimum is positive infinity",
+					{
+						error: new NotASizeError("startMin", Number.POSITIVE_INFINITY),
+						update: {
+							startMax: 123,
+							startMin: Number.POSITIVE_INFINITY as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is non-numeric",
+					{
+						error: new NotASizeError("startMax", "test"),
+						update: {
+							startMin: 123,
+							startMax: "test" as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is NaN",
+					{
+						error: new NotASizeError("startMax", Number.NaN),
+						update: {
+							startMin: 123,
+							startMax: Number.NaN as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is negative infinity",
+					{
+						error: new NotASizeError("startMax", Number.NEGATIVE_INFINITY),
+						update: {
+							startMin: 123,
+							startMax: Number.NEGATIVE_INFINITY,
+						},
+					},
+				],
+
+				[
+					"Errors if maximum is positive infinity",
+					{
+						error: new NotASizeError("startMax", Number.POSITIVE_INFINITY),
+						update: {
+							startMin: 123,
+							startMax: Number.POSITIVE_INFINITY as unknown as number,
+						},
+					},
+				],
+
+				[
+					"Errors if time min is greater than time max",
+					{
+						error: new IntervalExtremaError("startExtrema", 1, 0),
+						update: {
+							startMax: 0,
+							startMin: 1,
+						},
+					},
+				],
+
+				[
+					"Accepts if undefined",
+					{
+						error: null,
+						update: {
+							startMax: undefined,
+							startMin: undefined,
+						},
+					},
+				],
+
+				[
+					"Accepts if min is equal to max",
+					{
+						error: null,
+						update: {
+							startMax: 0,
+							startMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts zero and the number after zero",
+					{
+						error: null,
+						update: {
+							startMax: Number.MIN_VALUE,
+							startMin: ZERO,
+						},
+					},
+				],
+
+				[
+					"Accepts the number before the maximum number and the maximum number",
+					{
+						error: null,
+						update: {
+							startMax: Number.MAX_VALUE,
+							startMin: Number.MAX_VALUE - 2 ** 970,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with valid keys, both undefined",
+					{
+						error: null,
+						parameters: {
+							sideResizeStrategy: () => ({
+								barSize: undefined,
+								otherBarSize: undefined,
+							}),
+						},
+						update: {
+							startMax: 100,
+							startMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with zeros",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: ZERO,
+							}),
+							startMin: ZERO,
+						},
+						update: {
+							startMax: 100,
+							startMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with an other bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMax: Number.MAX_VALUE,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: Number.MAX_VALUE,
+								otherBarSize: ZERO,
+							}),
+							size: Number.MAX_VALUE,
+							startMin: ZERO,
+						},
+						update: {
+							startMax: 100,
+							startMin: 0,
+						},
+					},
+				],
+
+				[
+					"Accepts if side resize strategy return is an object with a bar size of maximum value",
+					{
+						error: null,
+						parameters: {
+							endMin: ZERO,
+							middleMin: ZERO,
+							sideResizeStrategy: () => ({
+								barSize: ZERO,
+								otherBarSize: Number.MAX_VALUE,
+							}),
+							size: Number.MAX_VALUE,
+							startMax: Number.MAX_VALUE,
+						},
+						update: {
+							startMax: 100,
+							startMin: 0,
+						},
+					},
+				],
+			];
+
+			test.each(testList)("%s", (_testTitle, testParams) => {
+				const error = testParams.error;
+				const parameters = testParams.parameters;
+				const update = testParams.update;
+
+				const state = new BarState({
+					endMax: 150,
+					endMin: 5,
+					endSize: 100,
+					middleMin: 130,
+					size: 600,
+					startMax: 350,
+					startMin: 250,
+					startSize: 300,
+					...parameters,
+				});
+
+				const receivedError = getError(() => {
+					state.setStartExtrema(update.startMin, update.startMax);
+				});
+
+				if (error) {
+					expect(receivedError).toBeInstanceOf(Error);
+					expect({ ...(receivedError as Record<string, unknown>) }).toEqual({
+						...error,
+					});
+				} else {
+					expect(receivedError).toBeUndefined();
+				}
+			});
+		});
+
+		describe("Result", () => {
+			const testGroups: readonly (readonly [
+				string,
+				readonly (readonly [
+					string,
+					Readonly<{
+						expected: Readonly<{
+							endSize: number | undefined;
+							middleSize: number;
+							startSize: number | undefined;
+						}>;
+						parameters: BarStateParameters;
+						update: Readonly<{
+							startMax: number | undefined;
+							startMin: number | undefined;
+						}>;
+					}>,
+				])[],
+			])[] = [
+				[
+					"Shrink",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 450,
+									startSize: 50,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi
+										.fn()
+										.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+										.mockReturnValue({ endSize: 100, startSize: 50 }),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 50,
+									startMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 325,
+									startMin: 275,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 195,
+									startSize: 305,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 305,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 350,
+									startMin: 305,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"Preserve",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 400,
+									startSize: 100,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 100,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi
+										.fn()
+										.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+										.mockReturnValue({ endSize: 100, startSize: 100 }),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 100,
+									startMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 300,
+									startMin: 200,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 195,
+									startSize: 305,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 305,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 405,
+									startMin: 305,
+								},
+							},
+						],
+					],
+				],
+
+				[
+					"Expand",
+					[
+						[
+							"Range less than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 300,
+									startSize: 200,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 100,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi
+										.fn()
+										.mockReturnValueOnce({ endSize: 100, startSize: 300 })
+										.mockReturnValue({ endSize: 100, startSize: 200 }),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 200,
+									startMin: 0,
+								},
+							},
+						],
+
+						[
+							"Range contains ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 200,
+									startSize: 300,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 300,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 400,
+									startMin: 200,
+								},
+							},
+						],
+
+						[
+							"Range greater than ideal value",
+							{
+								expected: {
+									endSize: 100,
+									middleSize: 195,
+									startSize: 305,
+								},
+								parameters: {
+									endMax: 150,
+									endMin: 5,
+									endSize: 100,
+									middleMin: 130,
+									resizeStrategy: vi.fn(() => ({
+										endSize: 100,
+										startSize: 305,
+									})),
+									size: 600,
+									startMax: 350,
+									startMin: 250,
+									startSize: 300,
+								},
+								update: {
+									startMax: 505,
+									startMin: 305,
+								},
+							},
+						],
+					],
+				],
+			];
+
+			describe.each(testGroups)("%s", (_groupTitle, testList) => {
+				test.each(testList)("%s", (_testTitle, testParams) => {
+					const expected = testParams.expected;
+					const parameters = testParams.parameters;
+					const update = testParams.update;
+
+					const state = new BarState(parameters);
+					state.setStartExtrema(update.startMin, update.startMax);
+
+					expect(state.size).toEqual(parameters.size);
+					expect(state.startMin).toEqual(update.startMin);
+					expect(state.startMax).toEqual(update.startMax);
+					expect(state.startSize).toEqual(expected.startSize);
+					expect(state.middleMin).toEqual(parameters.middleMin);
+					expect(state.middleSize).toEqual(expected.middleSize);
+					expect(state.endMin).toEqual(parameters.endMin);
+					expect(state.endMax).toEqual(parameters.endMax);
+					expect(state.endSize).toEqual(expected.endSize);
+				});
 			});
 		});
 	});
@@ -3179,7 +5295,7 @@ describe("StickyBarState", () => {
 				string,
 				Readonly<{
 					error: Readonly<Error> | null;
-					parameters?: Readonly<Partial<StickyBarStateParameters>>;
+					parameters?: Readonly<Partial<BarStateParameters>>;
 					update: Readonly<{
 						startSize: number | undefined;
 					}>;
@@ -3258,6 +5374,7 @@ describe("StickyBarState", () => {
 					{
 						error: new UnknownPropertyError(
 							"sideResizeStrategy()",
+							{ incorrectKey: true },
 							"incorrectKey",
 						),
 						parameters: {
@@ -3558,7 +5675,7 @@ describe("StickyBarState", () => {
 				const update = testParams.update;
 				const parameters = testParams.parameters;
 
-				const state = new StickyBarState({
+				const state = new BarState({
 					endMax: 150,
 					endMin: 5,
 					endSize: 100,
@@ -3594,7 +5711,7 @@ describe("StickyBarState", () => {
 						middleSize: number;
 						startSize: number | undefined;
 					}>;
-					parameters: StickyBarStateParameters;
+					parameters: BarStateParameters;
 					update: Readonly<{
 						startSize: number | undefined;
 					}>;
@@ -3604,15 +5721,19 @@ describe("StickyBarState", () => {
 					"Collapse",
 					{
 						expected: {
-							endSize: undefined,
-							middleSize: 300,
-							startSize: 300,
+							endSize: 100,
+							middleSize: 500,
+							startSize: undefined,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: undefined,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3628,15 +5749,19 @@ describe("StickyBarState", () => {
 					"Shrink to less than the minimum",
 					{
 						expected: {
-							endSize: 5,
-							middleSize: 295,
-							startSize: 300,
+							endSize: 100,
+							middleSize: 250,
+							startSize: 250,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 250,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
@@ -3652,22 +5777,26 @@ describe("StickyBarState", () => {
 					"Shrink to equal to the minimum",
 					{
 						expected: {
-							endSize: 5,
-							middleSize: 295,
-							startSize: 300,
+							endSize: 100,
+							middleSize: 250,
+							startSize: 250,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 250,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 5,
+							startSize: 250,
 						},
 					},
 				],
@@ -3676,22 +5805,26 @@ describe("StickyBarState", () => {
 					"Shrink to greater than the minimum",
 					{
 						expected: {
-							endSize: 50,
-							middleSize: 250,
-							startSize: 300,
+							endSize: 100,
+							middleSize: 225,
+							startSize: 275,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 275,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 50,
+							startSize: 275,
 						},
 					},
 				],
@@ -3709,13 +5842,17 @@ describe("StickyBarState", () => {
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 300,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 100,
+							startSize: 300,
 						},
 					},
 				],
@@ -3724,22 +5861,26 @@ describe("StickyBarState", () => {
 					"Expand to less than the maximum",
 					{
 						expected: {
-							endSize: 125,
+							endSize: 100,
 							middleSize: 175,
-							startSize: 300,
+							startSize: 325,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 325,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 125,
+							startSize: 325,
 						},
 					},
 				],
@@ -3748,22 +5889,26 @@ describe("StickyBarState", () => {
 					"Expand to equal to the maximum",
 					{
 						expected: {
-							endSize: 150,
+							endSize: 100,
 							middleSize: 150,
-							startSize: 300,
+							startSize: 350,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 350,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 150,
+							startSize: 350,
 						},
 					},
 				],
@@ -3772,22 +5917,26 @@ describe("StickyBarState", () => {
 					"Expand to greater than the maximum",
 					{
 						expected: {
-							endSize: 150,
+							endSize: 100,
 							middleSize: 150,
-							startSize: 300,
+							startSize: 350,
 						},
 						parameters: {
 							endMax: 150,
 							endMin: 5,
 							endSize: 100,
 							middleMin: 130,
+							sideResizeStrategy: vi.fn(() => ({
+								barSize: 350,
+								otherBarSize: 100,
+							})),
 							size: 600,
 							startMax: 350,
 							startMin: 250,
 							startSize: 300,
 						},
 						update: {
-							startSize: 200,
+							startSize: 400,
 						},
 					},
 				],
@@ -3798,8 +5947,8 @@ describe("StickyBarState", () => {
 				const parameters = testParams.parameters;
 				const update = testParams.update;
 
-				const state = new StickyBarState(parameters);
-				state.setEndSize(update.startSize);
+				const state = new BarState(parameters);
+				state.setStartSize(update.startSize);
 
 				expect(state.size).toEqual(parameters.size);
 				expect(state.startMin).toEqual(parameters.startMin);

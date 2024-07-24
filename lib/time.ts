@@ -1,6 +1,4 @@
-import { type Interval, clampMinWins } from "./math.ts";
-
-type TimeInterval = Interval;
+import { clampMinWins } from "./math.ts";
 
 export const TIME_MIN = -8.64e15;
 
@@ -61,48 +59,4 @@ export const clampTimeIntervalProperties = (
 	}
 
 	return clampTimeInterval(start, end, minimum, maximum);
-};
-
-const daysInWeek = 7;
-
-// update to only the default case?
-export const getTimeInterval = (start?: number, end?: number): TimeInterval => {
-	if (start !== undefined && end !== undefined && end > start) {
-		return [start, end];
-	}
-
-	if (start !== undefined || end === undefined) {
-		const startDate = new Date(start ?? Date.now());
-
-		return [
-			startDate.getTime(),
-			Math.min(startDate.setDate(startDate.getDate() + daysInWeek), TIME_MAX),
-		];
-	}
-
-	const endDate = new Date(end);
-
-	return [
-		Math.max(endDate.setDate(endDate.getDate() - daysInWeek), TIME_MIN),
-		end,
-	];
-};
-
-// parses, but does not validate
-export const parseTimeInterval = (
-	name: string,
-	value: string,
-): TimeInterval => {
-	const numParts = 2;
-	const decimal = 10;
-
-	const [parsedStart, parsedEnd] = value
-		.split(",", numParts)
-		.map((value) => Number.parseInt(value, decimal));
-
-	if (parsedStart === undefined || parsedEnd === undefined) {
-		throw new TypeError(`${name} must be formatted as "[minimum],[maximum]".`);
-	}
-
-	return [parsedStart, parsedEnd];
 };

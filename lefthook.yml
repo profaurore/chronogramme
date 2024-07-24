@@ -10,7 +10,7 @@ pre-push:
 pre-commit:
   commands:
     code-fix:
-      run: yarn biome check --apply .
+      run: yarn biome check --write .
       stage_fixed: true
     css-fix:
       run: yarn stylelint --fix {staged_files}

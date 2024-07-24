@@ -4,7 +4,7 @@ export class NotAnObjectError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super("Value is not an object.");
+		super(`Value is not an object. Given: ${value}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -16,10 +16,19 @@ export class MissingPropertyError extends Error {
 
 	public readonly valueName: string;
 
-	public constructor(valueName: string, property: string) {
-		super("Object is missing a required property.");
+	public readonly value: Record<string, unknown>;
+
+	public constructor(
+		valueName: string,
+		value: Record<string, unknown>,
+		property: string,
+	) {
+		super(
+			`Object is missing a required property. Expected: ${property}; Given: ${value}.`,
+		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
+		this.value = value;
 		this.property = property;
 	}
 }
@@ -29,10 +38,19 @@ export class UnknownPropertyError extends Error {
 
 	public readonly valueName: string;
 
-	public constructor(valueName: string, property: string) {
-		super("Object contains an unknown property.");
+	public readonly value: Record<string, unknown>;
+
+	public constructor(
+		valueName: string,
+		value: Record<string, unknown>,
+		property: string,
+	) {
+		super(
+			`Object contains an unknown property. Expected: not ${property}; Given: ${value}.`,
+		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
+		this.value = value;
 		this.property = property;
 	}
 }
@@ -57,7 +75,7 @@ export const validateObject: (
 
 	for (const property of requiredProperties) {
 		if (!(property in value)) {
-			throw new MissingPropertyError(valueName, property);
+			throw new MissingPropertyError(valueName, value, property);
 		}
 	}
 
@@ -68,7 +86,7 @@ export const validateObject: (
 				optionalProperties.includes(property)
 			)
 		) {
-			throw new UnknownPropertyError(valueName, property);
+			throw new UnknownPropertyError(valueName, value, property);
 		}
 	}
 };
