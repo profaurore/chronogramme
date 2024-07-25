@@ -1,5 +1,4 @@
 import type { ResizeStrategy } from "./barState.ts";
-
 import { UNIT, ZERO, clampMaxWins } from "./math.ts";
 
 interface FlexSegment {

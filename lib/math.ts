@@ -17,9 +17,6 @@ export const HALF = 0.5;
 /** Double value. */
 export const DOUBLE = 2;
 
-/** One hundred percent. */
-export const UNIT_PERCENT = 100;
-
 /**
  * Clamps a value between two values.
  *

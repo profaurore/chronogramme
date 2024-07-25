@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-
 import { clampMinWins, mean } from "./math.ts";
 
 describe("clamp", () => {

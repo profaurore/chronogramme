@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { constrainSideResizeStrategy } from "./barSideResizeStrategies.ts";
-import { consumeSideResizeStrategy } from "./barSideResizeStrategies.ts";
+import {
+	constrainSideResizeStrategy,
+	consumeSideResizeStrategy,
+} from "./barSideResizeStrategies.ts";
 import {
 	BarState,
 	type BarStateParameters,

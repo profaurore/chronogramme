@@ -1,4 +1,4 @@
-class NotAStringError extends Error {
+export class NotAStringError extends Error {
 	public readonly value: unknown;
 
 	public readonly valueName: string;
@@ -11,7 +11,7 @@ class NotAStringError extends Error {
 	}
 }
 
-class UnknownStringOptionError extends Error {
+export class UnknownStringOptionError extends Error {
 	public readonly options: readonly string[];
 
 	public readonly value: unknown;

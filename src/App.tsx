@@ -7,11 +7,10 @@ import {
 	useRef,
 	useState,
 } from "react";
-
-import type { Scroller } from "../lib/Scroller.tsx";
-import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 import "./App.css";
+import type { Scroller } from "../lib/Scroller.tsx";
 import { WindowChangeEventDetail } from "../lib/events.ts";
+import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 
 const timelineClass = css`
 	height: 400px;

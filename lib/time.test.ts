@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-
 import {
 	TIME_MAX,
 	TIME_MIN,

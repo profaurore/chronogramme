@@ -1,5 +1,4 @@
 import { describe, expect, test, vi } from "vitest";
-
 import {
 	BarState,
 	type BarStateParameters,
