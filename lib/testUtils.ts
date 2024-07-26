@@ -1,4 +1,4 @@
-export const getError = <TError>(call: () => unknown): TError | undefined => {
+export function getError<TError>(call: () => unknown): TError | undefined {
 	try {
 		call();
 	} catch (error: unknown) {
@@ -6,4 +6,4 @@ export const getError = <TError>(call: () => unknown): TError | undefined => {
 	}
 
 	return undefined;
-};
+}

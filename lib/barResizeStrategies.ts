@@ -37,14 +37,14 @@ function prepareFlexSegment(
 	};
 }
 
-const flexSegments = (
+function flexSegments(
 	segments: readonly [
 		Readonly<OptionalFlexSegment>,
 		Readonly<FlexSegment>,
 		Readonly<OptionalFlexSegment>,
 	],
 	targetSize: number,
-): [number | undefined, number, number | undefined] => {
+): [number | undefined, number, number | undefined] {
 	const segment0 = segments[0];
 	const segment1 = segments[1];
 	const segment2 = segments[2];
@@ -103,7 +103,7 @@ const flexSegments = (
 		localSegments[1].size,
 		segment2.idealSize === undefined ? undefined : localSegments[2].size,
 	];
-};
+}
 
 export const proportionalResizeStrategy: ResizeStrategy = (state) => {
 	const size = state.size;

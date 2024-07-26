@@ -32,11 +32,11 @@ export const DOUBLE = 2;
  * @param maximum The maximum value. Must be a finite or infinite number.
  * @returns The clamped value.
  */
-export const clampMinWins = (
+export function clampMinWins(
 	value: number,
 	minimum: number,
 	maximum: number,
-): number => {
+): number {
 	let clamped: number;
 
 	if (value <= minimum) {
@@ -48,7 +48,7 @@ export const clampMinWins = (
 	}
 
 	return clamped;
-};
+}
 
 /**
  * Clamps a value between two values.
@@ -65,11 +65,11 @@ export const clampMinWins = (
  * @param maximum The maximum value. Must be a finite or infinite number.
  * @returns The clamped value.
  */
-export const clampMaxWins = (
+export function clampMaxWins(
 	value: number,
 	minimum: number,
 	maximum: number,
-): number => {
+): number {
 	let clamped: number;
 
 	if (value >= maximum) {
@@ -81,7 +81,7 @@ export const clampMaxWins = (
 	}
 
 	return clamped;
-};
+}
 
 /**
  * Clamps an interval between two values.
@@ -100,12 +100,12 @@ export const clampMaxWins = (
  * @param maximum The maximum value. Must be a finite or infinite number.
  * @returns The interval, bound between `minimum` and `maximum`.
  */
-export const clampInterval = (
+export function clampInterval(
 	intervalMin: number,
 	intervalMax: number,
 	minimum: number,
 	maximum: number,
-): [number, number] => {
+): [number, number] {
 	const intervalRange = intervalMax - intervalMin;
 	const clampRange = maximum - minimum;
 
@@ -122,7 +122,7 @@ export const clampInterval = (
 	}
 
 	return clamped;
-};
+}
 
 /**
  * Compute the mean of an array of numbers.
@@ -130,7 +130,7 @@ export const clampInterval = (
  * @param values Array of numbers. Must be a finite number.
  * @returns Mean of the values.
  */
-export const mean = (...values: readonly number[]): number => {
+export function mean(...values: readonly number[]): number {
 	const ratio = UNIT / values.length;
 
 	let mean = ZERO;
@@ -139,9 +139,11 @@ export const mean = (...values: readonly number[]): number => {
 	}
 
 	return mean;
-};
+}
 
-const isNumber = (value: unknown): value is number => typeof value === "number";
+function isNumber(value: unknown): value is number {
+	return typeof value === "number";
+}
 
 export class NotASizeError extends Error {
 	public readonly value: unknown;
@@ -278,12 +280,12 @@ export const validateSize: (
 	}
 };
 
-export const validatePosition: (
+export function validatePosition(
 	valueName: string,
 	value: unknown,
 	minimum: number,
 	maximum: number,
-) => asserts value is number = (valueName, value, minimum, maximum) => {
+): asserts value is number {
 	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotAPositionError(valueName, value);
 	}
@@ -291,7 +293,7 @@ export const validatePosition: (
 	if (value < minimum || value > maximum) {
 		throw new PositionRangeError(valueName, value, minimum, maximum);
 	}
-};
+}
 
 /**
  * Clamps a value between two values.
@@ -302,14 +304,14 @@ export const validatePosition: (
  * @param valueName The name of the number value.
  * @param value The value to be clamped. Must be a finite or infinite number.
  */
-const validateNumber: (
+function validateNumber(
 	valueName: string,
 	value: unknown,
-) => asserts value is number = (valueName, value) => {
+): asserts value is number {
 	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotANumberError(valueName, value);
 	}
-};
+}
 
 export class IntervalExtremaError extends Error {
 	public readonly maximum: unknown;
@@ -372,22 +374,22 @@ export const validateSizeInterval: (
 };
 
 // parses, but does not validate
-export const parseIntegerAttribute = (
+export function parseIntegerAttribute(
 	value: string | null,
-): number | undefined => {
+): number | undefined {
 	return value === null
 		? undefined
 		: Number.parseInt(value, PARSE_INTERVAL_RADIX);
-};
+}
 
 const PARSE_INTERVAL_NUM_PARTS = 2;
 const PARSE_INTERVAL_RADIX = 10;
 
 // parses, but does not validate
-export const parseIntervalAttribute = (
+export function parseIntervalAttribute(
 	name: string,
 	value: string | null,
-): OptionalInterval => {
+): OptionalInterval {
 	if (value === null) {
 		return [undefined, undefined];
 	}
@@ -401,4 +403,4 @@ export const parseIntervalAttribute = (
 	}
 
 	return [parsedStart, parsedEnd];
-};
+}

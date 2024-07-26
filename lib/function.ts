@@ -11,14 +11,15 @@ export class NotAFunctionError extends Error {
 	}
 }
 
-const isFunction = <Fn extends () => void>(value: unknown): value is Fn =>
-	typeof value === "function";
+function isFunction<Fn extends () => void>(value: unknown): value is Fn {
+	return typeof value === "function";
+}
 
-export const validateFunction: <Fn>(
+export function validateFunction<Fn>(
 	valueName: string,
 	value: unknown,
-) => asserts value is Fn = (valueName, value) => {
+): asserts value is Fn {
 	if (!isFunction(value)) {
 		throw new NotAFunctionError(valueName, value);
 	}
-};
+}

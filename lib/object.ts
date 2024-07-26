@@ -55,8 +55,9 @@ export class UnknownPropertyError extends Error {
 	}
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object";
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object";
+}
 
 export const validateObject: (
 	valueName: string,

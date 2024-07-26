@@ -1,7 +1,7 @@
 import { css } from "./css.ts";
 import { Singleton } from "./singleton.ts";
 
-const buildStylesheet = (): CSSStyleSheet => {
+function buildStylesheet(): CSSStyleSheet {
 	const stylesheet = new CSSStyleSheet();
 
 	stylesheet.replaceSync(css`
@@ -263,7 +263,7 @@ const buildStylesheet = (): CSSStyleSheet => {
 	`);
 
 	return stylesheet;
-};
+}
 
 /** Lazily instanciated stylesheet singleton. */
 export const stylesheet = new Singleton(buildStylesheet);

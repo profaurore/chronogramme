@@ -25,7 +25,7 @@ const RESIZE_STRATEGY_OPTIONS = [
 
 const SIDE_RESIZE_STRATEGY_OPTIONS = ["constrain", "consume"] as const;
 
-export const getResizeStrategy = (strategy: unknown): ResizeStrategy => {
+export function getResizeStrategy(strategy: unknown): ResizeStrategy {
 	if (strategy !== undefined && strategy !== null) {
 		validateStringOptions("resizeStrategy", strategy, RESIZE_STRATEGY_OPTIONS);
 	}
@@ -54,11 +54,9 @@ export const getResizeStrategy = (strategy: unknown): ResizeStrategy => {
 	}
 
 	return strategyFn;
-};
+}
 
-export const getSideResizeStrategy = (
-	strategy: unknown,
-): SideResizeStrategy => {
+export function getSideResizeStrategy(strategy: unknown): SideResizeStrategy {
 	if (strategy !== undefined && strategy !== null) {
 		validateStringOptions(
 			"sideResizeStrategy",
@@ -86,4 +84,4 @@ export const getSideResizeStrategy = (
 	}
 
 	return strategyFn;
-};
+}

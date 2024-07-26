@@ -43,17 +43,22 @@ const formatter = new Intl.DateTimeFormat("en-CA", {
 	second: "2-digit",
 	era: "short",
 });
-const formatDate = (time: number): string => formatter.format(time);
+function formatDate(time: number): string {
+	return formatter.format(time);
+}
 
-const formatDateRange = (start: number, end: number): string =>
-	`${formatDate(start)} - ${formatDate(end)}`;
+function formatDateRange(start: number, end: number): string {
+	return `${formatDate(start)} - ${formatDate(end)}`;
+}
 
-const datesFromStartDate = (start: number): [number, number] => [
-	start,
-	new Date(start).setDate(new Date(start).getDate() + daysInWeek),
-];
+function datesFromStartDate(start: number): [number, number] {
+	return [
+		start,
+		new Date(start).setDate(new Date(start).getDate() + daysInWeek),
+	];
+}
 
-export const App = (): ReactNode => {
+export function App(): ReactNode {
 	const timelineRef = useRef<Scroller>(null);
 
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
@@ -162,4 +167,4 @@ export const App = (): ReactNode => {
 			</div>
 		</>
 	);
-};
+}

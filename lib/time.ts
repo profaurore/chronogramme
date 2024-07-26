@@ -21,12 +21,12 @@ export const clampTime = clampMinWins;
  * @param maximum The maximum value. Must be a finite or infinite number.
  * @returns The interval, bound between `minimum` and `maximum`.
  */
-export const clampTimeInterval = (
+export function clampTimeInterval(
 	start: number,
 	end: number,
 	minimum: number,
 	maximum: number,
-): [number, number] => {
+): [number, number] {
 	let clamped: [number, number];
 
 	if (start < minimum) {
@@ -42,14 +42,14 @@ export const clampTimeInterval = (
 	}
 
 	return clamped;
-};
+}
 
-export const clampTimeIntervalProperties = (
+export function clampTimeIntervalProperties(
 	start: number,
 	end: number,
 	minimum: number,
 	maximum: number,
-): [number, number] => {
+): [number, number] {
 	if (!Number.isFinite(start)) {
 		throw new Error("timeStart must be a finite number.");
 	}
@@ -59,4 +59,4 @@ export const clampTimeIntervalProperties = (
 	}
 
 	return clampTimeInterval(start, end, minimum, maximum);
-};
+}

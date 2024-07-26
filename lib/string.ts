@@ -33,23 +33,23 @@ export class UnknownStringOptionError extends Error {
 	}
 }
 
-const validateString: (
+function validateString(
 	valueName: string,
 	value: unknown,
-) => asserts value is string = (valueName, value) => {
+): asserts value is string {
 	if (typeof value !== "string") {
 		throw new NotAStringError(valueName, value);
 	}
-};
+}
 
-export const validateStringOptions: <TOptions extends readonly string[]>(
+export function validateStringOptions<TOptions extends readonly string[]>(
 	valueName: string,
 	value: unknown,
 	options: TOptions,
-) => asserts value is TOptions[number] = (valueName, value, options) => {
+): asserts value is TOptions[number] {
 	validateString(valueName, value);
 
 	if (!options.includes(value)) {
 		throw new UnknownStringOptionError(valueName, value, options);
 	}
-};
+}

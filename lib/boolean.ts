@@ -1,4 +1,4 @@
 // parses, no validation required
-export const parseBooleanAttribute = (value: string | null): boolean => {
+export function parseBooleanAttribute(value: string | null): boolean {
 	return value !== null;
-};
+}
