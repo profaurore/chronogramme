@@ -12,10 +12,10 @@ import {
 	ScrollSizeChangeEventDetail,
 	WindowChangeEventDetail,
 	WindowSizeChangeEventDetail,
-	getMouseEventCenterOffsetX,
-	getMouseEventCenterOffsetY,
+	calcMouseEventCenterOffsetX,
+	calcMouseEventCenterOffsetY,
 } from "./events.ts";
-import { ZERO, parseIntegerAttribute, parseIntervalAttribute } from "./math.ts";
+import { ZERO, parseFloatAttribute, parseIntervalAttribute } from "./math.ts";
 import { ScrollState } from "./scrollState.ts";
 import { Singleton } from "./singleton.ts";
 import { stylesheet } from "./styles.ts";
@@ -206,7 +206,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "h-end-size": {
-				this.setHEndSize(parseIntegerAttribute(newValue));
+				this.setHEndSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -216,12 +216,12 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "h-max-element-size": {
-				this.setHMaxElementSize(parseIntegerAttribute(newValue));
+				this.setHMaxElementSize(parseFloatAttribute(newValue));
 				break;
 			}
 
 			case "h-middle-min": {
-				this.setHMiddleMin(parseIntegerAttribute(newValue));
+				this.setHMiddleMin(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -231,7 +231,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "h-resync-threshold-size": {
-				this.setHResyncThresholdSize(parseIntegerAttribute(newValue));
+				this.setHResyncThresholdSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -248,7 +248,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "h-start-size": {
-				this.setHStartSize(parseIntegerAttribute(newValue));
+				this.setHStartSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -265,7 +265,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "v-end-size": {
-				this.setVEndSize(parseIntegerAttribute(newValue));
+				this.setVEndSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -275,12 +275,12 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "v-max-element-size": {
-				this.setVMaxElementSize(parseIntegerAttribute(newValue));
+				this.setVMaxElementSize(parseFloatAttribute(newValue));
 				break;
 			}
 
 			case "v-middle-min": {
-				this.setVMiddleMin(parseIntegerAttribute(newValue));
+				this.setVMiddleMin(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -290,7 +290,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "v-resync-threshold-size": {
-				this.setVResyncThresholdSize(parseIntegerAttribute(newValue));
+				this.setVResyncThresholdSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -307,7 +307,7 @@ export class Scroller extends HTMLElement {
 			}
 
 			case "v-start-size": {
-				this.setVStartSize(parseIntegerAttribute(newValue));
+				this.setVStartSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -352,7 +352,7 @@ export class Scroller extends HTMLElement {
 			),
 		);
 		hBarState.setMiddleMin(
-			parseIntegerAttribute(this.getAttribute("h-middle-min")),
+			parseFloatAttribute(this.getAttribute("h-middle-min")),
 		);
 		hBarState.setEndExtrema(
 			...parseIntervalAttribute(
@@ -361,11 +361,9 @@ export class Scroller extends HTMLElement {
 			),
 		);
 		hBarState.setStartSize(
-			parseIntegerAttribute(this.getAttribute("h-start-size")),
+			parseFloatAttribute(this.getAttribute("h-start-size")),
 		);
-		hBarState.setEndSize(
-			parseIntegerAttribute(this.getAttribute("h-end-size")),
-		);
+		hBarState.setEndSize(parseFloatAttribute(this.getAttribute("h-end-size")));
 
 		const vBarState = this.#vBarState;
 		vBarState.setSize(vSize);
@@ -382,7 +380,7 @@ export class Scroller extends HTMLElement {
 			),
 		);
 		vBarState.setMiddleMin(
-			parseIntegerAttribute(this.getAttribute("v-middle-min")),
+			parseFloatAttribute(this.getAttribute("v-middle-min")),
 		);
 		vBarState.setEndExtrema(
 			...parseIntervalAttribute(
@@ -391,11 +389,9 @@ export class Scroller extends HTMLElement {
 			),
 		);
 		vBarState.setStartSize(
-			parseIntegerAttribute(this.getAttribute("v-start-size")),
+			parseFloatAttribute(this.getAttribute("v-start-size")),
 		);
-		vBarState.setEndSize(
-			parseIntegerAttribute(this.getAttribute("v-end-size")),
-		);
+		vBarState.setEndSize(parseFloatAttribute(this.getAttribute("v-end-size")));
 
 		// Bar display
 		this.updateHBarDimensions();
@@ -404,10 +400,10 @@ export class Scroller extends HTMLElement {
 		// Scroll state attributes
 		const hScrollState = this.#hScrollState;
 		hScrollState.setMaxElementSize(
-			parseIntegerAttribute(this.getAttribute("h-max-element-size")),
+			parseFloatAttribute(this.getAttribute("h-max-element-size")),
 		);
 		hScrollState.setResyncThresholdSize(
-			parseIntegerAttribute(this.getAttribute("h-resync-threshold-size")),
+			parseFloatAttribute(this.getAttribute("h-resync-threshold-size")),
 		);
 		hScrollState.setExtrema(
 			...parseIntervalAttribute("h-extrema", this.getAttribute("h-extrema")),
@@ -418,10 +414,10 @@ export class Scroller extends HTMLElement {
 
 		const vScrollState = this.#vScrollState;
 		vScrollState.setMaxElementSize(
-			parseIntegerAttribute(this.getAttribute("v-max-element-size")),
+			parseFloatAttribute(this.getAttribute("v-max-element-size")),
 		);
 		vScrollState.setResyncThresholdSize(
-			parseIntegerAttribute(this.getAttribute("v-resync-threshold-size")),
+			parseFloatAttribute(this.getAttribute("v-resync-threshold-size")),
 		);
 		vScrollState.setExtrema(
 			...parseIntervalAttribute("v-extrema", this.getAttribute("v-extrema")),
@@ -454,7 +450,7 @@ export class Scroller extends HTMLElement {
 	private onHEndBarResizeHandler(event: MouseEvent): void {
 		// The offset is required to maintain the position of the divider relative
 		// to the cursor.
-		const offsetX = getMouseEventCenterOffsetX(event);
+		const offsetX = calcMouseEventCenterOffsetX(event);
 
 		const onMove = (event: MouseEvent): void => {
 			// The right side is calculated here in case the container resizes
@@ -472,7 +468,7 @@ export class Scroller extends HTMLElement {
 	private onHStartBarResizeHandler(event: MouseEvent): void {
 		// The offset is required to maintain the position of the divider relative
 		// to the cursor.
-		const offsetX = getMouseEventCenterOffsetX(event);
+		const offsetX = calcMouseEventCenterOffsetX(event);
 
 		const onMove = (event: MouseEvent): void => {
 			// The left side is calculated here in case the container resizes during
@@ -528,7 +524,7 @@ export class Scroller extends HTMLElement {
 	private onVEndBarResizeHandler(event: MouseEvent): void {
 		// The offset is required to maintain the position of the divider relative
 		// to the cursor.
-		const offsetY = getMouseEventCenterOffsetY(event);
+		const offsetY = calcMouseEventCenterOffsetY(event);
 
 		const onMove = (event: MouseEvent): void => {
 			// The bottom side is calculated here in case the container resizes
@@ -546,7 +542,7 @@ export class Scroller extends HTMLElement {
 	private onVStartBarResizeHandler(event: MouseEvent): void {
 		// The offset is required to maintain the position of the divider relative
 		// to the cursor.
-		const offsetY = getMouseEventCenterOffsetY(event);
+		const offsetY = calcMouseEventCenterOffsetY(event);
 
 		const onMove = (event: MouseEvent): void => {
 			// The top side is calculated here in case the container resizes during

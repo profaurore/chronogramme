@@ -151,7 +151,7 @@ export class NotASizeError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Size is not a finite number. Given: ${value}.`);
+		super(`Size is not a finite number. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -198,7 +198,7 @@ export class NotAPositionError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Position is not a finite number. Given: ${value}.`);
+		super(`Position is not a finite number. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -237,7 +237,7 @@ export class NotANumberError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Value is not a finite number. Given: ${value}.`);
+		super(`Value is not a finite number. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -374,18 +374,27 @@ export const validateSizeInterval: (
 };
 
 // parses, but does not validate
-export function parseIntegerAttribute(
-	value: string | null,
-): number | undefined {
-	return value === null
-		? undefined
-		: Number.parseInt(value, PARSE_INTERVAL_RADIX);
+export function parseFloatAttribute(value: string | null): number | undefined {
+	return value === null ? undefined : Number.parseFloat(value);
+}
+
+export class NotAnIntervalError extends Error {
+	public readonly value: string | null;
+
+	public readonly valueName: string;
+
+	public constructor(valueName: string, value: string | null) {
+		super(
+			`Value is not an interval formatted as "[minimum],[maximum]". Given: ${String(value)}.`,
+		);
+		this.name = this.constructor.name;
+		this.valueName = valueName;
+		this.value = value;
+	}
 }
 
 const PARSE_INTERVAL_NUM_PARTS = 2;
-const PARSE_INTERVAL_RADIX = 10;
 
-// parses, but does not validate
 export function parseIntervalAttribute(
 	name: string,
 	value: string | null,
@@ -399,7 +408,7 @@ export function parseIntervalAttribute(
 		.map((value) => Number.parseFloat(value));
 
 	if (parsedStart === undefined || parsedEnd === undefined) {
-		throw new TypeError(`${name} must be formatted as "[minimum],[maximum]".`);
+		throw new NotAnIntervalError(name, value);
 	}
 
 	return [parsedStart, parsedEnd];

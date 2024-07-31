@@ -5,6 +5,7 @@
 		// For Vite
 		"@babel/preset-react",
 		"@babel/preset-typescript",
+		"happy-dom",
 
 		// For Stylelint (stylelint.config.js)
 		"postcss",

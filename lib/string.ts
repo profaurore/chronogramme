@@ -4,7 +4,7 @@ export class NotAStringError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Value is not a string. Given: ${value}.`);
+		super(`Value is not a string. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -24,7 +24,7 @@ export class UnknownStringOptionError extends Error {
 		options: readonly string[],
 	) {
 		super(
-			`Value is not a valid option. Expected: ${options.join(", ")}; Given: ${value}.`,
+			`Value is not a valid option. Expected: ${options.join(", ")}; Given: ${String(value)}.`,
 		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;

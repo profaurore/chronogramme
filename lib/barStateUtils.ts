@@ -17,13 +17,13 @@ export type SideResizeStrategyOptions =
 export const RESIZE_STRATEGY_DEFAULT = preserveSidesResizeStrategy;
 export const SIDE_RESIZE_STRATEGY_DEFAULT = consumeSideResizeStrategy;
 
-const RESIZE_STRATEGY_OPTIONS = [
+export const RESIZE_STRATEGY_OPTIONS = [
 	"preserveMiddle",
 	"preserveSides",
 	"proportional",
 ] as const;
 
-const SIDE_RESIZE_STRATEGY_OPTIONS = ["constrain", "consume"] as const;
+export const SIDE_RESIZE_STRATEGY_OPTIONS = ["constrain", "consume"] as const;
 
 export function getResizeStrategy(strategy: unknown): ResizeStrategy {
 	if (strategy !== undefined && strategy !== null) {

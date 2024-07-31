@@ -39,4 +39,8 @@ export class Singleton<T> {
 			}
 		}
 	}
+
+	public get subscribeCount(): number {
+		return this.data?.count ?? ZERO;
+	}
 }

@@ -4,7 +4,7 @@ export class NotAnObjectError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Value is not an object. Given: ${value}.`);
+		super(`Value is not an object. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;
@@ -46,7 +46,7 @@ export class UnknownPropertyError extends Error {
 		property: string,
 	) {
 		super(
-			`Object contains an unknown property. Expected: not ${property}; Given: ${value}.`,
+			`Object contains an unknown property. Expected: not ${String(property)}; Given: ${value}.`,
 		);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
@@ -56,7 +56,7 @@ export class UnknownPropertyError extends Error {
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object";
+	return typeof value === "object" && value !== null;
 }
 
 export const validateObject: (

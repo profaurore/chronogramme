@@ -8,6 +8,7 @@ export {
 	NotANumberError,
 	NotAPositionError,
 	NotASizeError,
+	NotAnIntervalError,
 	PositionRangeError,
 	SizeRangeError,
 } from "./math.ts";

@@ -108,7 +108,7 @@ export class WindowSizeChangeEventDetail {
 	}
 }
 
-export const getMouseEventCenterOffsetX = (event: MouseEvent) => {
+export const calcMouseEventCenterOffsetX = (event: MouseEvent) => {
 	const currentTarget = event.currentTarget as HTMLElement;
 	const clientX = event.clientX;
 
@@ -121,7 +121,7 @@ export const getMouseEventCenterOffsetX = (event: MouseEvent) => {
 	return offsetX;
 };
 
-export const getMouseEventCenterOffsetY = (event: MouseEvent) => {
+export const calcMouseEventCenterOffsetY = (event: MouseEvent) => {
 	const currentTarget = event.currentTarget as HTMLElement;
 	const clientY = event.clientY;
 

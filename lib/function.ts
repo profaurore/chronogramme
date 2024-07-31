@@ -4,7 +4,7 @@ export class NotAFunctionError extends Error {
 	public readonly valueName: string;
 
 	public constructor(valueName: string, value: unknown) {
-		super(`Value is not a function. Given: ${value}.`);
+		super(`Value is not a function. Given: ${String(value)}.`);
 		this.name = this.constructor.name;
 		this.valueName = valueName;
 		this.value = value;

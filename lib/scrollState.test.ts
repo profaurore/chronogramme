@@ -2807,8 +2807,21 @@ describe("TimelineScroll", () => {
 						scrollPos: number;
 						scrollSize: number;
 						size: number;
+						windowMax?: number;
+						windowMin?: number;
 					}>;
+					parameters?: Readonly<
+						Partial<{
+							[P in keyof ConstructorParameters<
+								typeof ScrollState
+							>[0]]: Exclude<
+								ConstructorParameters<typeof ScrollState>[0][P],
+								undefined
+							>;
+						}>
+					>;
 					update: Readonly<{
+						scrollPos?: number;
 						resyncThresholdSize: number;
 					}>;
 				}>,
@@ -2823,6 +2836,52 @@ describe("TimelineScroll", () => {
 						},
 						update: {
 							resyncThresholdSize: 75,
+						},
+					},
+				],
+
+				[
+					"Shrink to minimum threshold",
+					{
+						expected: {
+							scrollPos: 250,
+							scrollSize: 550,
+							size: 550,
+							windowMax: 6,
+							windowMin: 5,
+						},
+						parameters: {
+							max: 11,
+							min: 0,
+							windowMax: 7,
+							windowMin: 6,
+						},
+						update: {
+							scrollPos: 150,
+							resyncThresholdSize: 150,
+						},
+					},
+				],
+
+				[
+					"Shrink to maximum threshold",
+					{
+						expected: {
+							scrollPos: 250,
+							scrollSize: 550,
+							size: 550,
+							windowMax: 6,
+							windowMin: 5,
+						},
+						parameters: {
+							max: 11,
+							min: 0,
+							windowMax: 5,
+							windowMin: 4,
+						},
+						update: {
+							scrollPos: 250,
+							resyncThresholdSize: 150,
 						},
 					},
 				],
@@ -2866,6 +2925,7 @@ describe("TimelineScroll", () => {
 					windowMax: 1,
 					windowMin: 0,
 					windowSize: 50,
+					...testParams.parameters,
 				};
 				const update = testParams.update;
 
@@ -2873,12 +2933,19 @@ describe("TimelineScroll", () => {
 				const expectedWindowRange = parameters.windowMax - parameters.windowMin;
 
 				const state = new ScrollState(parameters);
+				if (update.scrollPos) {
+					state.setScrollPos(update.scrollPos);
+				}
 				state.setResyncThresholdSize(update.resyncThresholdSize);
 
 				expect(state.min).toBeCloseTo(parameters.min);
 				expect(state.max).toBeCloseTo(parameters.max);
-				expect(state.windowMin).toBeCloseTo(parameters.windowMin);
-				expect(state.windowMax).toBeCloseTo(parameters.windowMax);
+				expect(state.windowMin).toBeCloseTo(
+					expected.windowMin ?? parameters.windowMin,
+				);
+				expect(state.windowMax).toBeCloseTo(
+					expected.windowMax ?? parameters.windowMax,
+				);
 				expect(state.range).toBeCloseTo(expectedRange);
 				expect(state.size).toBeCloseTo(expected.size);
 				expect(state.windowRange).toBeCloseTo(expectedWindowRange);
@@ -4367,6 +4434,32 @@ describe("TimelineScroll", () => {
 								update: {
 									windowMax: 10,
 									windowMin: 5,
+								},
+							},
+						],
+
+						[
+							"Window start from non-terminal view",
+							{
+								expected: {
+									scrollPos: 10,
+									scrollSize: 25,
+									size: 800,
+									windowMax: 20,
+									windowMin: 15,
+								},
+								parameters: {
+									max: 400,
+									maxElementSize: 20,
+									min: -400,
+									resyncThresholdSize: 5,
+									windowMax: 15,
+									windowMin: 5,
+									windowSize: 5,
+								},
+								update: {
+									windowMax: 20,
+									windowMin: 15,
 								},
 							},
 						],
