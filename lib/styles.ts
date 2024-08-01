@@ -12,7 +12,9 @@ function buildStylesheet(): CSSStyleSheet {
 		#container {
 			display: flex;
 			height: 100%;
+			overscroll-behavior: none;
 			position: relative;
+			user-select: none; 
 			width: 100%;
 		}
 

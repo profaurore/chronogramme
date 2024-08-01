@@ -23,6 +23,12 @@ import { stylesheet } from "./styles.ts";
 const SCROLLER_INIT_WIDTH = 100;
 const SCROLLER_INIT_HEIGHT = 100;
 
+type DragState = {
+	onMove: (event: MouseEvent) => void;
+	onStop: () => void;
+	onVisibilityChange: () => void;
+};
+
 export class Scroller extends HTMLElement {
 	public static observedAttributes = [
 		"default-resize-handles",
@@ -50,13 +56,9 @@ export class Scroller extends HTMLElement {
 		"v-window",
 	] as const;
 
-	#barResizeState:
-		| {
-				onMove: (event: MouseEvent) => void;
-				onStop: () => void;
-				onVisibilityChange: () => void;
-		  }
-		| undefined;
+	#barResizeState: DragState | undefined;
+
+	#scrollDragState: DragState | undefined;
 
 	readonly #containerElement: HTMLDivElement;
 
@@ -97,6 +99,7 @@ export class Scroller extends HTMLElement {
 		// Center
 		const center = document.createElement("div");
 		center.id = "center";
+		center.addEventListener("pointerdown", this.onScrollDragHandler.bind(this));
 		center.appendChild(document.createTextNode("container"));
 
 		// Sides
@@ -438,6 +441,7 @@ export class Scroller extends HTMLElement {
 
 	private clearResizeState(): void {
 		const barResizeState = this.#barResizeState;
+
 		if (barResizeState) {
 			document.removeEventListener(
 				"visibilityChange",
@@ -445,13 +449,29 @@ export class Scroller extends HTMLElement {
 			);
 			document.removeEventListener("pointermove", barResizeState.onMove);
 			document.removeEventListener("pointerup", barResizeState.onStop);
+
 			this.#barResizeState = undefined;
+		}
+	}
+
+	private clearScrollDragState(): void {
+		const scrollDragState = this.#scrollDragState;
+
+		if (scrollDragState) {
+			document.removeEventListener(
+				"visibilityChange",
+				scrollDragState.onVisibilityChange,
+			);
+			document.removeEventListener("pointermove", scrollDragState.onMove);
+			document.removeEventListener("pointerup", scrollDragState.onStop);
+
+			this.#scrollDragState = undefined;
 		}
 	}
 
 	// @ts-expect-error Protected method used by HTMLElement
 	private disconnectedCallback(): void {
-		this.setBarResize();
+		this.clearResizeState();
 
 		Scroller.resizeHandler.unsubscribe((resizeObserver) => {
 			resizeObserver.unobserve(this);
@@ -472,20 +492,16 @@ export class Scroller extends HTMLElement {
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
 			const onMove = (event: MouseEvent): void => {
-				if (event.buttons & 0x01) {
-					// The right side is calculated here in case the container resizes
-					// during bar resizing.
-					const target = Math.max(
-						ZERO,
-						this.getBoundingClientRect().right - event.clientX - offsetX,
-					);
-					this.setHEndSize(target);
-				} else {
-					this.clearResizeState();
-				}
+				// The right side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					this.getBoundingClientRect().right - event.clientX - offsetX,
+				);
+				this.setHEndSize(target);
 			};
 
-			this.setBarResize(onMove);
+			this.setBarResizeState(onMove);
 		}
 	}
 
@@ -497,20 +513,16 @@ export class Scroller extends HTMLElement {
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
 			const onMove = (event: MouseEvent): void => {
-				if (event.buttons & 0x01) {
-					// The left side is calculated here in case the container resizes
-					// during bar resizing.
-					const target = Math.max(
-						ZERO,
-						event.clientX + offsetX - this.getBoundingClientRect().left,
-					);
-					this.setHStartSize(target);
-				} else {
-					this.clearResizeState();
-				}
+				// The left side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					event.clientX + offsetX - this.getBoundingClientRect().left,
+				);
+				this.setHStartSize(target);
 			};
 
-			this.setBarResize(onMove);
+			this.setBarResizeState(onMove);
 		}
 	}
 
@@ -537,19 +549,55 @@ export class Scroller extends HTMLElement {
 		updateWindowSize();
 	}
 
+	private onScrollDragHandler(event: MouseEvent): void {
+		// Only the primary mouse button triggers scroll drag.
+		if (event.button === ZERO) {
+			this.clearScrollDragState();
+
+			let hLastPos = event.clientX;
+			let vLastPos = event.clientY;
+
+			const onMove = (event: MouseEvent): void => {
+				if (event.buttons & 0x01) {
+					const hPos = event.clientX;
+					const vPos = event.clientY;
+
+					this.setScrollPos(
+						this.#hScrollState.scrollPos - (hPos - hLastPos),
+						this.#vScrollState.scrollPos - (vPos - vLastPos),
+					);
+
+					hLastPos = hPos;
+					vLastPos = vPos;
+				} else {
+					this.clearScrollDragState();
+				}
+			};
+
+			const onStop = this.clearScrollDragState.bind(this);
+
+			const onVisibilityChange = () => {
+				if (document.visibilityState === "hidden") {
+					this.clearScrollDragState();
+				}
+			};
+
+			this.#scrollDragState = {
+				onMove,
+				onStop,
+				onVisibilityChange,
+			};
+
+			document.addEventListener("pointermove", onMove);
+			document.addEventListener("pointerup", onStop, { once: true });
+			document.addEventListener("visibilitychange", onVisibilityChange);
+		}
+	}
+
 	private onScrollHandler(): void {
 		const contentElement = this.#contentElement;
 
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#hScrollState.setScrollPos(contentElement.scrollLeft);
-		this.#vScrollState.setScrollPos(contentElement.scrollTop);
-
-		updateWindow();
-		updateScrollPos();
-		updateScrollSize();
+		this.setScrollPos(contentElement.scrollLeft, contentElement.scrollTop);
 	}
 
 	private onVEndBarResizeHandler(event: MouseEvent): void {
@@ -560,20 +608,16 @@ export class Scroller extends HTMLElement {
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
 			const onMove = (event: MouseEvent): void => {
-				if (event.buttons & 0x01) {
-					// The bottom side is calculated here in case the container resizes
-					// during bar resizing.
-					const target = Math.max(
-						ZERO,
-						this.getBoundingClientRect().bottom - event.clientY - offsetY,
-					);
-					this.setVEndSize(target);
-				} else {
-					this.clearResizeState();
-				}
+				// The bottom side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					this.getBoundingClientRect().bottom - event.clientY - offsetY,
+				);
+				this.setVEndSize(target);
 			};
 
-			this.setBarResize(onMove);
+			this.setBarResizeState(onMove);
 		}
 	}
 
@@ -585,41 +629,48 @@ export class Scroller extends HTMLElement {
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
 			const onMove = (event: MouseEvent): void => {
-				if (event.buttons & 0x01) {
-					// The top side is calculated here in case the container resizes
-					// during bar resizing.
-					const target = Math.max(
-						ZERO,
-						event.clientY + offsetY - this.getBoundingClientRect().top,
-					);
-					this.setVStartSize(target);
-				} else {
-					this.clearResizeState();
-				}
+				// The top side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					event.clientY + offsetY - this.getBoundingClientRect().top,
+				);
+				this.setVStartSize(target);
 			};
 
-			this.setBarResize(onMove);
+			this.setBarResizeState(onMove);
 		}
 	}
 
-	private setBarResize(onMove?: (event: MouseEvent) => void): void {
+	private setBarResizeState(onMove: (event: MouseEvent) => void): void {
 		this.clearResizeState();
 
-		if (onMove) {
-			const onStop = this.clearResizeState.bind(this);
+		const onMoveWithCheck = (event: MouseEvent) => {
+			if (event.buttons & 0x01) {
+				onMove(event);
+			} else {
+				this.clearResizeState();
+			}
+		};
 
-			const onVisibilityChange = () => {
-				if (document.visibilityState === "hidden") {
-					this.clearResizeState();
-				}
-			};
+		// const onStop = this.clearResizeState.bind(this);
+		const onStop = this.clearResizeState.bind(this);
 
-			this.#barResizeState = { onMove, onStop, onVisibilityChange };
+		const onVisibilityChange = () => {
+			if (document.visibilityState === "hidden") {
+				this.clearResizeState();
+			}
+		};
 
-			document.addEventListener("pointermove", onMove);
-			document.addEventListener("pointerup", onStop, { once: true });
-			document.addEventListener("visibilitychange", onVisibilityChange);
-		}
+		this.#barResizeState = {
+			onMove: onMoveWithCheck,
+			onStop,
+			onVisibilityChange,
+		};
+
+		document.addEventListener("pointermove", onMoveWithCheck);
+		document.addEventListener("pointerup", onStop, { once: true });
+		document.addEventListener("visibilitychange", onVisibilityChange);
 	}
 
 	private setupUpdateScrollPos(): () => void {
@@ -917,6 +968,19 @@ export class Scroller extends HTMLElement {
 
 		this.#hScrollState.setResyncThresholdSize(size);
 
+		updateScrollPos();
+		updateScrollSize();
+	}
+
+	private setScrollPos(hScrollPos: number, vScrollPos: number): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#hScrollState.setScrollPos(hScrollPos);
+		this.#vScrollState.setScrollPos(vScrollPos);
+
+		updateWindow();
 		updateScrollPos();
 		updateScrollSize();
 	}

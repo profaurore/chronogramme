@@ -248,7 +248,7 @@ export class ScrollState {
 	public setExtrema(
 		min: number | undefined = Number.MIN_SAFE_INTEGER,
 		max: number | undefined = Number.MAX_SAFE_INTEGER,
-	): this {
+	): void {
 		validateNumberInterval("min", "max", "extrema", [min, max]);
 
 		if (min !== this.#min || max !== this.#max) {
@@ -259,8 +259,6 @@ export class ScrollState {
 
 			this.resetScrollState();
 		}
-
-		return this;
 	}
 
 	/**
@@ -332,17 +330,20 @@ export class ScrollState {
 	 * - `windowMax`
 	 * - `windowMin`
 	 */
-	public setScrollPos(scrollPos: number): this {
+	public setScrollPos(scrollPos: number): void {
 		const scrollSize = this.#scrollSize;
 		const windowSize = this.#windowSize;
 
-		const maxScrollPosition = Math.ceil(scrollSize - windowSize);
+		validatePosition(
+			"scrollPos",
+			scrollPos,
+			-Number.MAX_VALUE,
+			Number.MAX_VALUE,
+		);
 
-		validatePosition("scrollPos", scrollPos, ZERO, maxScrollPosition);
+		const delta = scrollPos - this.#scrollPos;
 
-		const deltaX = scrollPos - this.#scrollPos;
-
-		if (deltaX) {
+		if (delta) {
 			const prevWindowMin = this.#windowMin;
 			const min = this.#min;
 			const max = this.#max;
@@ -352,7 +353,7 @@ export class ScrollState {
 			const isMaxTerminal = this.#isMaxTerminal;
 			const resyncThresholdSize = this.#resyncThresholdSize;
 
-			const unitDelta = unitPerPixel * deltaX;
+			const unitDelta = unitPerPixel * delta;
 			const targetWindowMin = prevWindowMin + unitDelta;
 			const [windowMin, windowMax] = clampInterval(
 				targetWindowMin,
@@ -361,31 +362,31 @@ export class ScrollState {
 				max,
 			);
 
-			this.#windowMin = windowMin;
-			this.#windowMinIdeal = windowMin;
-			this.#windowMax = windowMax;
-			this.#windowMaxIdeal = windowMax;
+			if (windowMin !== prevWindowMin) {
+				this.#windowMin = windowMin;
+				this.#windowMinIdeal = windowMin;
+				this.#windowMax = windowMax;
+				this.#windowMaxIdeal = windowMax;
 
-			const minScrollPos = isMinTerminal ? ZERO : resyncThresholdSize;
-			const maxScrollPos =
-				Math.ceil(scrollSize - windowSize) -
-				(isMaxTerminal ? ZERO : resyncThresholdSize);
+				const minScrollPos = isMinTerminal ? ZERO : resyncThresholdSize;
+				const maxScrollPos =
+					Math.ceil(scrollSize - windowSize) -
+					(isMaxTerminal ? ZERO : resyncThresholdSize);
 
-			// Force a recalculation if one of the extrema is reached or if within a
-			// resync threshold.
-			if (
-				windowMin <= min ||
-				windowMax >= max ||
-				scrollPos <= minScrollPos ||
-				scrollPos >= maxScrollPos
-			) {
-				this.resetScrollState();
-			} else {
-				this.#scrollPos = scrollPos;
+				// Force a recalculation if one of the extrema is reached or if within a
+				// resync threshold.
+				if (
+					windowMin <= min ||
+					windowMax >= max ||
+					scrollPos <= minScrollPos ||
+					scrollPos >= maxScrollPos
+				) {
+					this.resetScrollState();
+				} else {
+					this.#scrollPos = scrollPos;
+				}
 			}
 		}
-
-		return this;
 	}
 
 	/**
@@ -401,7 +402,7 @@ export class ScrollState {
 	public setWindowExtrema(
 		windowMin: number | undefined = Number.MIN_SAFE_INTEGER,
 		windowMax: number | undefined = Number.MAX_SAFE_INTEGER,
-	): this {
+	): void {
 		validateNumberInterval("windowMin", "windowMax", "windowExtrema", [
 			windowMin,
 			windowMax,
@@ -440,8 +441,6 @@ export class ScrollState {
 				this.resetScrollState();
 			}
 		}
-
-		return this;
 	}
 
 	/**
@@ -451,7 +450,7 @@ export class ScrollState {
 	 * - `scrollPos`
 	 * - `scrollSize`
 	 */
-	public setWindowSize(windowSize: number): this {
+	public setWindowSize(windowSize: number): void {
 		validateSize(
 			"windowSize",
 			windowSize,
@@ -468,8 +467,6 @@ export class ScrollState {
 
 			this.resetScrollState();
 		}
-
-		return this;
 	}
 
 	public get max(): number {

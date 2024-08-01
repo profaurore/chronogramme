@@ -5,7 +5,6 @@ import {
 	NotANumberError,
 	NotAPositionError,
 	NotASizeError,
-	PositionRangeError,
 	SizeRangeError,
 	ZERO,
 } from "./math.ts";
@@ -2421,7 +2420,7 @@ describe("TimelineScroll", () => {
 					const update = testParams.update;
 
 					const state = new ScrollState(parameters);
-					const resultState = state.setExtrema(update.min, update.max);
+					state.setExtrema(update.min, update.max);
 
 					const expectedRange = update.max - update.min;
 
@@ -2435,7 +2434,6 @@ describe("TimelineScroll", () => {
 						Number.MAX_SAFE_INTEGER;
 					const expectedWindowRange = expectedWindowMax - expectedWindowMin;
 
-					expect(state).toBe(resultState);
 					expect(state.min).toBeCloseTo(update.min);
 					expect(state.max).toBeCloseTo(update.max);
 					expect(state.windowMin).toBeCloseTo(expectedWindowMin);
@@ -2999,21 +2997,6 @@ describe("TimelineScroll", () => {
 				],
 
 				[
-					"Errors if less than zero",
-					{
-						error: new PositionRangeError(
-							"scrollPos",
-							-Number.MIN_VALUE,
-							0,
-							50,
-						),
-						update: {
-							scrollPos: -Number.MIN_VALUE,
-						},
-					},
-				],
-
-				[
 					"Errors if infinite",
 					{
 						error: new NotAPositionError("scrollPos", Number.POSITIVE_INFINITY),
@@ -3024,11 +3007,11 @@ describe("TimelineScroll", () => {
 				],
 
 				[
-					"Errors if greater than maximum scroll position",
+					"Accepts the minimum number",
 					{
-						error: new PositionRangeError("scrollPos", 51, 0, 50),
+						error: null,
 						update: {
-							scrollPos: 51,
+							scrollPos: -Number.MAX_VALUE,
 						},
 					},
 				],
@@ -3049,6 +3032,16 @@ describe("TimelineScroll", () => {
 						error: null,
 						update: {
 							scrollPos: 50,
+						},
+					},
+				],
+
+				[
+					"Accepts the maximum number",
+					{
+						error: null,
+						update: {
+							scrollPos: Number.MAX_VALUE,
 						},
 					},
 				],
@@ -3132,6 +3125,29 @@ describe("TimelineScroll", () => {
 				[
 					"Static Scroll",
 					[
+						[
+							"Scroll to a negative position",
+							{
+								expected: {
+									scrollPos: 0,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 15,
+									windowMin: 5,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									scrollPos: [-10],
+								},
+							},
+						],
+
 						[
 							"Scroll incrementally to the minimum position with rounding error",
 							{
@@ -3369,6 +3385,29 @@ describe("TimelineScroll", () => {
 								},
 								update: {
 									scrollPos: [13, 14, 15],
+								},
+							},
+						],
+
+						[
+							"Scroll to greater than the maximum position",
+							{
+								expected: {
+									scrollPos: 8,
+									scrollSize: 13,
+									size: 12.5,
+									windowMax: 30,
+									windowMin: 20,
+								},
+								parameters: {
+									max: 30,
+									min: 5,
+									windowMax: 20,
+									windowMin: 10,
+									windowSize: 5,
+								},
+								update: {
+									scrollPos: [100],
 								},
 							},
 						],
@@ -4069,12 +4108,10 @@ describe("TimelineScroll", () => {
 						(parameters.windowMin ?? Number.MIN_SAFE_INTEGER);
 
 					const state = new ScrollState(parameters);
-					const resultState = update.scrollPos.reduce<ScrollState>(
-						(state, scrollPos) => state.setScrollPos(scrollPos),
-						state,
-					);
+					for (const scrollPos of update.scrollPos) {
+						state.setScrollPos(scrollPos);
+					}
 
-					expect(state).toBe(resultState);
 					expect(state.min).toBeCloseTo(
 						parameters.min ?? Number.MIN_SAFE_INTEGER,
 					);
@@ -4970,12 +5007,8 @@ describe("TimelineScroll", () => {
 					);
 
 					const state = new ScrollState(parameters);
-					const resultState = state.setWindowExtrema(
-						update.windowMin,
-						update.windowMax,
-					);
+					state.setWindowExtrema(update.windowMin, update.windowMax);
 
-					expect(state).toBe(resultState);
 					expect(state.min).toBeCloseTo(
 						parameters.min ?? Number.MIN_SAFE_INTEGER,
 					);
@@ -5419,9 +5452,8 @@ describe("TimelineScroll", () => {
 						(parameters.windowMin ?? Number.MIN_SAFE_INTEGER);
 
 					const state = new ScrollState(parameters);
-					const resultState = state.setWindowSize(update.windowSize);
+					state.setWindowSize(update.windowSize);
 
-					expect(state).toBe(resultState);
 					expect(state.min).toBeCloseTo(
 						parameters.min ?? Number.MIN_SAFE_INTEGER,
 					);
