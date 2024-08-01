@@ -448,39 +448,45 @@ export class Scroller extends HTMLElement {
 	}
 
 	private onHEndBarResizeHandler(event: MouseEvent): void {
-		// The offset is required to maintain the position of the divider relative
-		// to the cursor.
-		const offsetX = calcMouseEventCenterOffsetX(event);
+		// Only the primary mouse button triggers resize.
+		if (event.button === ZERO) {
+			// The offset is required to maintain the position of the divider relative
+			// to the cursor.
+			const offsetX = calcMouseEventCenterOffsetX(event);
 
-		const onMove = (event: MouseEvent): void => {
-			// The right side is calculated here in case the container resizes
-			// during bar resizing.
-			const target = Math.max(
-				ZERO,
-				this.getBoundingClientRect().right - event.clientX - offsetX,
-			);
-			this.setHEndSize(target);
-		};
+			const onMove = (event: MouseEvent): void => {
+				// The right side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					this.getBoundingClientRect().right - event.clientX - offsetX,
+				);
+				this.setHEndSize(target);
+			};
 
-		this.setBarResize(onMove);
+			this.setBarResize(onMove);
+		}
 	}
 
 	private onHStartBarResizeHandler(event: MouseEvent): void {
-		// The offset is required to maintain the position of the divider relative
-		// to the cursor.
-		const offsetX = calcMouseEventCenterOffsetX(event);
+		// Only the primary mouse button triggers resize.
+		if (event.button === ZERO) {
+			// The offset is required to maintain the position of the divider relative
+			// to the cursor.
+			const offsetX = calcMouseEventCenterOffsetX(event);
 
-		const onMove = (event: MouseEvent): void => {
-			// The left side is calculated here in case the container resizes during
-			// bar resizing.
-			const target = Math.max(
-				ZERO,
-				event.clientX + offsetX - this.getBoundingClientRect().left,
-			);
-			this.setHStartSize(target);
-		};
+			const onMove = (event: MouseEvent): void => {
+				// The left side is calculated here in case the container resizes during
+				// bar resizing.
+				const target = Math.max(
+					ZERO,
+					event.clientX + offsetX - this.getBoundingClientRect().left,
+				);
+				this.setHStartSize(target);
+			};
 
-		this.setBarResize(onMove);
+			this.setBarResize(onMove);
+		}
 	}
 
 	private onResizeHandler(hSize: number, vSize: number): void {
@@ -522,39 +528,45 @@ export class Scroller extends HTMLElement {
 	}
 
 	private onVEndBarResizeHandler(event: MouseEvent): void {
-		// The offset is required to maintain the position of the divider relative
-		// to the cursor.
-		const offsetY = calcMouseEventCenterOffsetY(event);
+		// Only the primary mouse button triggers resize.
+		if (event.button === ZERO) {
+			// The offset is required to maintain the position of the divider relative
+			// to the cursor.
+			const offsetY = calcMouseEventCenterOffsetY(event);
 
-		const onMove = (event: MouseEvent): void => {
-			// The bottom side is calculated here in case the container resizes
-			// during bar resizing.
-			const target = Math.max(
-				ZERO,
-				this.getBoundingClientRect().bottom - event.clientY - offsetY,
-			);
-			this.setVEndSize(target);
-		};
+			const onMove = (event: MouseEvent): void => {
+				// The bottom side is calculated here in case the container resizes
+				// during bar resizing.
+				const target = Math.max(
+					ZERO,
+					this.getBoundingClientRect().bottom - event.clientY - offsetY,
+				);
+				this.setVEndSize(target);
+			};
 
-		this.setBarResize(onMove);
+			this.setBarResize(onMove);
+		}
 	}
 
 	private onVStartBarResizeHandler(event: MouseEvent): void {
-		// The offset is required to maintain the position of the divider relative
-		// to the cursor.
-		const offsetY = calcMouseEventCenterOffsetY(event);
+		// Only the primary mouse button triggers resize.
+		if (event.button === ZERO) {
+			// The offset is required to maintain the position of the divider relative
+			// to the cursor.
+			const offsetY = calcMouseEventCenterOffsetY(event);
 
-		const onMove = (event: MouseEvent): void => {
-			// The top side is calculated here in case the container resizes during
-			// bar resizing.
-			const target = Math.max(
-				ZERO,
-				event.clientY + offsetY - this.getBoundingClientRect().top,
-			);
-			this.setVStartSize(target);
-		};
+			const onMove = (event: MouseEvent): void => {
+				// The top side is calculated here in case the container resizes during
+				// bar resizing.
+				const target = Math.max(
+					ZERO,
+					event.clientY + offsetY - this.getBoundingClientRect().top,
+				);
+				this.setVStartSize(target);
+			};
 
-		this.setBarResize(onMove);
+			this.setBarResize(onMove);
+		}
 	}
 
 	private setBarResize(onMove?: (event: MouseEvent) => void): void {
