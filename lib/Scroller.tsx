@@ -51,7 +51,11 @@ export class Scroller extends HTMLElement {
 	] as const;
 
 	#barResizeState:
-		| { onMove: (event: MouseEvent) => void; onStop: () => void }
+		| {
+				onMove: (event: MouseEvent) => void;
+				onStop: () => void;
+				onVisibilityChange: () => void;
+		  }
 		| undefined;
 
 	readonly #containerElement: HTMLDivElement;
@@ -137,28 +141,28 @@ export class Scroller extends HTMLElement {
 		const dividerHStart = document.createElement("slot");
 		dividerHStart.id = "divider-h-start";
 		dividerHStart.addEventListener(
-			"mousedown",
+			"pointerdown",
 			this.onHStartBarResizeHandler.bind(this),
 		);
 
 		const dividerHEnd = document.createElement("slot");
 		dividerHEnd.id = "divider-h-end";
 		dividerHEnd.addEventListener(
-			"mousedown",
+			"pointerdown",
 			this.onHEndBarResizeHandler.bind(this),
 		);
 
 		const dividerVStart = document.createElement("slot");
 		dividerVStart.id = "divider-v-start";
 		dividerVStart.addEventListener(
-			"mousedown",
+			"pointerdown",
 			this.onVStartBarResizeHandler.bind(this),
 		);
 
 		const dividerVEnd = document.createElement("slot");
 		dividerVEnd.id = "divider-v-end";
 		dividerVEnd.addEventListener(
-			"mousedown",
+			"pointerdown",
 			this.onVEndBarResizeHandler.bind(this),
 		);
 
@@ -432,6 +436,19 @@ export class Scroller extends HTMLElement {
 		this.dispatchEvent(new CustomEvent<ConnectedEventDetail>("connected"));
 	}
 
+	private clearResizeState(): void {
+		const barResizeState = this.#barResizeState;
+		if (barResizeState) {
+			document.removeEventListener(
+				"visibilityChange",
+				barResizeState.onVisibilityChange,
+			);
+			document.removeEventListener("pointermove", barResizeState.onMove);
+			document.removeEventListener("pointerup", barResizeState.onStop);
+			this.#barResizeState = undefined;
+		}
+	}
+
 	// @ts-expect-error Protected method used by HTMLElement
 	private disconnectedCallback(): void {
 		this.setBarResize();
@@ -455,13 +472,17 @@ export class Scroller extends HTMLElement {
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
 			const onMove = (event: MouseEvent): void => {
-				// The right side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					this.getBoundingClientRect().right - event.clientX - offsetX,
-				);
-				this.setHEndSize(target);
+				if (event.buttons & 0x01) {
+					// The right side is calculated here in case the container resizes
+					// during bar resizing.
+					const target = Math.max(
+						ZERO,
+						this.getBoundingClientRect().right - event.clientX - offsetX,
+					);
+					this.setHEndSize(target);
+				} else {
+					this.clearResizeState();
+				}
 			};
 
 			this.setBarResize(onMove);
@@ -476,13 +497,17 @@ export class Scroller extends HTMLElement {
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
 			const onMove = (event: MouseEvent): void => {
-				// The left side is calculated here in case the container resizes during
-				// bar resizing.
-				const target = Math.max(
-					ZERO,
-					event.clientX + offsetX - this.getBoundingClientRect().left,
-				);
-				this.setHStartSize(target);
+				if (event.buttons & 0x01) {
+					// The left side is calculated here in case the container resizes
+					// during bar resizing.
+					const target = Math.max(
+						ZERO,
+						event.clientX + offsetX - this.getBoundingClientRect().left,
+					);
+					this.setHStartSize(target);
+				} else {
+					this.clearResizeState();
+				}
 			};
 
 			this.setBarResize(onMove);
@@ -535,13 +560,17 @@ export class Scroller extends HTMLElement {
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
 			const onMove = (event: MouseEvent): void => {
-				// The bottom side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					this.getBoundingClientRect().bottom - event.clientY - offsetY,
-				);
-				this.setVEndSize(target);
+				if (event.buttons & 0x01) {
+					// The bottom side is calculated here in case the container resizes
+					// during bar resizing.
+					const target = Math.max(
+						ZERO,
+						this.getBoundingClientRect().bottom - event.clientY - offsetY,
+					);
+					this.setVEndSize(target);
+				} else {
+					this.clearResizeState();
+				}
 			};
 
 			this.setBarResize(onMove);
@@ -556,13 +585,17 @@ export class Scroller extends HTMLElement {
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
 			const onMove = (event: MouseEvent): void => {
-				// The top side is calculated here in case the container resizes during
-				// bar resizing.
-				const target = Math.max(
-					ZERO,
-					event.clientY + offsetY - this.getBoundingClientRect().top,
-				);
-				this.setVStartSize(target);
+				if (event.buttons & 0x01) {
+					// The top side is calculated here in case the container resizes
+					// during bar resizing.
+					const target = Math.max(
+						ZERO,
+						event.clientY + offsetY - this.getBoundingClientRect().top,
+					);
+					this.setVStartSize(target);
+				} else {
+					this.clearResizeState();
+				}
 			};
 
 			this.setBarResize(onMove);
@@ -570,23 +603,22 @@ export class Scroller extends HTMLElement {
 	}
 
 	private setBarResize(onMove?: (event: MouseEvent) => void): void {
-		const barResizeState = this.#barResizeState;
-		if (barResizeState) {
-			document.removeEventListener("mousemove", barResizeState.onMove);
-			document.removeEventListener("mouseup", barResizeState.onStop);
-			this.#barResizeState = undefined;
-		}
+		this.clearResizeState();
 
 		if (onMove) {
-			const onStop = (): void => {
-				document.removeEventListener("mousemove", onMove);
-				this.#barResizeState = undefined;
+			const onStop = this.clearResizeState.bind(this);
+
+			const onVisibilityChange = () => {
+				if (document.visibilityState === "hidden") {
+					this.clearResizeState();
+				}
 			};
 
-			this.#barResizeState = { onMove, onStop };
+			this.#barResizeState = { onMove, onStop, onVisibilityChange };
 
-			document.addEventListener("mousemove", onMove);
-			document.addEventListener("mouseup", onStop, { once: true });
+			document.addEventListener("pointermove", onMove);
+			document.addEventListener("pointerup", onStop, { once: true });
+			document.addEventListener("visibilitychange", onVisibilityChange);
 		}
 	}
 
