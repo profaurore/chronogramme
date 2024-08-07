@@ -1,12 +1,6 @@
-import {
-	BINARY_SEARCH_EQUALS,
-	BINARY_SEARCH_LESS_THAN,
-	binarySearch,
-} from "./array.ts";
 import { MOST_SIGNIFICANT_BIT, UNIT, ZERO } from "./math.ts";
 import "./Scroller.ts";
 import type { Scroller } from "./Scroller.ts";
-import { BPlusTree } from "./trees.ts";
 
 export interface BaseItem<TItemId = number, TGroupId = number> {
 	endTime: EpochTimeStamp;
@@ -70,8 +64,8 @@ export class Timeline<
 
 	// Ordered row array
 	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Testing
-	private prepareGroupRows4(): void {
-		performance.mark("start4");
+	private prepareGroupRows(): void {
+		performance.mark("prepareGroupRows-start");
 		const groupedItems = this.#groupedItems;
 		const scroller = this.#scroller;
 		const hWindowMin = scroller.hWindowMin;
@@ -159,217 +153,10 @@ export class Timeline<
 		}
 
 		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("#4", performance.measure("measure4", "start4"));
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemRows);
-	}
-
-	// Ordered row array
-	private prepareGroupRows3(): void {
-		performance.mark("start3");
-		const groupedItems = this.#groupedItems;
-		const scroller = this.#scroller;
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedItemRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const [groupId, items] of groupedItems) {
-			const rows: TItem[][] = [];
-			const orderedRows: TItem[][] = [];
-
-			for (const item of items) {
-				const startTime = item.startTime;
-				const endTime = item.endTime;
-
-				if (startTime > hWindowMax || endTime <= hWindowMin) {
-					continue;
-				}
-
-				let row = orderedRows[ZERO];
-				const lastItem = row?.[row.length - UNIT];
-
-				if (row === undefined || (lastItem && lastItem.endTime > startTime)) {
-					row = [];
-					rows.push(row);
-				} else {
-					orderedRows.shift();
-				}
-
-				row.push(item);
-
-				// Add row to ordered rows
-				const insertRowIdx =
-					binarySearch(
-						orderedRows,
-						endTime,
-						BINARY_SEARCH_LESS_THAN,
-						(row) => row.at(-UNIT)?.endTime,
-					) + UNIT;
-
-				orderedRows.splice(insertRowIdx, ZERO, row);
-			}
-
-			groupedItemRows.set(groupId, rows);
-		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("#3", performance.measure("measure3", "start3"));
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemRows);
-	}
-
-	private prepareGroupRows2(): void {
-		performance.mark("start2");
-		const groupedItems = this.#groupedItems;
-		const scroller = this.#scroller;
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedItemRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const [groupId, items] of groupedItems) {
-			const rows: TItem[][] = [];
-			const rowsByEndTime = new BPlusTree<TItem[]>();
-
-			for (const item of items) {
-				const startTime = item.startTime;
-				const endTime = item.endTime;
-
-				if (startTime > hWindowMax || endTime <= hWindowMin) {
-					continue;
-				}
-
-				let [rowEndTime, row] = rowsByEndTime.getMin();
-				const lastItem = row?.[row.length - UNIT];
-
-				if (
-					rowEndTime === undefined ||
-					row === undefined ||
-					(lastItem && lastItem.endTime > startTime)
-				) {
-					row = [];
-					rows.push(row);
-				} else {
-					rowsByEndTime.delete(rowEndTime, row);
-				}
-
-				row.push(item);
-
-				// Add row to ordered row
-				rowsByEndTime.insert(endTime, row);
-			}
-
-			groupedItemRows.set(groupId, rows);
-		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("#2", performance.measure("measure2", "start2"));
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemRows);
-	}
-
-	// Ordered row array
-	private prepareGroupRows1(): void {
-		performance.mark("start1");
-		const groupedItems = this.#groupedItems;
-		const scroller = this.#scroller;
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedItemRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const [groupId, items] of groupedItems) {
-			const rows: TItem[][] = [];
-			const orderedRows: TItem[][] = [];
-
-			for (const item of items) {
-				const startTime = item.startTime;
-				const endTime = item.endTime;
-
-				if (startTime > hWindowMax || endTime <= hWindowMin) {
-					continue;
-				}
-
-				const rowIdx = binarySearch(
-					orderedRows,
-					startTime,
-					BINARY_SEARCH_EQUALS | BINARY_SEARCH_LESS_THAN,
-					(row) => row.at(-UNIT)?.endTime,
-				);
-
-				let row: TItem[];
-				if (rowIdx === -1) {
-					row = [];
-					rows.push(row);
-				} else {
-					const removedRow = orderedRows.splice(rowIdx, UNIT)[ZERO];
-					if (!removedRow) {
-						continue;
-					}
-
-					row = removedRow;
-				}
-
-				row.push(item);
-
-				// Add row to ordered rows
-				const insertRowIdx =
-					binarySearch(
-						orderedRows,
-						endTime,
-						BINARY_SEARCH_LESS_THAN,
-						(row) => row.at(-UNIT)?.endTime,
-					) + UNIT;
-
-				orderedRows.splice(insertRowIdx, ZERO, row);
-			}
-
-			groupedItemRows.set(groupId, rows);
-		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("#1", performance.measure("measure1", "start1"));
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemRows);
-	}
-
-	// No ordered rows
-	private prepareGroupRowsBase(): void {
-		performance.mark("base");
-		const groupedItems = this.#groupedItems;
-		const scroller = this.#scroller;
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedItemRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const [groupId, items] of groupedItems) {
-			const rows: TItem[][] = [];
-
-			for (const item of items) {
-				const startTime = item.startTime;
-				const endTime = item.endTime;
-
-				if (startTime > hWindowMax || endTime <= hWindowMin) {
-					continue;
-				}
-
-				let row = rows.find((row) => {
-					const lastItem = row[row.length - 1];
-
-					return lastItem && lastItem.endTime <= startTime;
-				});
-
-				if (row === undefined) {
-					row = [];
-					rows.push(row);
-				}
-
-				row.push(item);
-			}
-
-			groupedItemRows.set(groupId, rows);
-		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("base", performance.measure("measureBase", "base"));
+		console.log(
+			"prepareGroupRows",
+			performance.measure("prepareGroupRows", "prepareGroupRows-start"),
+		);
 		// biome-ignore lint/nursery/noConsole: Testing
 		console.log(groupedItemRows);
 	}
@@ -387,60 +174,20 @@ export class Timeline<
 
 	// TODO: Make async
 	public setItems(items: readonly TItem[]): void {
-		performance.mark("grouping1");
-		const groupedItemsByStartDate1 = Map.groupBy(items, (item) => item.groupId);
+		performance.mark("grouping-start");
+		const groupedItemsByStartDate = Map.groupBy(items, (item) => item.groupId);
 
-		for (const items of groupedItemsByStartDate1.values()) {
+		for (const items of groupedItemsByStartDate.values()) {
 			items.sort((a, b) => a.startTime - b.startTime);
 		}
 		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping1",
-			performance.measure("measureGrouping1", "grouping1"),
-		);
+		console.log("grouping", performance.measure("grouping", "grouping-start"));
 		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemsByStartDate1);
+		console.log(groupedItemsByStartDate);
 
-		performance.mark("grouping2");
-		const sortedItems2 = items.toSorted((a, b) => a.startTime - b.startTime);
-		const groupedItemsByStartDate2 = Map.groupBy(
-			sortedItems2,
-			(item) => item.groupId,
-		);
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping2",
-			performance.measure("measureGrouping2", "grouping2"),
-		);
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemsByStartDate2);
+		this.#groupedItems = groupedItemsByStartDate;
 
-		performance.mark("grouping3");
-		const sortedItems3 = [...items].sort((a, b) => a.startTime - b.startTime);
-		const groupedItemsByStartDate3 = Map.groupBy(
-			sortedItems3,
-			(item) => item.groupId,
-		);
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping3",
-			performance.measure("measureGrouping3", "grouping3"),
-		);
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(groupedItemsByStartDate3);
-
-		this.#groupedItems = groupedItemsByStartDate2;
-
-		this.prepareGroupRowsBase();
-		this.prepareGroupRows1();
-		this.prepareGroupRows2();
-		this.prepareGroupRows3();
-		this.prepareGroupRows4();
-		this.prepareGroupRowsBase();
-		this.prepareGroupRows1();
-		this.prepareGroupRows2();
-		this.prepareGroupRows3();
-		this.prepareGroupRows4();
+		this.prepareGroupRows();
 	}
 }
 
