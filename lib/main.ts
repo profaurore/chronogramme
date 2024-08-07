@@ -1,5 +1,6 @@
 // Components
-export { Scroller } from "./Scroller.tsx";
+export { Scroller } from "./Scroller.ts";
+export { Timeline } from "./Timeline.ts";
 
 // Errors
 export { NotAFunctionError } from "./function.ts";

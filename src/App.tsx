@@ -8,11 +8,12 @@ import {
 	useState,
 } from "react";
 import "./App.css";
-import type { Scroller } from "../lib/Scroller.tsx";
+import type { Scroller } from "../lib/Scroller.ts";
+import type { BaseItem, Timeline } from "../lib/Timeline.ts";
 import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 
-const timelineClass = css`
+const scrollerClass = css`
 	height: 400px;
 	margin-bottom: 1em;
 	max-height: 80vh;
@@ -59,7 +60,8 @@ function datesFromStartDate(start: number): [number, number] {
 }
 
 export function App(): ReactNode {
-	const timelineRef = useRef<Scroller>(null);
+	const timelineRef = useRef<Timeline>(null);
+	const scrollerRef = useRef<Scroller>(null);
 
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
@@ -93,15 +95,15 @@ export function App(): ReactNode {
 	});
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
+		scrollerRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
 	};
 
 	const onNowClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setHWindow(...datesFromStartDate(Date.now()));
+		scrollerRef.current?.setHWindow(...datesFromStartDate(Date.now()));
 	};
 
 	const onEndOfTimeClickHandler: MouseEventHandler = () => {
-		timelineRef.current?.setHWindow(
+		scrollerRef.current?.setHWindow(
 			...datesFromStartDate(
 				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
 			),
@@ -109,7 +111,7 @@ export function App(): ReactNode {
 	};
 
 	useEffect(() => {
-		const timeline = timelineRef.current;
+		const timeline = scrollerRef.current;
 		if (timeline) {
 			const windowChangeHandler: EventListener = (e) => {
 				if (
@@ -130,6 +132,74 @@ export function App(): ReactNode {
 		return undefined;
 	}, []);
 
+	useEffect(() => {
+		const smallTest = false;
+
+		let items: BaseItem[];
+		if (smallTest) {
+			items = [
+				{ endTime: 100, groupId: 0, id: 1, startTime: 0 },
+				{ endTime: 200, groupId: 0, id: 2, startTime: 100 },
+				{ endTime: 300, groupId: 0, id: 3, startTime: 200 },
+				{ endTime: 400, groupId: 0, id: 4, startTime: 300 },
+				{ endTime: 150, groupId: 0, id: 5, startTime: 50 },
+				{ endTime: 200, groupId: 0, id: 6, startTime: 150 },
+			];
+		} else {
+			const itemCount = 1_000_000;
+			const groupSize = 10_000;
+			items = [];
+			for (let i = 0; i < itemCount; i++) {
+				const startTime = Math.random() * 1000 + i;
+				items.push({
+					endTime: startTime + 100 + Math.random() * 3900,
+					groupId: Math.floor(i / groupSize),
+					id: i,
+					startTime,
+				});
+			}
+		}
+
+		timelineRef.current?.setItems(items);
+	}, []);
+
+	useEffect(() => {
+		// const tree = new BPlusTree<string>();
+		// const nodes: [number, string][] = [
+		// 	[1, "abc"],
+		// 	[2, "def"],
+		// 	[3, "ghi"],
+		// 	[4, "jkl"],
+		// 	[5, "mno"],
+		// 	[6, "pqr"],
+		// 	[7, "stu"],
+		// 	[8, "vwx"],
+		// 	[9, "yz."],
+		// ] as const;
+		// for (const [key, value] of nodes) {
+		// 	// console.log("--------------- INSERT %s %s", key, value);
+		// 	tree.insert(key, value);
+		// 	// console.log(printBPlusTree(tree));
+		// }
+		// console.log(printBPlusTree(tree));
+		// const deleteNodes: [number, string][] = [
+		// 	[9, "yz."],
+		// 	[8, "vwx"],
+		// 	[7, "stu"],
+		// 	[6, "pqr"],
+		// 	[5, "mno"],
+		// 	[4, "jkl"],
+		// 	[3, "ghi"],
+		// 	[2, "def"],
+		// 	[1, "abc"],
+		// ];
+		// for (const [key, value] of deleteNodes) {
+		// 	console.log("--------------- DELETE %s %s", key, value);
+		// 	tree.delete(key, value);
+		// 	console.log(printBPlusTree(tree));
+		// }
+	}, []);
+
 	return (
 		<>
 			<div className={buttonsClass}>
@@ -147,8 +217,11 @@ export function App(): ReactNode {
 			<div>Extrema: {extremaString}</div>
 			<div>Window: {windowString}</div>
 			<div>
+				<cg-timeline ref={timelineRef} />
+			</div>
+			<div>
 				<cg-scroller
-					class={timelineClass}
+					class={scrollerClass}
 					default-resize-handles
 					h-end-extrema={[50, 150]}
 					h-end-size={100}
@@ -156,7 +229,7 @@ export function App(): ReactNode {
 					h-extrema={[extremaStart, extremaEnd]}
 					h-start-extrema={[50, 150]}
 					h-start-size={100}
-					ref={timelineRef}
+					ref={scrollerRef}
 					v-end-extrema={[50, 150]}
 					v-end-size={100}
 					v-extrema={[0, 1000]}

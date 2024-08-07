@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "../lib/Scroller.tsx";
+import "../lib/Scroller.ts";
+import "../lib/Timeline.ts";
 import { App } from "./App.tsx";
 
 const root = document.getElementById("root");
