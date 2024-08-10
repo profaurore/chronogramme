@@ -15,6 +15,7 @@ declare global {
 				"className"
 			> & {
 				class?: string | undefined;
+
 				// Dashed attributes may cause issues with type checking, but they make
 				// the attributes more readable.
 				// https://github.com/microsoft/TypeScript/issues/55182
@@ -48,6 +49,11 @@ declare global {
 				"className"
 			> & {
 				class?: string | undefined;
+
+				// Dashed attributes may cause issues with type checking, but they make
+				// the attributes more readable.
+				// https://github.com/microsoft/TypeScript/issues/55182
+				"h-window"?: [number, number] | undefined;
 			};
 		}
 	}

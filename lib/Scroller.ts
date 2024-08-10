@@ -18,7 +18,7 @@ import {
 import { ZERO, parseFloatAttribute, parseIntervalAttribute } from "./math.ts";
 import { ScrollState } from "./scrollState.ts";
 import { Singleton } from "./singleton.ts";
-import { stylesheet } from "./styles.ts";
+import { scrollerStylesheet } from "./styles.ts";
 
 const SCROLLER_INIT_WIDTH = 100;
 const SCROLLER_INIT_HEIGHT = 100;
@@ -67,6 +67,8 @@ export class Scroller extends HTMLElement {
 	readonly #hBarState: BarState;
 
 	readonly #hScrollState: ScrollState;
+
+	#scrollSkip: boolean;
 
 	readonly #shadow: ShadowRoot;
 
@@ -133,9 +135,7 @@ export class Scroller extends HTMLElement {
 		const content = document.createElement("div");
 		this.#contentElement = content;
 		content.id = "content";
-		content.addEventListener("scroll", () => {
-			this.onScrollHandler();
-		});
+		content.addEventListener("scroll", this.onScrollHandler.bind(this));
 		content.appendChild(center);
 		content.append(...bars);
 		content.append(...corners);
@@ -169,18 +169,29 @@ export class Scroller extends HTMLElement {
 			this.onVEndBarResizeHandler.bind(this),
 		);
 
+		// Slots
+		const centerSlot = document.createElement("slot");
+		centerSlot.name = "center";
+		center.appendChild(centerSlot);
+
 		// Container
 		const container = document.createElement("div");
 		this.#containerElement = container;
 		container.id = "container";
-		container.appendChild(content);
-		container.append(dividerHStart, dividerHEnd, dividerVStart, dividerVEnd);
+		container.append(
+			content,
+			dividerHStart,
+			dividerHEnd,
+			dividerVStart,
+			dividerVEnd,
+		);
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
 		shadow.appendChild(container);
-
 		this.#shadow = shadow;
+
+		this.#scrollSkip = false;
 
 		this.#hScrollState = new ScrollState({ windowSize: SCROLLER_INIT_WIDTH });
 		this.#vScrollState = new ScrollState({ windowSize: SCROLLER_INIT_HEIGHT });
@@ -434,7 +445,9 @@ export class Scroller extends HTMLElement {
 		);
 
 		// Styles
-		this.#shadow.adoptedStyleSheets.push(stylesheet.subscribe());
+		this.#shadow.adoptedStyleSheets.push(scrollerStylesheet.subscribe());
+
+		this.#scrollSkip = true;
 
 		this.dispatchEvent(new CustomEvent<ConnectedEventDetail>("connected"));
 	}
@@ -477,7 +490,7 @@ export class Scroller extends HTMLElement {
 			resizeObserver.unobserve(this);
 		});
 
-		stylesheet.unsubscribe();
+		scrollerStylesheet.unsubscribe();
 
 		this.dispatchEvent(
 			new CustomEvent<DisconnectedEventDetail>("disconnected"),
@@ -595,6 +608,11 @@ export class Scroller extends HTMLElement {
 	}
 
 	private onScrollHandler(): void {
+		if (this.#scrollSkip) {
+			this.#scrollSkip = false;
+			return;
+		}
+
 		const contentElement = this.#contentElement;
 
 		this.setScrollPos(contentElement.scrollLeft, contentElement.scrollTop);
@@ -859,6 +877,18 @@ export class Scroller extends HTMLElement {
 		styles.setProperty("--v-size", `${vScrollState.scrollSize}px`);
 
 		this.#contentElement.scrollTo({ top: vScrollState.scrollPos });
+	}
+
+	public getHPos(value: number): number {
+		const hScrollState = this.#hScrollState;
+
+		return hScrollState.getPos(value);
+	}
+
+	public getVPos(value: number): number {
+		const vScrollState = this.#vScrollState;
+
+		return vScrollState.getPos(value);
 	}
 
 	// private upgradeProperty(property: string): void {

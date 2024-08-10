@@ -9,9 +9,14 @@ import {
 } from "react";
 import "./App.css";
 import type { Scroller } from "../lib/Scroller.ts";
-import type { BaseItem, Timeline } from "../lib/Timeline.ts";
+import type { BaseGroup, BaseItem, Timeline } from "../lib/Timeline.ts";
 import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
+
+const timelineClass = css`
+	/* height: 400px; */
+	margin-bottom: 1em;
+`;
 
 const scrollerClass = css`
 	height: 400px;
@@ -66,7 +71,7 @@ export function App(): ReactNode {
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
 	);
-	const [[extremaStart, extremaEnd], setExtrema] = useState<[number, number]>([
+	const [[extremaStart, extremaEnd], _setExtrema] = useState<[number, number]>([
 		TIME_MIN,
 		TIME_MAX,
 	]);
@@ -83,16 +88,16 @@ export function App(): ReactNode {
 		return formatDateRange(extremaStart, extremaEnd);
 	}, [extremaEnd, extremaStart]);
 
-	useEffect(() => {
-		const x = setTimeout(() => {
-			setWindow([3000, 7000]);
-			setExtrema([0, 10000]);
-		}, 1000000);
+	// useEffect(() => {
+	// 	const x = setTimeout(() => {
+	// 		setWindow([3000, 7000]);
+	// 		setExtrema([0, 10000]);
+	// 	}, 1000000);
 
-		return () => {
-			clearTimeout(x);
-		};
-	});
+	// 	return () => {
+	// 		clearTimeout(x);
+	// 	};
+	// });
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
 		scrollerRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
@@ -133,26 +138,82 @@ export function App(): ReactNode {
 	}, []);
 
 	useEffect(() => {
-		const smallTest = false;
+		const now = Date.now();
+		const testType: number = 2;
 
 		let items: BaseItem[];
-		if (smallTest) {
+		if (testType === 0) {
 			items = [
-				{ endTime: 100, groupId: 0, id: 1, startTime: 0 },
-				{ endTime: 200, groupId: 0, id: 2, startTime: 100 },
-				{ endTime: 300, groupId: 0, id: 3, startTime: 200 },
-				{ endTime: 400, groupId: 0, id: 4, startTime: 300 },
-				{ endTime: 150, groupId: 0, id: 5, startTime: 50 },
-				{ endTime: 200, groupId: 0, id: 6, startTime: 150 },
+				{ endTime: now + 10_000_000, groupId: 0, id: 1, startTime: now + 0 },
+				{
+					endTime: now + 20_000_000,
+					groupId: 0,
+					id: 2,
+					startTime: now + 10_000_000,
+				},
+				{
+					endTime: now + 30_000_000,
+					groupId: 0,
+					id: 3,
+					startTime: now + 20_000_000,
+				},
+				{
+					endTime: now + 40_000_000,
+					groupId: 0,
+					id: 4,
+					startTime: now + 30_000_000,
+				},
+				{
+					endTime: now + 15_000_000,
+					groupId: 0,
+					id: 5,
+					startTime: now + 5_000_000,
+				},
+				{
+					endTime: now + 7_000_000,
+					groupId: 0,
+					id: 6,
+					startTime: now + 6_000_000,
+				},
+				{
+					endTime: now + 8_000_000,
+					groupId: 0,
+					id: 7,
+					startTime: now + 7_000_000,
+				},
+				{
+					endTime: now + 9_000_000,
+					groupId: 0,
+					id: 8,
+					startTime: now + 8_000_000,
+				},
+				{
+					endTime: now + 20_000_000,
+					groupId: 0,
+					id: 9,
+					startTime: now + 15_000_000,
+				},
 			];
-		} else {
-			const itemCount = 1_000_000;
-			const groupSize = 10_000;
+		} else if (testType === 1) {
+			const itemCount = 30;
 			items = [];
 			for (let i = 0; i < itemCount; i++) {
-				const startTime = Math.random() * 1000 + i;
+				const startTime = now + i * 10_000_000;
 				items.push({
-					endTime: startTime + 100 + Math.random() * 3900,
+					endTime: now + 500_000_000,
+					groupId: 0,
+					id: i,
+					startTime,
+				});
+			}
+		} else {
+			const itemCount = 200;
+			const groupSize = 1_000_000;
+			items = [];
+			for (let i = 0; i < itemCount; i++) {
+				const startTime = now + Math.random() * 10_000_000 + i * 1_000_000;
+				items.push({
+					endTime: startTime + 1_000_000 + Math.random() * 39_000_000,
 					groupId: Math.floor(i / groupSize),
 					id: i,
 					startTime,
@@ -160,7 +221,20 @@ export function App(): ReactNode {
 			}
 		}
 
+		const groups = [
+			...items
+				.reduce((acc, { groupId }) => {
+					if (!acc.has(groupId)) {
+						acc.set(groupId, { id: groupId });
+					}
+
+					return acc;
+				}, new Map<number, BaseGroup>())
+				.values(),
+		];
+
 		timelineRef.current?.setItems(items);
+		timelineRef.current?.setGroups(groups);
 	}, []);
 
 	useEffect(() => {
@@ -217,7 +291,11 @@ export function App(): ReactNode {
 			<div>Extrema: {extremaString}</div>
 			<div>Window: {windowString}</div>
 			<div>
-				<cg-timeline ref={timelineRef} />
+				<cg-timeline
+					class={timelineClass}
+					ref={timelineRef}
+					h-window={[windowStart, windowEnd]}
+				/>
 			</div>
 			<div>
 				<cg-scroller

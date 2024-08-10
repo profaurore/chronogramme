@@ -1,7 +1,7 @@
 import { css } from "./css.ts";
 import { Singleton } from "./singleton.ts";
 
-function buildStylesheet(): CSSStyleSheet {
+function buildScrollerStylesheet(): CSSStyleSheet {
 	const stylesheet = new CSSStyleSheet();
 
 	stylesheet.replaceSync(css`
@@ -268,4 +268,19 @@ function buildStylesheet(): CSSStyleSheet {
 }
 
 /** Lazily instanciated stylesheet singleton. */
-export const stylesheet = new Singleton(buildStylesheet);
+export const scrollerStylesheet = new Singleton(buildScrollerStylesheet);
+
+function buildTimelineStylesheet(): CSSStyleSheet {
+	const stylesheet = new CSSStyleSheet();
+
+	stylesheet.replaceSync(css`
+	  :host {
+			display: block;
+		}
+	`);
+
+	return stylesheet;
+}
+
+/** Lazily instanciated stylesheet singleton. */
+export const timelineStylesheet = new Singleton(buildTimelineStylesheet);
