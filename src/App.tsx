@@ -139,10 +139,10 @@ export function App(): ReactNode {
 
 	useEffect(() => {
 		const now = Date.now();
-		const testType: number = 2;
+		const staticTest = false;
 
 		let items: BaseItem[];
-		if (testType === 0) {
+		if (staticTest) {
 			items = [
 				{ endTime: now + 10_000_000, groupId: 0, id: 1, startTime: now + 0 },
 				{
@@ -194,20 +194,8 @@ export function App(): ReactNode {
 					startTime: now + 15_000_000,
 				},
 			];
-		} else if (testType === 1) {
-			const itemCount = 30;
-			items = [];
-			for (let i = 0; i < itemCount; i++) {
-				const startTime = now + i * 10_000_000;
-				items.push({
-					endTime: now + 500_000_000,
-					groupId: 0,
-					id: i,
-					startTime,
-				});
-			}
 		} else {
-			const itemCount = 200;
+			const itemCount = 1_000_000;
 			const groupSize = 1_000_000;
 			items = [];
 			for (let i = 0; i < itemCount; i++) {
