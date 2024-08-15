@@ -1,5 +1,5 @@
 import { groupOrderedItems, layoutGroupRows } from "./groupLayout.ts";
-import { ZERO } from "./math.ts";
+import { UNIT, ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
 import type { Scroller } from "./Scroller.ts";
 import { timelineStylesheet } from "./styles.ts";
@@ -13,7 +13,10 @@ export interface BaseItem<TItemId = number, TGroupId = number> {
 
 export interface BaseGroup<TGroupId = number> {
 	id: TGroupId;
+	rowHeight?: number;
 }
+
+const TIMELINE_ROW_HEIGHT_DEFAULT = 30;
 
 export class Timeline<
 	TGroupId = number,
@@ -21,9 +24,11 @@ export class Timeline<
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > extends HTMLElement {
-	public static observedAttributes = ["h-window"];
+	public static observedAttributes = ["h-window", "row-height"];
 
 	readonly #scroller: Scroller;
+
+	#defaultRowHeight: number;
 
 	#groupedItems: Map<TGroupId, readonly Readonly<TItem>[]>;
 
@@ -39,11 +44,13 @@ export class Timeline<
 		const scroller = document.createElement("cg-scroller") as Scroller;
 		customElements.upgrade(scroller);
 		scroller.addEventListener("scrollPosChange", this.render.bind(this));
+		scroller.id = "scroller";
 		this.#scroller = scroller;
 
 		this.#groupedItems = new Map();
 		this.#groupsRows = new Map();
 		this.#groups = [];
+		this.#defaultRowHeight = TIMELINE_ROW_HEIGHT_DEFAULT;
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
@@ -53,7 +60,7 @@ export class Timeline<
 
 	// @ts-expect-error Protected method used by HTMLElement
 	private attributeChangedCallback(
-		name: (typeof Scroller.observedAttributes)[number],
+		name: (typeof Timeline.observedAttributes)[number],
 		oldValue: string | null,
 		newValue: string | null,
 	): void {
@@ -62,6 +69,12 @@ export class Timeline<
 		}
 
 		switch (name) {
+			case "row-height": {
+				this.#defaultRowHeight =
+					parseFloatAttribute(newValue) ?? TIMELINE_ROW_HEIGHT_DEFAULT;
+				break;
+			}
+
 			// Passthrough to the scroller element.
 			case "h-window": {
 				const scroller = this.#scroller;
@@ -81,9 +94,6 @@ export class Timeline<
 
 	// @ts-expect-error Protected method used by HTMLElement
 	private connectedCallback(): void {
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("timeline connected");
-
 		const scroller = this.#scroller;
 		const hWindow = this.getAttribute("h-window");
 		if (hWindow) {
@@ -92,9 +102,17 @@ export class Timeline<
 			scroller.removeAttribute("h-window");
 		}
 
+		this.#defaultRowHeight =
+			parseFloatAttribute(this.getAttribute("row-height")) ??
+			TIMELINE_ROW_HEIGHT_DEFAULT;
+
 		this.#shadow.adoptedStyleSheets.push(timelineStylesheet.subscribe());
 
 		this.render();
+
+		const bbox = this.getBoundingClientRect();
+		const vSize = bbox.height;
+		scroller.setVWindow(ZERO, vSize);
 	}
 
 	// @ts-expect-error Protected method used by HTMLElement
@@ -133,12 +151,33 @@ export class Timeline<
 		this.#groupsRows = groupedRows;
 	}
 
+	private updateFullHeight() {
+		const defaultRowHeight = this.#defaultRowHeight;
+		const groups = this.#groups;
+		const groupsRows = this.#groupsRows;
+		const scroller = this.#scroller;
+
+		let fullHeight = ZERO;
+
+		for (const group of groups) {
+			fullHeight +=
+				(group.rowHeight ?? defaultRowHeight) *
+				(groupsRows.get(group.id)?.length ?? UNIT);
+		}
+
+		const bbox = this.getBoundingClientRect();
+		const vSize = bbox.height;
+
+		scroller.setVExtrema(ZERO, Math.max(fullHeight, vSize));
+	}
+
 	private render(): void {
 		if (!this.isConnected) {
 			return;
 		}
 
 		this.prepareGroupsRows();
+		this.updateFullHeight();
 
 		const scroller = this.#scroller;
 		const groups = this.#groups;
@@ -148,13 +187,14 @@ export class Timeline<
 			scroller.removeChild(scroller.firstChild);
 		}
 
+		const defaultRowHeight = this.#defaultRowHeight;
+
 		let topPos = 0;
 		for (const group of groups) {
 			const groupRows = groupsRows.get(group.id) || [];
+			const rowHeight = group.rowHeight ?? defaultRowHeight;
 
 			for (const groupRow of groupRows) {
-				const rowHeight = 30;
-
 				const rowElement = document.createElement("div");
 				rowElement.slot = "center";
 				rowElement.style.position = "absolute";
@@ -199,12 +239,6 @@ export class Timeline<
 				topPos += rowHeight;
 			}
 		}
-
-		const bbox = this.getBoundingClientRect();
-		const vSize = bbox.height;
-
-		scroller.setVWindow(ZERO, vSize);
-		scroller.setVExtrema(ZERO, Math.max(topPos, vSize));
 	}
 
 	// TODO: Make async

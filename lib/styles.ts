@@ -12,7 +12,6 @@ function buildScrollerStylesheet(): CSSStyleSheet {
 		#container {
 			display: flex;
 			height: 100%;
-			overscroll-behavior: none;
 			position: relative;
 			user-select: none; 
 			width: 100%;
@@ -29,6 +28,7 @@ function buildScrollerStylesheet(): CSSStyleSheet {
 			height: 100%;
 			overflow: auto;
 			overflow-anchor: none;
+			overscroll-behavior: none;
 			position: relative;
 
 			/* Hide the scrollbars */
@@ -276,6 +276,10 @@ function buildTimelineStylesheet(): CSSStyleSheet {
 	stylesheet.replaceSync(css`
 	  :host {
 			display: block;
+		}
+
+		#scroller {
+			height: 100%;
 		}
 	`);
 

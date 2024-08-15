@@ -14,7 +14,7 @@ import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 
 const timelineClass = css`
-	/* height: 400px; */
+	height: 400px;
 	margin-bottom: 1em;
 `;
 
@@ -196,13 +196,13 @@ export function App(): ReactNode {
 			];
 		} else {
 			const itemCount = 1_000_000;
-			const groupSize = 1_000_000;
+			const groupCount = 2;
 			items = [];
 			for (let i = 0; i < itemCount; i++) {
 				const startTime = now + Math.random() * 10_000_000 + i * 1_000_000;
 				items.push({
 					endTime: startTime + 1_000_000 + Math.random() * 39_000_000,
-					groupId: Math.floor(i / groupSize),
+					groupId: i % groupCount,
 					id: i,
 					startTime,
 				});
@@ -213,7 +213,7 @@ export function App(): ReactNode {
 			...items
 				.reduce((acc, { groupId }) => {
 					if (!acc.has(groupId)) {
-						acc.set(groupId, { id: groupId });
+						acc.set(groupId, { id: groupId, rowHeight: groupId % 2 ? 30 : 50 });
 					}
 
 					return acc;
