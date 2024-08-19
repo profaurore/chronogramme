@@ -1,3 +1,4 @@
+import { ScrollPosChangeEventDetail } from "./events.ts";
 import { layoutGroupRows } from "./groupLayout.ts";
 import { UNIT, ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
@@ -43,7 +44,10 @@ export class Timeline<
 
 		const scroller = document.createElement("cg-scroller") as Scroller;
 		customElements.upgrade(scroller);
-		scroller.addEventListener("scrollPosChange", this.render.bind(this));
+		scroller.addEventListener(
+			"scrollPosChange",
+			this.scrollPosChangeHandler.bind(this),
+		);
 		scroller.id = "scroller";
 		this.#scroller = scroller;
 
@@ -123,37 +127,18 @@ export class Timeline<
 		timelineStylesheet.unsubscribe();
 	}
 
-	private prepareGroupsRows(): void {
-		performance.mark("prepareGroupRows-start");
+	private scrollPosChangeHandler(event: Event): void {
+		if (event instanceof CustomEvent) {
+			const detail = event.detail;
 
-		const groups = this.#groups;
-		const items = this.#items;
-		const scroller = this.#scroller;
+			if (detail instanceof ScrollPosChangeEventDetail) {
+				if (detail.hScrollPos !== detail.hScrollPosPrev) {
+					this.#groupedRows.clear();
+				}
 
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const group of groups) {
-			const groupId = group.id;
-
-			const rows = layoutGroupRows<TGroupId, TItemId, TItem>(
-				groupId,
-				items,
-				hWindowMin,
-				hWindowMax,
-			);
-
-			groupedRows.set(groupId, rows);
+				this.render();
+			}
 		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"prepareGroupRows",
-			performance.measure("prepareGroupRows", "prepareGroupRows-start"),
-		);
-
-		this.#groupedRows = groupedRows;
 	}
 
 	private updateFullHeight() {
@@ -181,12 +166,13 @@ export class Timeline<
 			return;
 		}
 
-		this.prepareGroupsRows();
-		this.updateFullHeight();
-
-		const scroller = this.#scroller;
-		const groups = this.#groups;
 		const groupedRows = this.#groupedRows;
+		const groups = this.#groups;
+		const items = this.#items;
+		const scroller = this.#scroller;
+
+		const hWindowMin = scroller.hWindowMin;
+		const hWindowMax = scroller.hWindowMax;
 
 		while (scroller.firstChild) {
 			scroller.removeChild(scroller.firstChild);
@@ -196,7 +182,31 @@ export class Timeline<
 
 		let topPos = 0;
 		for (const group of groups) {
-			const groupRows = groupedRows.get(group.id) || [];
+			const groupId = group.id;
+			let groupRows = groupedRows.get(groupId);
+
+			if (groupRows === undefined) {
+				performance.mark(`prepareGroupRows-${groupId}-start`);
+
+				groupRows = layoutGroupRows<TGroupId, TItemId, TItem>(
+					groupId,
+					items,
+					hWindowMin,
+					hWindowMax,
+				);
+
+				// biome-ignore lint/nursery/noConsole: Testing
+				console.log(
+					`prepareGroupRows-${groupId}`,
+					performance.measure(
+						`prepareGroupRows-${groupId}`,
+						`prepareGroupRows-${groupId}-start`,
+					),
+				);
+
+				groupedRows.set(groupId, groupRows);
+			}
+
 			const rowHeight = group.rowHeight ?? defaultRowHeight;
 
 			for (const groupRow of groupRows) {
@@ -244,6 +254,8 @@ export class Timeline<
 				topPos += rowHeight;
 			}
 		}
+
+		this.updateFullHeight();
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
