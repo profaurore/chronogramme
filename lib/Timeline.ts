@@ -32,7 +32,7 @@ export class Timeline<
 
 	#groups: readonly Readonly<TGroup>[];
 
-	#groupsRows: Map<TGroupId, readonly Readonly<TItem>[][]>;
+	#groupedRows: Map<TGroupId, readonly Readonly<TItem>[][]>;
 
 	#items: readonly Readonly<TItem>[];
 
@@ -49,7 +49,7 @@ export class Timeline<
 
 		this.#defaultRowHeight = TIMELINE_ROW_HEIGHT_DEFAULT;
 		this.#groups = [];
-		this.#groupsRows = new Map();
+		this.#groupedRows = new Map();
 		this.#items = [];
 
 		// Root
@@ -152,12 +152,14 @@ export class Timeline<
 			"prepareGroupRows",
 			performance.measure("prepareGroupRows", "prepareGroupRows-start"),
 		);
+
+		this.#groupedRows = groupedRows;
 	}
 
 	private updateFullHeight() {
 		const defaultRowHeight = this.#defaultRowHeight;
 		const groups = this.#groups;
-		const groupsRows = this.#groupsRows;
+		const groupedRows = this.#groupedRows;
 		const scroller = this.#scroller;
 
 		let fullHeight = ZERO;
@@ -165,7 +167,7 @@ export class Timeline<
 		for (const group of groups) {
 			fullHeight +=
 				(group.rowHeight ?? defaultRowHeight) *
-				(groupsRows.get(group.id)?.length ?? UNIT);
+				(groupedRows.get(group.id)?.length ?? UNIT);
 		}
 
 		const bbox = this.getBoundingClientRect();
@@ -184,7 +186,7 @@ export class Timeline<
 
 		const scroller = this.#scroller;
 		const groups = this.#groups;
-		const groupsRows = this.#groupsRows;
+		const groupedRows = this.#groupedRows;
 
 		while (scroller.firstChild) {
 			scroller.removeChild(scroller.firstChild);
@@ -194,7 +196,7 @@ export class Timeline<
 
 		let topPos = 0;
 		for (const group of groups) {
-			const groupRows = groupsRows.get(group.id) || [];
+			const groupRows = groupedRows.get(group.id) || [];
 			const rowHeight = group.rowHeight ?? defaultRowHeight;
 
 			for (const groupRow of groupRows) {
