@@ -1,4 +1,8 @@
-import { groupOrderedItems, layoutGroupRows } from "./groupLayout.ts";
+import {
+	groupOrderedItems,
+	layoutGroupRows,
+	layoutGroupRows2,
+} from "./groupLayout.ts";
 import { UNIT, ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
 import type { Scroller } from "./Scroller.ts";
@@ -30,6 +34,8 @@ export class Timeline<
 
 	#defaultRowHeight: number;
 
+	#items: readonly Readonly<TItem>[];
+
 	#groupedItems: Map<TGroupId, readonly Readonly<TItem>[]>;
 
 	#groupsRows: Map<TGroupId, readonly Readonly<TItem>[][]>;
@@ -47,6 +53,7 @@ export class Timeline<
 		scroller.id = "scroller";
 		this.#scroller = scroller;
 
+		this.#items = [];
 		this.#groupedItems = new Map();
 		this.#groupsRows = new Map();
 		this.#groups = [];
@@ -128,6 +135,7 @@ export class Timeline<
 
 		const groupedItems = this.#groupedItems;
 		const scroller = this.#scroller;
+
 		const hWindowMin = scroller.hWindowMin;
 		const hWindowMax = scroller.hWindowMax;
 
@@ -149,6 +157,37 @@ export class Timeline<
 		);
 
 		this.#groupsRows = groupedRows;
+	}
+
+	private prepareGroupsRows2(): void {
+		performance.mark("prepareGroupRows2-start");
+
+		const groups = this.#groups;
+		const items = this.#items;
+		const scroller = this.#scroller;
+
+		const hWindowMin = scroller.hWindowMin;
+		const hWindowMax = scroller.hWindowMax;
+
+		const groupedRows: Map<TGroupId, TItem[][]> = new Map();
+		for (const group of groups) {
+			const groupId = group.id;
+
+			const rows = layoutGroupRows2<TGroupId, TItemId, TItem>(
+				groupId,
+				items,
+				hWindowMin,
+				hWindowMax,
+			);
+
+			groupedRows.set(groupId, rows);
+		}
+
+		// biome-ignore lint/nursery/noConsole: Testing
+		console.log(
+			"prepareGroupRows2",
+			performance.measure("prepareGroupRows2", "prepareGroupRows2-start"),
+		);
 	}
 
 	private updateFullHeight() {
@@ -177,6 +216,7 @@ export class Timeline<
 		}
 
 		this.prepareGroupsRows();
+		this.prepareGroupsRows2();
 		this.updateFullHeight();
 
 		const scroller = this.#scroller;
@@ -257,7 +297,40 @@ export class Timeline<
 		// biome-ignore lint/nursery/noConsole: Testing
 		console.log("grouping", performance.measure("grouping", "grouping-start"));
 
+		performance.mark("grouping2-start");
+
+		const groupedItemsV2 = items.toSorted((a, b) => a.startTime - b.startTime);
+
+		// biome-ignore lint/nursery/noConsole: Testing
+		console.log(
+			"grouping2",
+			performance.measure("grouping2", "grouping2-start"),
+		);
+
+		performance.mark("grouping3-start");
+
+		const groupedItemsV3 = [...items];
+
+		// biome-ignore lint/nursery/noConsole: Testing
+		console.log(
+			"grouping3",
+			performance.measure("grouping3", "grouping3-start"),
+		);
+
+		performance.mark("grouping4-start");
+
+		const groupedItemsV4 = items.slice(0);
+
+		// biome-ignore lint/nursery/noConsole: Testing
+		console.log(
+			"grouping4",
+			performance.measure("grouping4", "grouping4-start"),
+		);
+
+		// biome-ignore lint/nursery/noConsole: <explanation>
+		console.log(groupedItems, groupedItemsV2, groupedItemsV3, groupedItemsV4);
 		this.#groupedItems = groupedItems;
+		this.#items = groupedItemsV4;
 
 		this.render();
 	}
