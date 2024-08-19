@@ -8,7 +8,7 @@ import {
 
 describe("layoutGroupRows", () => {
 	test("No items returns an empty list of rows", () => {
-		expect(layoutGroupRows([], 0, 100)).toEqual([]);
+		expect(layoutGroupRows(0, [], 0, 100)).toEqual([]);
 	});
 
 	test("Random values match reference implementation", () => {
@@ -33,14 +33,12 @@ describe("layoutGroupRows", () => {
 			max = Math.max(max, startTime);
 		}
 
-		items.sort((a, b) => a.startTime - b.startTime);
-
 		// Offsets to test filtering.
 		min++;
 		max--;
 
-		expect(layoutGroupRows(items, min, max)).toEqual(
-			layoutGroupRowsReference(items, min, max),
+		expect(layoutGroupRows(0, items, min, max)).toEqual(
+			layoutGroupRowsReference(0, items, min, max),
 		);
 
 		// for (const [rowIdx, row] of rows.entries()) {

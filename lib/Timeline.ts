@@ -1,8 +1,4 @@
-import {
-	groupOrderedItems,
-	layoutGroupRows,
-	layoutGroupRows2,
-} from "./groupLayout.ts";
+import { layoutGroupRows } from "./groupLayout.ts";
 import { UNIT, ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
 import type { Scroller } from "./Scroller.ts";
@@ -34,13 +30,11 @@ export class Timeline<
 
 	#defaultRowHeight: number;
 
-	#items: readonly Readonly<TItem>[];
-
-	#groupedItems: Map<TGroupId, readonly Readonly<TItem>[]>;
+	#groups: readonly Readonly<TGroup>[];
 
 	#groupsRows: Map<TGroupId, readonly Readonly<TItem>[][]>;
 
-	#groups: TGroup[];
+	#items: readonly Readonly<TItem>[];
 
 	readonly #shadow: ShadowRoot;
 
@@ -53,11 +47,10 @@ export class Timeline<
 		scroller.id = "scroller";
 		this.#scroller = scroller;
 
-		this.#items = [];
-		this.#groupedItems = new Map();
-		this.#groupsRows = new Map();
-		this.#groups = [];
 		this.#defaultRowHeight = TIMELINE_ROW_HEIGHT_DEFAULT;
+		this.#groups = [];
+		this.#groupsRows = new Map();
+		this.#items = [];
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
@@ -133,15 +126,19 @@ export class Timeline<
 	private prepareGroupsRows(): void {
 		performance.mark("prepareGroupRows-start");
 
-		const groupedItems = this.#groupedItems;
+		const groups = this.#groups;
+		const items = this.#items;
 		const scroller = this.#scroller;
 
 		const hWindowMin = scroller.hWindowMin;
 		const hWindowMax = scroller.hWindowMax;
 
 		const groupedRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const [groupId, items] of groupedItems) {
+		for (const group of groups) {
+			const groupId = group.id;
+
 			const rows = layoutGroupRows<TGroupId, TItemId, TItem>(
+				groupId,
 				items,
 				hWindowMin,
 				hWindowMax,
@@ -154,39 +151,6 @@ export class Timeline<
 		console.log(
 			"prepareGroupRows",
 			performance.measure("prepareGroupRows", "prepareGroupRows-start"),
-		);
-
-		this.#groupsRows = groupedRows;
-	}
-
-	private prepareGroupsRows2(): void {
-		performance.mark("prepareGroupRows2-start");
-
-		const groups = this.#groups;
-		const items = this.#items;
-		const scroller = this.#scroller;
-
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
-
-		const groupedRows: Map<TGroupId, TItem[][]> = new Map();
-		for (const group of groups) {
-			const groupId = group.id;
-
-			const rows = layoutGroupRows2<TGroupId, TItemId, TItem>(
-				groupId,
-				items,
-				hWindowMin,
-				hWindowMax,
-			);
-
-			groupedRows.set(groupId, rows);
-		}
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"prepareGroupRows2",
-			performance.measure("prepareGroupRows2", "prepareGroupRows2-start"),
 		);
 	}
 
@@ -216,7 +180,6 @@ export class Timeline<
 		}
 
 		this.prepareGroupsRows();
-		this.prepareGroupsRows2();
 		this.updateFullHeight();
 
 		const scroller = this.#scroller;
@@ -281,56 +244,14 @@ export class Timeline<
 		}
 	}
 
-	// TODO: Make async
-	public setGroups(groups: TGroup[]): void {
+	public setGroups(groups: readonly Readonly<TGroup>[]): void {
 		this.#groups = groups;
 
 		this.render();
 	}
 
-	// TODO: Make async
 	public setItems(items: readonly Readonly<TItem>[]): void {
-		performance.mark("grouping-start");
-
-		const groupedItems = groupOrderedItems<TGroupId, TItemId, TItem>(items);
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log("grouping", performance.measure("grouping", "grouping-start"));
-
-		performance.mark("grouping2-start");
-
-		const groupedItemsV2 = items.toSorted((a, b) => a.startTime - b.startTime);
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping2",
-			performance.measure("grouping2", "grouping2-start"),
-		);
-
-		performance.mark("grouping3-start");
-
-		const groupedItemsV3 = [...items];
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping3",
-			performance.measure("grouping3", "grouping3-start"),
-		);
-
-		performance.mark("grouping4-start");
-
-		const groupedItemsV4 = items.slice(0);
-
-		// biome-ignore lint/nursery/noConsole: Testing
-		console.log(
-			"grouping4",
-			performance.measure("grouping4", "grouping4-start"),
-		);
-
-		// biome-ignore lint/nursery/noConsole: <explanation>
-		console.log(groupedItems, groupedItemsV2, groupedItemsV3, groupedItemsV4);
-		this.#groupedItems = groupedItems;
-		this.#items = groupedItemsV4;
+		this.#items = items;
 
 		this.render();
 	}
