@@ -5,12 +5,7 @@ export function layoutGroupRows<
 	TGroupId = number,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
->(
-	groupId: TGroupId,
-	items: readonly Readonly<TItem>[],
-	min: number,
-	max: number,
-): TItem[][] {
+>(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
 	const rows: TItem[][] = [];
 	const rowMaxs: number[] = [];
 	const leftMinOfMaxs: number[] = [];
@@ -86,9 +81,7 @@ export function layoutGroupRows<
 	}
 
 	const filteredItems = items.filter((item) => {
-		return (
-			item.groupId === groupId && item.startTime < max && item.endTime > min
-		);
+		return item.startTime < max && item.endTime > min;
 	});
 	filteredItems.sort((a, b) => a.startTime - b.startTime);
 
@@ -125,18 +118,11 @@ export function layoutGroupRowsReference<
 	TGroupId = number,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
->(
-	groupId: TGroupId,
-	items: readonly Readonly<TItem>[],
-	min: number,
-	max: number,
-): TItem[][] {
+>(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
 	const rows: TItem[][] = [];
 
 	const filteredItems = items.filter((item) => {
-		return (
-			item.groupId === groupId && item.startTime < max && item.endTime > min
-		);
+		return item.startTime < max && item.endTime > min;
 	});
 	filteredItems.sort((a, b) => a.startTime - b.startTime);
 
