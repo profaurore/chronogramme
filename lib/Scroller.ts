@@ -411,10 +411,6 @@ export class Scroller extends HTMLElement {
 		);
 		vBarState.setEndSize(parseFloatAttribute(this.getAttribute("v-end-size")));
 
-		// Bar display
-		this.updateHBarDimensions();
-		this.updateVBarDimensions();
-
 		// Scroll state attributes
 		const hScrollState = this.#hScrollState;
 		hScrollState.setMaxElementSize(
@@ -443,6 +439,10 @@ export class Scroller extends HTMLElement {
 		vScrollState.setWindowExtrema(
 			...parseIntervalAttribute("v-window", this.getAttribute("v-window")),
 		);
+
+		// Bar display
+		this.updateHBarDimensions();
+		this.updateVBarDimensions();
 
 		// Styles
 		this.#shadow.adoptedStyleSheets.push(scrollerStylesheet.subscribe());
