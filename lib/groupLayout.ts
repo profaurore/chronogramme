@@ -106,11 +106,7 @@ export function layoutGroupRows<
 
 // Paper folding sequence (https://oeis.org/A014707)
 function paperFoldingSequenceTerm(n: number): boolean {
-	return n % 4 === 0
-		? false
-		: n % 4 === 2
-			? true
-			: paperFoldingSequenceTerm((n - 1) / 2);
+	return n % 4 !== 0 && (n % 4 === 2 || paperFoldingSequenceTerm((n - 1) / 2));
 }
 
 // Very inefficient for larger item counts. Only use for testing.

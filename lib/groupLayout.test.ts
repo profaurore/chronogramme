@@ -48,7 +48,7 @@ describe("layoutGroupRows", () => {
 		// 		const baseItem = referenceRows[rowIdx]?.[itemIdx];
 
 		// 		if (item !== baseItem) {
-		// 			// biome-ignore lint/nursery/noConsole: Logging for debugging.
+		// 			// biome-ignore lint/suspicious/noConsole: Logging for debugging.
 		// 			console.log("bad item", baseItem?.id, item.id);
 		// 		}
 		// 	}

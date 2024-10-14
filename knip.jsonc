@@ -7,13 +7,6 @@
 		"@babel/preset-typescript",
 		"happy-dom",
 
-		// For Stylelint (stylelint.config.js)
-		"postcss",
-		"postcss-jsx",
-		"postcss-markdown",
-		"postcss-styled-syntax",
-		"postcss-syntax",
-
 		// Peer Dependency
 		"@babel/core"
 	],

@@ -117,7 +117,7 @@ export class Timeline<
 
 	// @ts-expect-error Protected method used by HTMLElement
 	private disconnectedCallback(): void {
-		// biome-ignore lint/nursery/noConsole: Testing
+		// biome-ignore lint/suspicious/noConsole: Testing
 		console.log("disconnected");
 
 		timelineStylesheet.unsubscribe();
@@ -168,7 +168,7 @@ export class Timeline<
 			hWindowMax,
 		);
 
-		// biome-ignore lint/nursery/noConsole: Testing
+		// biome-ignore lint/suspicious/noConsole: Testing
 		console.log(
 			`prepareGroupRows-${groupId}`,
 			performance.measure(
