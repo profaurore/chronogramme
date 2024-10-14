@@ -199,16 +199,15 @@ export class Timeline<
 
 		const defaultRowHeight = this.#defaultRowHeight;
 
-		let topPos = 0;
+		let currentPos = 0;
 		for (const group of groups) {
-			let currentPos = topPos;
-
 			const rowHeight = group.rowHeight ?? defaultRowHeight;
 			const rowCount = itemGroups.get(group.id)?.length ?? UNIT;
 			const groupHeight = rowHeight * rowCount;
-			topPos += groupHeight;
+			const groupBottom = currentPos + groupHeight;
 
-			if (topPos <= vWindowMin) {
+			if (groupBottom <= vWindowMin) {
+				currentPos = groupBottom;
 				continue;
 			}
 
@@ -219,8 +218,10 @@ export class Timeline<
 			const groupRows = this.getGroupRows(group.id);
 
 			for (const groupRow of groupRows) {
-				if (currentPos + rowHeight <= vWindowMin) {
-					currentPos += rowHeight;
+				const rowBottom = currentPos + rowHeight;
+
+				if (rowBottom <= vWindowMin) {
+					currentPos = rowBottom;
 					continue;
 				}
 
@@ -269,7 +270,7 @@ export class Timeline<
 
 				scroller.appendChild(rowElement);
 
-				currentPos += rowHeight;
+				currentPos = rowBottom;
 			}
 		}
 

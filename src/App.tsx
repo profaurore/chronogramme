@@ -142,6 +142,7 @@ export function App(): ReactNode {
 		const staticTest = false;
 
 		let items: BaseItem[];
+
 		if (staticTest) {
 			items = [
 				{ endTime: now + 10_000_000, groupId: 0, id: 1, startTime: now + 0 },
@@ -195,71 +196,55 @@ export function App(): ReactNode {
 				},
 			];
 		} else {
-			const itemCount = 1_000_000;
-			const groupCount = 2;
+			const groupCount = 1_000;
+			const groupItemCount = 10_000;
+
 			items = [];
-			for (let i = 0; i < itemCount; i++) {
-				const startTime = now + Math.random() * 10_000_000 + i * 1_000_000;
-				items.push({
-					endTime: startTime + 1_000_000 + Math.random() * 39_000_000,
-					groupId: i % groupCount,
-					id: i,
-					startTime,
-				});
+
+			for (let i = 0; i < groupCount; i++) {
+				for (let j = 0; j < groupItemCount; j++) {
+					const startTime = now + Math.random() * 10_000_000 + j * 1_000_000;
+					items.push({
+						endTime: startTime + 1_000_000 + Math.random() * 39_000_000,
+						groupId: i,
+						id: i * groupItemCount + j,
+						startTime,
+					});
+				}
 			}
+
+			// Randomize if the algorithm is sensitive to randomized values.
+			// for (let i = items.length - 1; i >= 0; i--) {
+			// 	const otherIdx = Math.floor(Math.random() * (i + 1));
+			// 	// biome-ignore lint/style/noNonNullAssertion: Guaranteed by the algorithm
+			// 	const temp = items[i]!;
+			// 	// biome-ignore lint/style/noNonNullAssertion: Guaranteed by the algorithm
+			// 	items[i] = items[otherIdx]!;
+			// 	items[otherIdx] = temp;
+			// }
 		}
+
+		const evenGroupRowHeight = 10;
+		const oddGroupRowHeight = 20;
 
 		const groups = [
 			...items
 				.reduce((acc, { groupId }) => {
 					if (!acc.has(groupId)) {
-						acc.set(groupId, { id: groupId, rowHeight: groupId % 2 ? 30 : 50 });
+						acc.set(groupId, {
+							id: groupId,
+							rowHeight: groupId % 2 ? evenGroupRowHeight : oddGroupRowHeight,
+						});
 					}
 
 					return acc;
 				}, new Map<number, BaseGroup>())
 				.values(),
 		];
+		groups.sort((a, b) => a.id - b.id);
 
 		timelineRef.current?.setItems(items);
 		timelineRef.current?.setGroups(groups);
-	}, []);
-
-	useEffect(() => {
-		// const tree = new BPlusTree<string>();
-		// const nodes: [number, string][] = [
-		// 	[1, "abc"],
-		// 	[2, "def"],
-		// 	[3, "ghi"],
-		// 	[4, "jkl"],
-		// 	[5, "mno"],
-		// 	[6, "pqr"],
-		// 	[7, "stu"],
-		// 	[8, "vwx"],
-		// 	[9, "yz."],
-		// ] as const;
-		// for (const [key, value] of nodes) {
-		// 	// console.log("--------------- INSERT %s %s", key, value);
-		// 	tree.insert(key, value);
-		// 	// console.log(printBPlusTree(tree));
-		// }
-		// console.log(printBPlusTree(tree));
-		// const deleteNodes: [number, string][] = [
-		// 	[9, "yz."],
-		// 	[8, "vwx"],
-		// 	[7, "stu"],
-		// 	[6, "pqr"],
-		// 	[5, "mno"],
-		// 	[4, "jkl"],
-		// 	[3, "ghi"],
-		// 	[2, "def"],
-		// 	[1, "abc"],
-		// ];
-		// for (const [key, value] of deleteNodes) {
-		// 	console.log("--------------- DELETE %s %s", key, value);
-		// 	tree.delete(key, value);
-		// 	console.log(printBPlusTree(tree));
-		// }
 	}, []);
 
 	return (
