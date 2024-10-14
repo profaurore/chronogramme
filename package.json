@@ -19,6 +19,12 @@
 			"url": "https://github.com/profaurore"
 		}
 	],
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"onFail": "error"
+		}
+	},
 	"type": "module",
 	"main": "dist/chronogramme.js",
 	"types": "dist/lib/main.d.ts",
@@ -26,17 +32,17 @@
 	"scripts": {
 		"build": "tsc --p ./tsconfig.lib.json && vite build",
 		"dev": "vite",
-		"fix": "yarn fix:code && yarn fix:css",
+		"fix": "pnpm fix:code && pnpm fix:css",
 		"fix:css": "stylelint --fix \"**/*\"",
 		"fix:code": "biome check --write .",
-		"lint": "yarn lint:code && yarn lint:css && yarn lint:knip",
+		"lint": "pnpm lint:code && pnpm lint:css && pnpm lint:knip",
 		"lint:css": "stylelint \"**/*\"",
 		"lint:code": "biome check .",
 		"lint:knip": "knip",
 		"pre-commit": "lefthook run checks",
 		"pre-commit-fix": "lefthook run pre-commit",
 		"prepare": "lefthook install",
-		"prepublishOnly": "yarn build",
+		"prepublishOnly": "pnpm build",
 		"preview": "vite preview",
 		"test": "vitest"
 	},

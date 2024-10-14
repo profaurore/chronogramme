@@ -8,10 +8,10 @@ export default {
 		"**/*.log",
 		"**/*.tsbuildinfo",
 		"**/*.yml",
+		"**/*.yaml",
 		"coverage/**/*",
 		"dist/**/*",
 		"node_modules/**/*",
-		"yarn.lock",
 	],
 	overrides: [
 		{

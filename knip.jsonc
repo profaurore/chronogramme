@@ -1,6 +1,5 @@
 {
 	"entry": ["src/main.tsx", "lib/main.ts"],
-	"ignoreBinaries": ["audit"],
 	"ignoreDependencies": [
 		// For Vite
 		"@babel/preset-react",

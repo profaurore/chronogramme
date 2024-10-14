@@ -12,7 +12,7 @@
 		"typescript",
 		"typescriptreact"
 	],
-	"stylelint.packageManager": "yarn",
+	"stylelint.packageManager": "pnpm",
 	"stylelint.configFile": "stylelint.config.js",
 	// Comments in JSON
 	"json.validate.enable": false,

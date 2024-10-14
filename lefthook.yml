@@ -5,29 +5,29 @@ output:
 pre-push:
   commands:
     packages-audit:
-      run: yarn audit
+      run: pnpm audit
 
 pre-commit:
   commands:
     code-fix:
-      run: yarn biome check --write .
+      run: pnpm biome check --write .
       stage_fixed: true
     css-fix:
-      run: yarn stylelint --fix {staged_files}
+      run: pnpm stylelint --fix {staged_files}
       stage_fixed: true
     checks:
-      run: yarn lefthook run checks
+      run: pnpm lefthook run checks
 
 checks:
   parallel: true
   commands:
     code-check:
-      run: yarn biome check .
+      run: pnpm biome check .
     css-check:
-      run: yarn stylelint {staged_files}
+      run: pnpm stylelint {staged_files}
     dead-check:
-      run: yarn knip
+      run: pnpm knip
     tests:
-      run: yarn vitest run
+      run: pnpm vitest run
     typescript:
-      run: yarn tsc
+      run: pnpm tsc

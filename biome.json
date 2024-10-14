@@ -9,7 +9,7 @@
 		}
 	},
 	"files": {
-		"ignore": ["coverage/", "dist/", "yarn.lock"]
+		"ignore": ["coverage/", "dist/"]
 	},
 	"json": {
 		"parser": {
