@@ -39,7 +39,7 @@
 				"noNestedTernary": "error",
 				"noOctalEscape": "error",
 				"noProcessEnv": "error",
-				"noSecrets": "error",
+				"noSecrets": "off",
 				"noStaticElementInteractions": "error",
 				"noSubstr": "error",
 				"noTemplateCurlyInString": "error",
@@ -50,6 +50,12 @@
 				"useAriaPropsSupportedByRole": "error",
 				"useComponentExportOnlyModules": "error",
 				"useConsistentCurlyBraces": "error",
+				"useConsistentMemberAccessibility": {
+					"level": "error",
+					"options": {
+						"accessibility": "explicit"
+					}
+				},
 				"useSortedClasses": "error",
 				"useStrictMode": "error",
 				"useTrimStartEnd": "error",

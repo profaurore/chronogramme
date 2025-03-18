@@ -233,7 +233,7 @@ export function App(): ReactNode {
 					if (!acc.has(groupId)) {
 						acc.set(groupId, {
 							id: groupId,
-							rowHeight: groupId % 2 ? evenGroupRowHeight : oddGroupRowHeight,
+							lineSize: groupId % 2 ? evenGroupRowHeight : oddGroupRowHeight,
 						});
 					}
 

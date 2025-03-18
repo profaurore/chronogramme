@@ -27,6 +27,8 @@ type DragState = {
 	onMove: (event: MouseEvent) => void;
 	onStop: () => void;
 	onVisibilityChange: () => void;
+
+	// TODO: use AbortController for removeEventHandlers
 };
 
 export class Scroller extends HTMLElement {

@@ -1,5 +1,5 @@
-import { layoutGroupRows } from "./groupLayout.ts";
-import { UNIT, ZERO, parseFloatAttribute } from "./math.ts";
+import { GroupPositionsState } from "./groupPositionsState.ts";
+import { ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
 import type { Scroller } from "./Scroller.ts";
 import { timelineStylesheet } from "./styles.ts";
@@ -13,10 +13,14 @@ export interface BaseItem<TItemId = number, TGroupId = number> {
 
 export interface BaseGroup<TGroupId = number> {
 	id: TGroupId;
-	rowHeight?: number;
+	lineSize?: number;
 }
 
-const TIMELINE_ROW_HEIGHT_DEFAULT = 30;
+// interface ScrollReference<TGroupId = number> {
+// 	groupId: TGroupId;
+// 	groupIdx: number;
+// 	offset: number;
+// }
 
 export class Timeline<
 	TGroupId = number,
@@ -28,13 +32,16 @@ export class Timeline<
 
 	readonly #scroller: Scroller;
 
-	#defaultRowHeight: number;
+	readonly #groupPositionsState: GroupPositionsState<
+		TGroupId,
+		TGroup,
+		TItemId,
+		TItem
+	>;
 
-	#groups: readonly Readonly<TGroup>[];
-
-	#itemGroups: Map<TGroupId, Readonly<TItem>[]>;
-
-	#items: readonly Readonly<TItem>[];
+	// The reference is the distance from the bottom of the first group in the
+	// view.
+	// #vScrollReference: ScrollReference | undefined;
 
 	readonly #shadow: ShadowRoot;
 
@@ -47,10 +54,7 @@ export class Timeline<
 		scroller.id = "scroller";
 		this.#scroller = scroller;
 
-		this.#defaultRowHeight = TIMELINE_ROW_HEIGHT_DEFAULT;
-		this.#groups = [];
-		this.#itemGroups = new Map();
-		this.#items = [];
+		this.#groupPositionsState = new GroupPositionsState();
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
@@ -70,8 +74,9 @@ export class Timeline<
 
 		switch (name) {
 			case "row-height": {
-				this.#defaultRowHeight =
-					parseFloatAttribute(newValue) ?? TIMELINE_ROW_HEIGHT_DEFAULT;
+				this.#groupPositionsState.setDefaultLineSize(
+					parseFloatAttribute(newValue),
+				);
 				break;
 			}
 
@@ -102,9 +107,9 @@ export class Timeline<
 			scroller.removeAttribute("h-window");
 		}
 
-		this.#defaultRowHeight =
-			parseFloatAttribute(this.getAttribute("row-height")) ??
-			TIMELINE_ROW_HEIGHT_DEFAULT;
+		this.#groupPositionsState.setDefaultLineSize(
+			parseFloatAttribute(this.getAttribute("row-height")),
+		);
 
 		this.#shadow.adoptedStyleSheets.push(timelineStylesheet.subscribe());
 
@@ -124,20 +129,10 @@ export class Timeline<
 	}
 
 	private updateFullHeight() {
-		const defaultRowHeight = this.#defaultRowHeight;
-		const groups = this.#groups;
-		const itemGroups = this.#itemGroups;
 		const scroller = this.#scroller;
+		const groupPositionsState = this.#groupPositionsState;
 
-		let fullHeight = ZERO;
-
-		for (const group of groups) {
-			const rowHeight = group.rowHeight ?? defaultRowHeight;
-			const rowCount = itemGroups.get(group.id)?.length ?? UNIT;
-			const groupHeight = rowHeight * rowCount;
-
-			fullHeight += groupHeight;
-		}
+		const fullHeight = groupPositionsState.getHeight();
 
 		const bbox = this.getBoundingClientRect();
 		const vSize = bbox.height;
@@ -145,101 +140,78 @@ export class Timeline<
 		scroller.setVExtrema(ZERO, Math.max(fullHeight, vSize));
 	}
 
-	private getGroupRows(groupId: TGroupId): Readonly<TItem>[][] {
-		performance.mark(`prepareGroupRows-${groupId}-start`);
+	// private updateVScrollPos() {
+	// 	const vScrollPos = this.#scroller.vScrollPos;
 
-		const itemGroups = this.#itemGroups;
-		const items = this.#items;
-		const scroller = this.#scroller;
+	// 	let vScrollReference = this.#vScrollReference;
 
-		const hWindowMin = scroller.hWindowMin;
-		const hWindowMax = scroller.hWindowMax;
+	// 	if (!vScrollReference) {
+	// 		vScrollReference = { groupId: 0, groupIdx: 0, offset: 0 };
+	// 		this.#vScrollReference = vScrollReference;
+	// 	}
 
-		let itemGroup = itemGroups.get(groupId);
+	// 	// while ()
+	// }
 
-		if (itemGroup === undefined) {
-			itemGroup = items.filter((item) => item.groupId === groupId);
-			itemGroups.set(groupId, itemGroup);
-		}
-
-		const groupRows = layoutGroupRows<TGroupId, TItemId, TItem>(
-			itemGroup,
-			hWindowMin,
-			hWindowMax,
-		);
-
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(
-			`prepareGroupRows-${groupId}`,
-			performance.measure(
-				`prepareGroupRows-${groupId}`,
-				`prepareGroupRows-${groupId}-start`,
-			),
-		);
-
-		return groupRows;
-	}
-
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: initial development
 	private render(): void {
+		performance.mark("render-start");
+
 		if (!this.isConnected) {
 			return;
 		}
 
-		const itemGroups = this.#itemGroups;
-		const groups = this.#groups;
+		const groupPositionsState = this.#groupPositionsState;
 		const scroller = this.#scroller;
 
-		const vWindowMin = scroller.vWindowMin;
+		const hWindowMax = scroller.hWindowMax;
+		const hWindowMin = scroller.hWindowMin;
 		const vWindowMax = scroller.vWindowMax;
+		const vWindowMin = scroller.vWindowMin;
+
+		groupPositionsState.setGroupWindow(vWindowMin, vWindowMax);
+		groupPositionsState.setItemWindow(hWindowMin, hWindowMax);
+		const groups = groupPositionsState.getVisibleGroupsIter();
 
 		while (scroller.firstChild) {
 			scroller.removeChild(scroller.firstChild);
 		}
 
-		const defaultRowHeight = this.#defaultRowHeight;
+		for (const groupIndex of groups) {
+			const lineSize = groupPositionsState.getGroupLineSize(groupIndex);
+			const lines = groupPositionsState.getVisibleGroupLinesIter(groupIndex);
+			const groupPosition = groupPositionsState.getGroupPosition(groupIndex);
 
-		let currentPos = 0;
-		for (const group of groups) {
-			const rowHeight = group.rowHeight ?? defaultRowHeight;
-			const rowCount = itemGroups.get(group.id)?.length ?? UNIT;
-			const groupHeight = rowHeight * rowCount;
-			const groupBottom = currentPos + groupHeight;
-
-			if (groupBottom <= vWindowMin) {
-				currentPos = groupBottom;
-				continue;
-			}
-
-			if (currentPos >= vWindowMax) {
-				break;
-			}
-
-			const groupRows = this.getGroupRows(group.id);
-
-			for (const groupRow of groupRows) {
-				const rowBottom = currentPos + rowHeight;
-
-				if (rowBottom <= vWindowMin) {
-					currentPos = rowBottom;
-					continue;
-				}
-
-				if (currentPos >= vWindowMax) {
-					break;
-				}
+			for (const lineIndex of lines) {
+				const linePosition = groupPositionsState.getLinePosition(
+					groupIndex,
+					lineIndex,
+				);
+				const items = groupPositionsState.getVisibleLineItemsIter(
+					groupIndex,
+					lineIndex,
+				);
 
 				const rowElement = document.createElement("div");
 				rowElement.slot = "center";
 				rowElement.style.position = "absolute";
 				rowElement.style.insetInline = "0";
-				rowElement.style.top = `${currentPos}px`;
-				rowElement.style.height = `${rowHeight}px`;
+				rowElement.style.top = `${groupPosition + linePosition}px`;
+				rowElement.style.height = `${lineSize}px`;
 				rowElement.style.border = "2px solid blue";
 				rowElement.style.background = "#9999ffaa";
 				rowElement.style.boxSizing = "border-box";
 
-				for (const item of groupRow) {
+				for (const itemIndex of items) {
+					const item = groupPositionsState.getItem(
+						groupIndex,
+						lineIndex,
+						itemIndex,
+					);
+
+					if (!item) {
+						continue;
+					}
+
 					const startTime = item.startTime;
 					const endTime = item.endTime;
 					const id = item.id;
@@ -269,23 +241,28 @@ export class Timeline<
 				}
 
 				scroller.appendChild(rowElement);
-
-				currentPos = rowBottom;
 			}
 		}
 
 		this.updateFullHeight();
+
+		const perf = performance.measure("render", "render-start");
+		// if (perf.duration > 500) {
+		// biome-ignore lint/suspicious/noConsole: Testing
+		console.log("render", perf);
+		// }
+
+		// this.updateVScrollPos();
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groups = groups;
+		this.#groupPositionsState.setGroups(groups);
 
 		this.render();
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#items = items;
-		this.#itemGroups.clear();
+		this.#groupPositionsState.setItems(items);
 
 		this.render();
 	}
