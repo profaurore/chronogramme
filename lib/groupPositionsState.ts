@@ -6,12 +6,16 @@ const GROUP_LINE_SIZE_DEFAULT = 30;
 
 const GROUP_OVERDRAW_DEFAULT = 40;
 
+const ASYNC_PROCESSING_SIZE_DEFAULT = 1_000_000;
+
 export class GroupPositionsState<
 	TGroupId = number,
 	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > {
+	#asyncProcessingSize: number;
+
 	#defaultLineSize: number;
 
 	#groups: readonly Readonly<TGroup>[];
@@ -30,6 +34,8 @@ export class GroupPositionsState<
 
 	#itemGroups: (readonly Readonly<TItem>[])[];
 
+	#itemGroupsSignalController: AbortController | undefined;
+
 	#items: readonly Readonly<TItem>[];
 
 	#itemWindowMax: number;
@@ -37,18 +43,19 @@ export class GroupPositionsState<
 	#itemWindowMin: number;
 
 	public constructor() {
+		this.#asyncProcessingSize = ASYNC_PROCESSING_SIZE_DEFAULT;
 		this.#defaultLineSize = GROUP_LINE_SIZE_DEFAULT;
 		this.#groups = [];
 		this.#groupLineSets = [];
 		this.#groupOverdraw = GROUP_OVERDRAW_DEFAULT;
 		this.#groupPositions = [];
 		this.#groupSizes = [];
-		this.#groupWindowMax = 0;
-		this.#groupWindowMin = 0;
+		this.#groupWindowMax = ZERO;
+		this.#groupWindowMin = ZERO;
 		this.#itemGroups = [];
 		this.#items = [];
-		this.#itemWindowMax = 0;
-		this.#itemWindowMin = 0;
+		this.#itemWindowMax = ZERO;
+		this.#itemWindowMin = ZERO;
 	}
 
 	private getFirstGroupInWindow(): [index: number, startPos: number] {
@@ -62,7 +69,7 @@ export class GroupPositionsState<
 		let firstGroup: [index: number, startPos: number] | undefined;
 		let currentPos = ZERO;
 
-		for (let index = 0; index < numGroups; index++) {
+		for (let index = ZERO; index < numGroups; index++) {
 			const groupSize = groupSizes[index] ?? defaultGroupSize;
 
 			const startPos = currentPos;
@@ -134,7 +141,7 @@ export class GroupPositionsState<
 				itemWindowMax,
 			);
 
-			if (lines.length === 0) {
+			if (lines.length === ZERO) {
 				lines.push([]);
 			}
 
@@ -162,7 +169,7 @@ export class GroupPositionsState<
 
 			let lastKnownPosition: number | undefined;
 			let lastKnownIndex = index;
-			for (; lastKnownIndex >= 0; lastKnownIndex--) {
+			for (; lastKnownIndex >= ZERO; lastKnownIndex--) {
 				lastKnownPosition = groupPositions[lastKnownIndex];
 				if (lastKnownPosition !== undefined) {
 					break;
@@ -189,7 +196,7 @@ export class GroupPositionsState<
 		const numGroups = groups.length;
 		let height = ZERO;
 
-		for (let index = 0; index < numGroups; index++) {
+		for (let index = ZERO; index < numGroups; index++) {
 			height += groupSizes[index] ?? this.getGroupLineSize(index);
 		}
 
@@ -266,7 +273,7 @@ export class GroupPositionsState<
 		// If the selected groups are still shorter than the window range, snap the
 		// first group to the start of the range.
 		if (currentPos > windowMinAdjusted) {
-			currentPos = 0;
+			currentPos = ZERO;
 		}
 
 		for (let index = firstGroupIndex; index < lastGroupIndex; index++) {
@@ -317,18 +324,90 @@ export class GroupPositionsState<
 		}
 	}
 
-	private prepareItemGroups(): void {
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Work in progress
+	private async prepareItemGroups() {
+		performance.mark("itemGroups-start");
+
+		this.#itemGroupsSignalController?.abort();
+
+		const itemGroupsSignalController = new AbortController();
+		this.#itemGroupsSignalController = itemGroupsSignalController;
+		const itemGroupsSignal = itemGroupsSignalController.signal;
+
+		const asyncProcessingSize = this.#asyncProcessingSize;
 		const groups = this.#groups;
-		const itemGroups = this.#itemGroups;
 		const items = this.#items;
 
-		itemGroups.length = ZERO;
+		const itemGroups: (readonly Readonly<TItem>[])[] = [];
 
-		const itemGroupsMap = Map.groupBy(items, (item) => item.groupId);
-
-		for (const group of groups) {
-			itemGroups.push(itemGroupsMap.get(group.id) ?? []);
+		if (groups.length === ZERO || items.length === 0) {
+			this.#itemGroups = itemGroups;
+			return;
 		}
+
+		const itemGroupsMap = new Map<TGroupId, TItem[]>();
+
+		performance.mark("itemGroupsSet-start");
+		for (const [itemIndex, item] of items.entries()) {
+			let itemGroup = itemGroupsMap.get(item.groupId);
+
+			if (!itemGroup) {
+				itemGroup = [];
+				itemGroupsMap.set(item.groupId, itemGroup);
+			}
+
+			itemGroup.push(item);
+
+			if ((itemIndex + UNIT) % asyncProcessingSize === ZERO) {
+				// biome-ignore lint/suspicious/noConsole: Testing
+				console.log("itemGroups-itemIndex", itemIndex);
+				// biome-ignore lint/suspicious/noConsole: Testing
+				console.log(
+					performance.measure("itemGroupsSet", "itemGroupsSet-start"),
+				);
+				performance.mark("itemGroupsSet-start");
+				await new Promise((resolve) => setTimeout(resolve, ZERO));
+
+				if (itemGroupsSignal.aborted) {
+					return Promise.reject();
+				}
+			}
+		}
+		// biome-ignore lint/suspicious/noConsole: Testing
+		console.log(performance.measure("itemGroupsSet", "itemGroupsSet-start"));
+
+		performance.mark("itemGroupsSet-start");
+		for (const [groupIndex, group] of groups.entries()) {
+			itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
+
+			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
+				// biome-ignore lint/suspicious/noConsole: Testing
+				console.log("itemGroups-groupIndex", groupIndex);
+				// biome-ignore lint/suspicious/noConsole: Testing
+				console.log(
+					performance.measure("itemGroupsSet", "itemGroupsSet-start"),
+				);
+				performance.mark("itemGroupsSet-start");
+				await new Promise((resolve) => setTimeout(resolve, ZERO));
+
+				if (itemGroupsSignal.aborted) {
+					return Promise.reject();
+				}
+			}
+		}
+		// biome-ignore lint/suspicious/noConsole: Testing
+		console.log(performance.measure("itemGroupsSet", "itemGroupsSet-start"));
+		performance.mark("itemGroupsEnd-start");
+
+		if (itemGroupsSignal.aborted) {
+			return Promise.reject();
+		}
+
+		this.#itemGroups = itemGroups;
+		// biome-ignore lint/suspicious/noConsole: Testing
+		console.log(performance.measure("itemGroupsEnd", "itemGroupsEnd-start"));
+		// biome-ignore lint/suspicious/noConsole: Testing
+		console.log(performance.measure("itemGroups", "itemGroups-start"));
 	}
 
 	public setDefaultLineSize(defaultLineSize: number | undefined): void {
@@ -338,22 +417,24 @@ export class GroupPositionsState<
 		this.#groupSizes.length = ZERO;
 	}
 
-	public setGroups(groups: readonly Readonly<TGroup>[]): void {
+	public async setGroups(groups: readonly Readonly<TGroup>[]): Promise<void> {
 		this.#groups = groups;
 
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
-		this.prepareItemGroups();
+
+		return await this.prepareItemGroups();
 	}
 
-	public setItems(items: readonly Readonly<TItem>[]): void {
+	public async setItems(items: readonly Readonly<TItem>[]): Promise<void> {
 		this.#items = items;
 
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
-		this.prepareItemGroups();
+
+		return await this.prepareItemGroups();
 	}
 
 	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {

@@ -256,15 +256,19 @@ export class Timeline<
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groupPositionsState.setGroups(groups);
+		this.#groupPositionsState
+			.setGroups(groups)
+			.then(() => this.render())
+			.catch(() => undefined);
 
 		this.render();
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#groupPositionsState.setItems(items);
-
-		this.render();
+		this.#groupPositionsState
+			.setItems(items)
+			.then(() => this.render())
+			.catch(() => undefined);
 	}
 }
 
