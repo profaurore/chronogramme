@@ -317,6 +317,20 @@ export class GroupPositionsState<
 		}
 	}
 
+	private prepareItemGroups(): void {
+		const groups = this.#groups;
+		const itemGroups = this.#itemGroups;
+		const items = this.#items;
+
+		itemGroups.length = ZERO;
+
+		const itemGroupsMap = Map.groupBy(items, (item) => item.groupId);
+
+		for (const group of groups) {
+			itemGroups.push(itemGroupsMap.get(group.id) ?? []);
+		}
+	}
+
 	public setDefaultLineSize(defaultLineSize: number | undefined): void {
 		this.#defaultLineSize = defaultLineSize ?? GROUP_LINE_SIZE_DEFAULT;
 
@@ -330,7 +344,7 @@ export class GroupPositionsState<
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
-		this.#itemGroups.length = ZERO;
+		this.prepareItemGroups();
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
@@ -339,7 +353,7 @@ export class GroupPositionsState<
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
-		this.#itemGroups.length = ZERO;
+		this.prepareItemGroups();
 	}
 
 	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {

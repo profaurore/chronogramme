@@ -249,7 +249,7 @@ export class Timeline<
 		const perf = performance.measure("render", "render-start");
 		// if (perf.duration > 500) {
 		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log("render", perf);
+		console.log(perf);
 		// }
 
 		// this.updateVScrollPos();
