@@ -139,6 +139,7 @@ export class GroupPositionsState<
 			}
 
 			groupLines = lines;
+			groupLineSets[index] = groupLines;
 		}
 
 		return groupLines;
@@ -169,12 +170,13 @@ export class GroupPositionsState<
 			}
 
 			let currentPos = lastKnownPosition ?? ZERO;
-			for (let i = lastKnownIndex + 1; i < index - 1; i++) {
+			for (let i = Math.max(lastKnownIndex, ZERO); i < index; i++) {
 				groupPositions[i] = currentPos;
 				currentPos += this.getGroupSize(i);
 			}
 
 			groupPosition = currentPos;
+			groupPositions[index] = currentPos;
 		}
 
 		return groupPosition;
@@ -227,7 +229,7 @@ export class GroupPositionsState<
 		return lineIndex * lineHeight;
 	}
 
-	private getVisibleGroups(): [startIndex: number, endIndex: number] {
+	public *getVisibleGroupsIter(): Generator<number, void, undefined> {
 		const groups = this.#groups;
 
 		const groupDrawMin = this.getGroupDrawMin();
@@ -267,47 +269,32 @@ export class GroupPositionsState<
 			currentPos = 0;
 		}
 
-		return [firstGroupIndex, lastGroupIndex];
-	}
-
-	public *getVisibleGroupsIter(): Generator<number, void, undefined> {
-		const [firstGroupIndex, lastGroupIndex] = this.getVisibleGroups();
-
 		for (let index = firstGroupIndex; index < lastGroupIndex; index++) {
 			yield index;
 		}
 	}
 
-	private getVisibleGroupLines(
-		index: number,
-	): [startIndex: number, endIndex: number] {
+	public *getVisibleGroupLinesIter(
+		groupIndex: number,
+	): Generator<number, void, undefined> {
 		const groupDrawMax = this.getGroupDrawMax();
 		const groupDrawMin = this.getGroupDrawMin();
-		const groupLines = this.getGroupLines(index);
-		const groupPos = this.getGroupPosition(index);
-		const lineSize = this.getGroupLineSize(index);
+		const groupLines = this.getGroupLines(groupIndex);
+		const groupPos = this.getGroupPosition(groupIndex);
+		const lineSize = this.getGroupLineSize(groupIndex);
 
 		const groupLinesCount = groupLines.length;
 
-		const startIndex = clampMinWins(
+		const firstLineIndex = clampMinWins(
 			Math.floor((groupDrawMin - groupPos) / lineSize),
 			ZERO,
 			groupLinesCount,
 		);
-		const endIndex = clampMinWins(
+		const lastLineIndex = clampMinWins(
 			Math.ceil((groupDrawMax - groupPos) / lineSize) + UNIT,
 			ZERO,
 			groupLinesCount,
 		);
-
-		return [startIndex, endIndex];
-	}
-
-	public *getVisibleGroupLinesIter(
-		groupIndex: number,
-	): Generator<number, void, undefined> {
-		const [firstLineIndex, lastLineIndex] =
-			this.getVisibleGroupLines(groupIndex);
 
 		for (
 			let lineIndex = firstLineIndex;
