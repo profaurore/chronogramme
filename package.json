@@ -41,6 +41,7 @@
 		"lint:knip": "knip",
 		"pre-commit": "lefthook run checks",
 		"pre-commit-fix": "lefthook run pre-commit",
+		"pre-push": "lefthook run pre-push",
 		"prepare": "lefthook install",
 		"prepublishOnly": "pnpm build",
 		"preview": "vite preview",
