@@ -30,10 +30,10 @@ declare global {
 				"h-side-resize-strategy"?: SideResizeStrategyOptions | undefined;
 				"h-start-extrema"?: Interval | IntervalString | undefined;
 				"h-start-size"?: number | undefined;
-				"h-window"?: [number, number] | undefined;
+				"h-window"?: Interval | undefined;
 				"v-end-extrema"?: Interval | IntervalString | undefined;
 				"v-end-size"?: number | undefined;
-				"v-extrema"?: [number, number] | undefined;
+				"v-extrema"?: Interval | undefined;
 				"v-max-element-size"?: number | undefined;
 				"v-middle-min"?: number | undefined;
 				"v-resize-strategy"?: ResizeStrategyOptions | undefined;
@@ -41,7 +41,7 @@ declare global {
 				"v-side-resize-strategy"?: SideResizeStrategyOptions | undefined;
 				"v-start-extrema"?: Interval | IntervalString | undefined;
 				"v-start-size"?: number | undefined;
-				"v-window"?: [number, number] | undefined;
+				"v-window"?: Interval | undefined;
 			};
 
 			"cg-timeline": Omit<
@@ -53,7 +53,8 @@ declare global {
 				// Dashed attributes may cause issues with type checking, but they make
 				// the attributes more readable.
 				// https://github.com/microsoft/TypeScript/issues/55182
-				"h-window"?: [number, number] | undefined;
+				"h-extrema"?: Interval | IntervalString | undefined;
+				"h-window"?: Interval | undefined;
 			};
 		}
 	}

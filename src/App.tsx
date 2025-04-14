@@ -213,9 +213,9 @@ export function App(): ReactNode {
 			<div>
 				<cg-timeline
 					class={timelineClass}
-					ref={timelineRef}
 					h-extrema={[extremaStart, extremaEnd]}
 					h-window={[windowStart, windowEnd]}
+					ref={timelineRef}
 				/>
 			</div>
 			<div>
