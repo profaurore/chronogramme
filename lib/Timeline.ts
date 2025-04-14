@@ -1,8 +1,8 @@
 import { GroupPositionsState } from "./groupPositionsState.ts";
 import { ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
-import type { Scroller } from "./Scroller.ts";
-import { timelineStylesheet } from "./styles.ts";
+import { Scroller } from "./Scroller.ts";
+import { validateStringOptions } from "./string.ts";
 
 export interface BaseItem<TItemId = number, TGroupId = number> {
 	endTime: EpochTimeStamp;
@@ -16,21 +16,19 @@ export interface BaseGroup<TGroupId = number> {
 	lineSize?: number;
 }
 
-// interface ScrollReference<TGroupId = number> {
-// 	groupId: TGroupId;
-// 	groupIdx: number;
-// 	offset: number;
-// }
+const TIMELINE_OBSERVED_ATTRIBUTES = [
+	"h-extrema",
+	"h-window",
+	"row-height",
+] as const;
 
 export class Timeline<
 	TGroupId = number,
 	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
-> extends HTMLElement {
-	public static observedAttributes = ["h-extrema", "h-window", "row-height"];
-
-	readonly #scroller: Scroller;
+> extends Scroller {
+	protected override observedAttributes = TIMELINE_OBSERVED_ATTRIBUTES;
 
 	readonly #groupPositionsState: GroupPositionsState<
 		TGroupId,
@@ -39,20 +37,10 @@ export class Timeline<
 		TItem
 	>;
 
-	// The reference is the distance from the bottom of the first group in the
-	// view.
-	// #vScrollReference: ScrollReference | undefined;
-
-	readonly #shadow: ShadowRoot;
-
 	public constructor() {
 		super();
 
-		const scroller = document.createElement("cg-scroller") as Scroller;
-		customElements.upgrade(scroller);
-		scroller.addEventListener("windowChange", this.render.bind(this));
-		scroller.id = "scroller";
-		this.#scroller = scroller;
+		this.addEventListener("windowChange", this.render.bind(this));
 
 		const groupPositionsState = new GroupPositionsState<
 			TGroupId,
@@ -65,19 +53,15 @@ export class Timeline<
 			this.render.bind(this),
 		);
 		this.#groupPositionsState = groupPositionsState;
-
-		// Root
-		const shadow = this.attachShadow({ mode: "closed" });
-		shadow.appendChild(scroller);
-		this.#shadow = shadow;
 	}
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private attributeChangedCallback(
-		name: (typeof Timeline.observedAttributes)[number],
+	protected override attributeChangedCallback(
+		name: string,
 		oldValue: string | null,
 		newValue: string | null,
 	): void {
+		validateStringOptions("attributeName", name, TIMELINE_OBSERVED_ATTRIBUTES);
+
 		if (!this.isConnected || newValue === oldValue) {
 			return;
 		}
@@ -90,97 +74,36 @@ export class Timeline<
 				break;
 			}
 
-			// Passthrough to the scroller element.
-			case "h-extrema": {
-				const scroller = this.#scroller;
-				if (newValue) {
-					scroller.setAttribute(name, newValue);
-				} else {
-					scroller.removeAttribute(name);
-				}
-				break;
-			}
-
-			// Passthrough to the scroller element.
-			case "h-window": {
-				const scroller = this.#scroller;
-				if (newValue) {
-					scroller.setAttribute(name, newValue);
-				} else {
-					scroller.removeAttribute(name);
-				}
-				break;
-			}
-
 			default: {
+				super.attributeChangedCallback(name, oldValue, newValue);
 				break;
 			}
 		}
 	}
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private connectedCallback(): void {
-		const scroller = this.#scroller;
-
-		const hExtrema = this.getAttribute("h-extrema");
-		if (hExtrema) {
-			scroller.setAttribute("h-extrema", hExtrema);
-		} else {
-			scroller.removeAttribute("h-extrema");
-		}
-
-		const hWindow = this.getAttribute("h-window");
-		if (hWindow) {
-			scroller.setAttribute("h-window", hWindow);
-		} else {
-			scroller.removeAttribute("h-window");
-		}
+	protected override connectedCallback(): void {
+		super.connectedCallback();
 
 		this.#groupPositionsState.setDefaultLineSize(
 			parseFloatAttribute(this.getAttribute("row-height")),
 		);
 
-		this.#shadow.adoptedStyleSheets.push(timelineStylesheet.subscribe());
-
-		this.render();
-
 		const bbox = this.getBoundingClientRect();
 		const vSize = bbox.height;
-		scroller.setVWindow(ZERO, vSize);
-	}
+		this.setVExtrema(ZERO, vSize);
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private disconnectedCallback(): void {
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log("disconnected");
-
-		timelineStylesheet.unsubscribe();
+		this.render();
 	}
 
 	private updateFullHeight() {
-		const scroller = this.#scroller;
 		const groupPositionsState = this.#groupPositionsState;
 
 		const fullHeight = groupPositionsState.getHeight();
-
 		const bbox = this.getBoundingClientRect();
 		const vSize = bbox.height;
 
-		scroller.setVExtrema(ZERO, Math.max(fullHeight, vSize));
+		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
 	}
-
-	// private updateVScrollPos() {
-	// 	const vScrollPos = this.#scroller.vScrollPos;
-
-	// 	let vScrollReference = this.#vScrollReference;
-
-	// 	if (!vScrollReference) {
-	// 		vScrollReference = { groupId: 0, groupIdx: 0, offset: 0 };
-	// 		this.#vScrollReference = vScrollReference;
-	// 	}
-
-	// 	// while ()
-	// }
 
 	private render(): void {
 		performance.mark("render-start");
@@ -190,19 +113,18 @@ export class Timeline<
 		}
 
 		const groupPositionsState = this.#groupPositionsState;
-		const scroller = this.#scroller;
 
-		const hWindowMax = scroller.hWindowMax;
-		const hWindowMin = scroller.hWindowMin;
-		const vWindowMax = scroller.vWindowMax;
-		const vWindowMin = scroller.vWindowMin;
+		const hWindowMax = this.hWindowMax;
+		const hWindowMin = this.hWindowMin;
+		const vWindowMax = this.vWindowMax;
+		const vWindowMin = this.vWindowMin;
 
 		groupPositionsState.setGroupWindow(vWindowMin, vWindowMax);
 		groupPositionsState.setItemWindow(hWindowMin, hWindowMax);
 		const groups = groupPositionsState.getVisibleGroupsIter();
 
-		while (scroller.firstChild) {
-			scroller.removeChild(scroller.firstChild);
+		while (this.firstChild) {
+			this.removeChild(this.firstChild);
 		}
 
 		for (const groupIndex of groups) {
@@ -246,11 +168,8 @@ export class Timeline<
 					const endTime = item.endTime;
 					const id = item.id;
 
-					const startPos = Math.max(scroller.getHPos(startTime), ZERO);
-					const endPos = Math.min(
-						scroller.getHPos(endTime),
-						scroller.hScrollSize,
-					);
+					const startPos = Math.max(this.getHPos(startTime), ZERO);
+					const endPos = Math.min(this.getHPos(endTime), this.hScrollSize);
 					const width = (endPos - startPos).toFixed(4);
 
 					const itemElement = document.createElement("div");
@@ -270,19 +189,15 @@ export class Timeline<
 					rowElement.appendChild(itemElement);
 				}
 
-				scroller.appendChild(rowElement);
+				this.appendChild(rowElement);
 			}
 		}
 
 		this.updateFullHeight();
 
 		const perf = performance.measure("render", "render-start");
-		// if (perf.duration > 500) {
 		// biome-ignore lint/suspicious/noConsole: Testing
 		console.log(perf);
-		// }
-
-		// this.updateVScrollPos();
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
@@ -291,10 +206,6 @@ export class Timeline<
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
 		this.#groupPositionsState.setItems(items);
-	}
-
-	public setHWindow(min: number | undefined, max: number | undefined): void {
-		this.#scroller.setHWindow(min, max);
 	}
 }
 

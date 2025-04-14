@@ -18,6 +18,7 @@ import {
 import { ZERO, parseFloatAttribute, parseIntervalAttribute } from "./math.ts";
 import { ScrollState } from "./scrollState.ts";
 import { Singleton } from "./singleton.ts";
+import { validateStringOptions } from "./string.ts";
 import { scrollerStylesheet } from "./styles.ts";
 
 const SCROLLER_INIT_WIDTH = 100;
@@ -31,32 +32,35 @@ type DragState = {
 	// TODO: use AbortController for removeEventHandlers
 };
 
+const SCROLLER_OBSERVED_ATTRIBUTES = [
+	"default-resize-handles",
+	"h-end-extrema",
+	"h-end-size",
+	"h-extrema",
+	"h-max-element-size",
+	"h-middle-min",
+	"h-resize-strategy",
+	"h-resync-threshold-size",
+	"h-side-resize-strategy",
+	"h-start-extrema",
+	"h-start-size",
+	"h-window",
+	"v-end-extrema",
+	"v-end-size",
+	"v-extrema",
+	"v-max-element-size",
+	"v-middle-min",
+	"v-resize-strategy",
+	"v-resync-threshold-size",
+	"v-side-resize-strategy",
+	"v-start-extrema",
+	"v-start-size",
+	"v-window",
+] as const;
+
 export class Scroller extends HTMLElement {
-	public static observedAttributes = [
-		"default-resize-handles",
-		"h-end-extrema",
-		"h-end-size",
-		"h-extrema",
-		"h-max-element-size",
-		"h-middle-min",
-		"h-resize-strategy",
-		"h-resync-threshold-size",
-		"h-side-resize-strategy",
-		"h-start-extrema",
-		"h-start-size",
-		"h-window",
-		"v-end-extrema",
-		"v-end-size",
-		"v-extrema",
-		"v-max-element-size",
-		"v-middle-min",
-		"v-resize-strategy",
-		"v-resync-threshold-size",
-		"v-side-resize-strategy",
-		"v-start-extrema",
-		"v-start-size",
-		"v-window",
-	] as const;
+	protected observedAttributes: readonly string[] =
+		SCROLLER_OBSERVED_ATTRIBUTES;
 
 	#barResizeState: DragState | undefined;
 
@@ -202,12 +206,13 @@ export class Scroller extends HTMLElement {
 		this.#vBarState = new BarState({ size: SCROLLER_INIT_HEIGHT });
 	}
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private attributeChangedCallback(
-		name: (typeof Scroller.observedAttributes)[number],
+	protected attributeChangedCallback(
+		name: string,
 		oldValue: string | null,
 		newValue: string | null,
 	): void {
+		validateStringOptions("attributeName", name, SCROLLER_OBSERVED_ATTRIBUTES);
+
 		if (!this.isConnected || newValue === oldValue) {
 			return;
 		}
@@ -342,8 +347,7 @@ export class Scroller extends HTMLElement {
 		}
 	}
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private connectedCallback(): void {
+	protected connectedCallback(): void {
 		const resizeObserver = Scroller.resizeHandler.subscribe();
 		resizeObserver.observe(this, { box: "content-box" });
 
@@ -489,8 +493,7 @@ export class Scroller extends HTMLElement {
 		}
 	}
 
-	// @ts-expect-error Protected method used by HTMLElement
-	private disconnectedCallback(): void {
+	protected disconnectedCallback(): void {
 		this.clearResizeState();
 
 		Scroller.resizeHandler.unsubscribe((resizeObserver) => {

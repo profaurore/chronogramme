@@ -8,6 +8,12 @@ const GROUP_OVERDRAW_DEFAULT = 500;
 
 const ASYNC_PROCESSING_SIZE_DEFAULT = 1_000_000;
 
+// interface ScrollReference<TGroupId = number> {
+// 	groupId: TGroupId;
+// 	groupIdx: number;
+// 	offset: number;
+// }
+
 export class GroupPositionsState<
 	TGroupId = number,
 	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
@@ -41,6 +47,10 @@ export class GroupPositionsState<
 	#itemWindowMax: number;
 
 	#itemWindowMin: number;
+
+	// The reference is the distance from the bottom of the first group in the
+	// view.
+	// #vScrollReference: ScrollReference | undefined;
 
 	public constructor() {
 		super();
@@ -455,4 +465,17 @@ export class GroupPositionsState<
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
 	}
+
+	// private updateVScrollPos() {
+	// 	const vScrollPos = this.#scroller.vScrollPos;
+
+	// 	let vScrollReference = this.#vScrollReference;
+
+	// 	if (!vScrollReference) {
+	// 		vScrollReference = { groupId: 0, groupIdx: 0, offset: 0 };
+	// 		this.#vScrollReference = vScrollReference;
+	// 	}
+
+	// 	// while ()
+	// }
 }
