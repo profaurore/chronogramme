@@ -28,7 +28,7 @@ export class Timeline<
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > extends HTMLElement {
-	public static observedAttributes = ["h-window", "row-height"];
+	public static observedAttributes = ["h-extrema", "h-window", "row-height"];
 
 	readonly #scroller: Scroller;
 
@@ -91,6 +91,17 @@ export class Timeline<
 			}
 
 			// Passthrough to the scroller element.
+			case "h-extrema": {
+				const scroller = this.#scroller;
+				if (newValue) {
+					scroller.setAttribute(name, newValue);
+				} else {
+					scroller.removeAttribute(name);
+				}
+				break;
+			}
+
+			// Passthrough to the scroller element.
 			case "h-window": {
 				const scroller = this.#scroller;
 				if (newValue) {
@@ -110,6 +121,14 @@ export class Timeline<
 	// @ts-expect-error Protected method used by HTMLElement
 	private connectedCallback(): void {
 		const scroller = this.#scroller;
+
+		const hExtrema = this.getAttribute("h-extrema");
+		if (hExtrema) {
+			scroller.setAttribute("h-extrema", hExtrema);
+		} else {
+			scroller.removeAttribute("h-extrema");
+		}
+
 		const hWindow = this.getAttribute("h-window");
 		if (hWindow) {
 			scroller.setAttribute("h-window", hWindow);
