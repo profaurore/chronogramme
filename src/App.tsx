@@ -9,7 +9,7 @@ import {
 } from "react";
 import "./App.css";
 import type { Scroller } from "../lib/Scroller.ts";
-import type { BaseGroup, BaseItem, Timeline } from "../lib/Timeline.ts";
+import type { BaseItem, Timeline } from "../lib/Timeline.ts";
 import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 
@@ -64,6 +64,8 @@ function datesFromStartDate(start: number): [number, number] {
 	];
 }
 
+const GROUP_COUNT = 1_000;
+
 export function App(): ReactNode {
 	const timelineRef = useRef<Timeline>(null);
 	const scrollerRef = useRef<Scroller>(null);
@@ -88,23 +90,14 @@ export function App(): ReactNode {
 		return formatDateRange(extremaStart, extremaEnd);
 	}, [extremaEnd, extremaStart]);
 
-	// useEffect(() => {
-	// 	const x = setTimeout(() => {
-	// 		setWindow([3000, 7000]);
-	// 		setExtrema([0, 10000]);
-	// 	}, 1000000);
-
-	// 	return () => {
-	// 		clearTimeout(x);
-	// 	};
-	// });
-
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
 		scrollerRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
+		timelineRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
 	};
 
 	const onNowClickHandler: MouseEventHandler = () => {
 		scrollerRef.current?.setHWindow(...datesFromStartDate(Date.now()));
+		timelineRef.current?.setHWindow(...datesFromStartDate(Date.now()));
 	};
 
 	const onEndOfTimeClickHandler: MouseEventHandler = () => {
@@ -113,11 +106,53 @@ export function App(): ReactNode {
 				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
 			),
 		);
+		timelineRef.current?.setHWindow(
+			...datesFromStartDate(
+				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
+			),
+		);
 	};
 
+	const [items, setItems] = useState<BaseItem[]>([]);
+
+	const onAddClickHandler =
+		(addCount: number): MouseEventHandler =>
+		() => {
+			setItems((prevItems) => {
+				const now = Date.now();
+				const groupItemCount = addCount / GROUP_COUNT;
+				const indexOffsetFactor = 5_000_000_000 / groupItemCount;
+				const items = prevItems.slice(0);
+				let prevCount = items.length;
+
+				for (let i = 0; i < GROUP_COUNT; i++) {
+					for (let j = 0; j < groupItemCount; j++) {
+						const startTime =
+							now +
+							Math.random() * 1 * indexOffsetFactor +
+							j * indexOffsetFactor;
+
+						items.push({
+							endTime: startTime + 10_000_000 + Math.random() * 50_000_000,
+							groupId: i,
+							id: prevCount,
+							startTime,
+						});
+
+						prevCount++;
+					}
+				}
+
+				timelineRef.current?.setItems(items);
+
+				return items;
+			});
+		};
+
 	useEffect(() => {
-		const timeline = scrollerRef.current;
-		if (timeline) {
+		const scroller = scrollerRef.current;
+		const timeline = timelineRef.current;
+		if (scroller && timeline) {
 			const windowChangeHandler: EventListener = (e) => {
 				if (
 					e instanceof CustomEvent &&
@@ -127,9 +162,11 @@ export function App(): ReactNode {
 				}
 			};
 
+			scroller.addEventListener("windowChange", windowChangeHandler);
 			timeline.addEventListener("windowChange", windowChangeHandler);
 
 			return () => {
+				scroller.removeEventListener("windowChange", windowChangeHandler);
 				timeline.removeEventListener("windowChange", windowChangeHandler);
 			};
 		}
@@ -138,112 +175,15 @@ export function App(): ReactNode {
 	}, []);
 
 	useEffect(() => {
-		const now = Date.now();
-		const staticTest = false;
+		const groups: { id: number; lineSize: number }[] = [];
 
-		let items: BaseItem[];
-
-		if (staticTest) {
-			items = [
-				{ endTime: now + 10_000_000, groupId: 0, id: 1, startTime: now + 0 },
-				{
-					endTime: now + 20_000_000,
-					groupId: 0,
-					id: 2,
-					startTime: now + 10_000_000,
-				},
-				{
-					endTime: now + 30_000_000,
-					groupId: 0,
-					id: 3,
-					startTime: now + 20_000_000,
-				},
-				{
-					endTime: now + 40_000_000,
-					groupId: 0,
-					id: 4,
-					startTime: now + 30_000_000,
-				},
-				{
-					endTime: now + 15_000_000,
-					groupId: 0,
-					id: 5,
-					startTime: now + 5_000_000,
-				},
-				{
-					endTime: now + 7_000_000,
-					groupId: 0,
-					id: 6,
-					startTime: now + 6_000_000,
-				},
-				{
-					endTime: now + 8_000_000,
-					groupId: 0,
-					id: 7,
-					startTime: now + 7_000_000,
-				},
-				{
-					endTime: now + 9_000_000,
-					groupId: 0,
-					id: 8,
-					startTime: now + 8_000_000,
-				},
-				{
-					endTime: now + 20_000_000,
-					groupId: 0,
-					id: 9,
-					startTime: now + 15_000_000,
-				},
-			];
-		} else {
-			const groupCount = 1_000;
-			const groupItemCount = 10_000;
-
-			items = [];
-
-			for (let i = 0; i < groupCount; i++) {
-				for (let j = 0; j < groupItemCount; j++) {
-					const startTime = now + Math.random() * 10_000_000 + j * 1_000_000;
-					items.push({
-						endTime: startTime + 1_000_000 + Math.random() * 39_000_000,
-						groupId: i,
-						id: i * groupItemCount + j,
-						startTime,
-					});
-				}
-			}
-
-			// Randomize if the algorithm is sensitive to randomized values.
-			// for (let i = items.length - 1; i >= 0; i--) {
-			// 	const otherIdx = Math.floor(Math.random() * (i + 1));
-			// 	// biome-ignore lint/style/noNonNullAssertion: Guaranteed by the algorithm
-			// 	const temp = items[i]!;
-			// 	// biome-ignore lint/style/noNonNullAssertion: Guaranteed by the algorithm
-			// 	items[i] = items[otherIdx]!;
-			// 	items[otherIdx] = temp;
-			// }
+		for (let i = 0; i < GROUP_COUNT; i++) {
+			groups.push({
+				id: i,
+				lineSize: i % 2 ? 10 : 20,
+			});
 		}
 
-		const evenGroupRowHeight = 10;
-		const oddGroupRowHeight = 20;
-
-		const groups = [
-			...items
-				.reduce((acc, { groupId }) => {
-					if (!acc.has(groupId)) {
-						acc.set(groupId, {
-							id: groupId,
-							lineSize: groupId % 2 ? evenGroupRowHeight : oddGroupRowHeight,
-						});
-					}
-
-					return acc;
-				}, new Map<number, BaseGroup>())
-				.values(),
-		];
-		groups.sort((a, b) => a.id - b.id);
-
-		timelineRef.current?.setItems(items);
 		timelineRef.current?.setGroups(groups);
 	}, []);
 
@@ -259,6 +199,13 @@ export function App(): ReactNode {
 				<button onClick={onEndOfTimeClickHandler} type="button">
 					End of time
 				</button>
+				<button onClick={onAddClickHandler(50_000)} type="button">
+					Add 50k items
+				</button>
+				<button onClick={onAddClickHandler(250_000)} type="button">
+					Add 250k items
+				</button>
+				<span>{Intl.NumberFormat("en").format(items.length)}</span>
 			</div>
 
 			<div>Extrema: {extremaString}</div>

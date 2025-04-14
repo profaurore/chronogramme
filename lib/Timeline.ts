@@ -50,11 +50,21 @@ export class Timeline<
 
 		const scroller = document.createElement("cg-scroller") as Scroller;
 		customElements.upgrade(scroller);
-		scroller.addEventListener("scrollPosChange", this.render.bind(this));
+		scroller.addEventListener("windowChange", this.render.bind(this));
 		scroller.id = "scroller";
 		this.#scroller = scroller;
 
-		this.#groupPositionsState = new GroupPositionsState();
+		const groupPositionsState = new GroupPositionsState<
+			TGroupId,
+			TGroup,
+			TItemId,
+			TItem
+		>();
+		groupPositionsState.addEventListener(
+			"renderRequest",
+			this.render.bind(this),
+		);
+		this.#groupPositionsState = groupPositionsState;
 
 		// Root
 		const shadow = this.attachShadow({ mode: "closed" });
@@ -200,6 +210,7 @@ export class Timeline<
 				rowElement.style.border = "2px solid blue";
 				rowElement.style.background = "#9999ffaa";
 				rowElement.style.boxSizing = "border-box";
+				rowElement.style.fontSize = `${lineSize / 2}px`;
 
 				for (const itemIndex of items) {
 					const item = groupPositionsState.getItem(
@@ -256,19 +267,15 @@ export class Timeline<
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groupPositionsState
-			.setGroups(groups)
-			.then(() => this.render())
-			.catch(() => undefined);
-
-		this.render();
+		this.#groupPositionsState.setGroups(groups);
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#groupPositionsState
-			.setItems(items)
-			.then(() => this.render())
-			.catch(() => undefined);
+		this.#groupPositionsState.setItems(items);
+	}
+
+	public setHWindow(min: number | undefined, max: number | undefined): void {
+		this.#scroller.setHWindow(min, max);
 	}
 }
 

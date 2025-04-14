@@ -451,7 +451,12 @@ export class Scroller extends HTMLElement {
 
 		this.#scrollSkip = true;
 
-		this.dispatchEvent(new CustomEvent<ConnectedEventDetail>("connected"));
+		this.dispatchEvent(
+			new CustomEvent<ConnectedEventDetail>("connected", {
+				bubbles: true,
+				composed: true,
+			}),
+		);
 	}
 
 	private clearResizeState(): void {
@@ -495,7 +500,10 @@ export class Scroller extends HTMLElement {
 		scrollerStylesheet.unsubscribe();
 
 		this.dispatchEvent(
-			new CustomEvent<DisconnectedEventDetail>("disconnected"),
+			new CustomEvent<DisconnectedEventDetail>("disconnected", {
+				bubbles: true,
+				composed: true,
+			}),
 		);
 	}
 
@@ -709,6 +717,8 @@ export class Scroller extends HTMLElement {
 
 				this.dispatchEvent(
 					new CustomEvent<ScrollPosChangeEventDetail>("scrollPosChange", {
+						bubbles: true,
+						composed: true,
 						detail: new ScrollPosChangeEventDetail(
 							hScrollPosPrev,
 							vScrollPosPrev,
@@ -739,6 +749,8 @@ export class Scroller extends HTMLElement {
 
 				this.dispatchEvent(
 					new CustomEvent<ScrollSizeChangeEventDetail>("scrollSizeChange", {
+						bubbles: true,
+						composed: true,
 						detail: new ScrollSizeChangeEventDetail(
 							hScrollSizePrev,
 							vScrollSizePrev,
@@ -775,6 +787,8 @@ export class Scroller extends HTMLElement {
 			) {
 				this.dispatchEvent(
 					new CustomEvent<WindowChangeEventDetail>("windowChange", {
+						bubbles: true,
+						composed: true,
 						detail: new WindowChangeEventDetail(
 							hWindowMinPrev,
 							hWindowMaxPrev,
@@ -805,6 +819,8 @@ export class Scroller extends HTMLElement {
 			if (hWindowSize !== hWindowSizePrev || vWindowSize !== vWindowSizePrev) {
 				this.dispatchEvent(
 					new CustomEvent<WindowSizeChangeEventDetail>("windowSizeChange", {
+						bubbles: true,
+						composed: true,
 						detail: new WindowSizeChangeEventDetail(
 							hWindowSizePrev,
 							vWindowSizePrev,

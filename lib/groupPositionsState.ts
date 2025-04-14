@@ -4,7 +4,7 @@ import { UNIT, ZERO, clampMinWins } from "./math.ts";
 
 const GROUP_LINE_SIZE_DEFAULT = 30;
 
-const GROUP_OVERDRAW_DEFAULT = 40;
+const GROUP_OVERDRAW_DEFAULT = 500;
 
 const ASYNC_PROCESSING_SIZE_DEFAULT = 1_000_000;
 
@@ -13,7 +13,7 @@ export class GroupPositionsState<
 	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
-> {
+> extends EventTarget {
 	#asyncProcessingSize: number;
 
 	#defaultLineSize: number;
@@ -43,6 +43,8 @@ export class GroupPositionsState<
 	#itemWindowMin: number;
 
 	public constructor() {
+		super();
+
 		this.#asyncProcessingSize = ASYNC_PROCESSING_SIZE_DEFAULT;
 		this.#defaultLineSize = GROUP_LINE_SIZE_DEFAULT;
 		this.#groups = [];
@@ -215,19 +217,8 @@ export class GroupPositionsState<
 
 	private getItemGroup(index: number): readonly Readonly<TItem>[] {
 		const itemGroups = this.#itemGroups;
-		const items = this.#items;
 
-		let itemGroup = itemGroups[index];
-
-		if (itemGroup === undefined) {
-			const groups = this.#groups;
-			const groupId = groups[index]?.id;
-
-			itemGroup = items.filter((item) => item.groupId === groupId);
-			itemGroups[index] = itemGroup;
-		}
-
-		return itemGroup;
+		return itemGroups[index] ?? [];
 	}
 
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
@@ -325,7 +316,7 @@ export class GroupPositionsState<
 	}
 
 	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Work in progress
-	private async prepareItemGroups() {
+	private async prepareItemGroups(): Promise<void> {
 		performance.mark("itemGroups-start");
 
 		this.#itemGroupsSignalController?.abort();
@@ -338,10 +329,15 @@ export class GroupPositionsState<
 		const groups = this.#groups;
 		const items = this.#items;
 
-		const itemGroups: (readonly Readonly<TItem>[])[] = [];
+		await new Promise((resolve) => setTimeout(resolve, ZERO));
 
-		if (groups.length === ZERO || items.length === 0) {
-			this.#itemGroups = itemGroups;
+		if (itemGroupsSignal.aborted) {
+			return;
+		}
+
+		if (groups.length === ZERO || items.length === ZERO) {
+			this.#itemGroups = [];
+			this.dispatchEvent(new CustomEvent("renderRequest"));
 			return;
 		}
 
@@ -369,12 +365,14 @@ export class GroupPositionsState<
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
 				if (itemGroupsSignal.aborted) {
-					return Promise.reject();
+					return;
 				}
 			}
 		}
 		// biome-ignore lint/suspicious/noConsole: Testing
 		console.log(performance.measure("itemGroupsSet", "itemGroupsSet-start"));
+
+		const itemGroups: (readonly Readonly<TItem>[])[] = [];
 
 		performance.mark("itemGroupsSet-start");
 		for (const [groupIndex, group] of groups.entries()) {
@@ -391,7 +389,7 @@ export class GroupPositionsState<
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
 				if (itemGroupsSignal.aborted) {
-					return Promise.reject();
+					return;
 				}
 			}
 		}
@@ -400,10 +398,17 @@ export class GroupPositionsState<
 		performance.mark("itemGroupsEnd-start");
 
 		if (itemGroupsSignal.aborted) {
-			return Promise.reject();
+			return;
 		}
 
 		this.#itemGroups = itemGroups;
+
+		if (this.#itemGroupsSignalController === itemGroupsSignalController) {
+			this.#itemGroupsSignalController = undefined;
+		}
+
+		this.dispatchEvent(new CustomEvent("renderRequest"));
+
 		// biome-ignore lint/suspicious/noConsole: Testing
 		console.log(performance.measure("itemGroupsEnd", "itemGroupsEnd-start"));
 		// biome-ignore lint/suspicious/noConsole: Testing
@@ -417,24 +422,24 @@ export class GroupPositionsState<
 		this.#groupSizes.length = ZERO;
 	}
 
-	public async setGroups(groups: readonly Readonly<TGroup>[]): Promise<void> {
+	public setGroups(groups: readonly Readonly<TGroup>[]): void {
 		this.#groups = groups;
 
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
 
-		return await this.prepareItemGroups();
+		this.prepareItemGroups();
 	}
 
-	public async setItems(items: readonly Readonly<TItem>[]): Promise<void> {
+	public setItems(items: readonly Readonly<TItem>[]): void {
 		this.#items = items;
 
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
 
-		return await this.prepareItemGroups();
+		this.prepareItemGroups();
 	}
 
 	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {
