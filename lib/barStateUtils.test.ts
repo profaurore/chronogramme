@@ -36,7 +36,9 @@ describe("getResizeStrategy", () => {
 
 			const receivedError = getError(() => getResizeStrategy(value));
 
-			expect(receivedError).toEqual(new NotAStringError("test", value));
+			expect(receivedError).toEqual(
+				new NotAStringError("resizeStrategy", value),
+			);
 		});
 	});
 
@@ -152,7 +154,9 @@ describe("getSideResizeStrategy", () => {
 
 			const receivedError = getError(() => getSideResizeStrategy(value));
 
-			expect(receivedError).toEqual(new NotAStringError("test", value));
+			expect(receivedError).toEqual(
+				new NotAStringError("sideResizeStrategy", value),
+			);
 		});
 	});
 
