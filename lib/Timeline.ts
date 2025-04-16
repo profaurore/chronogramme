@@ -95,6 +95,12 @@ export class Timeline<
 		this.render();
 	}
 
+	protected override disconnectedCallback(): void {
+		this.#groupPositionsState.resetGroupsAndItems();
+
+		super.disconnectedCallback();
+	}
+
 	private updateFullHeight() {
 		const groupPositionsState = this.#groupPositionsState;
 

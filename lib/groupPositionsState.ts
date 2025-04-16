@@ -425,6 +425,17 @@ export class GroupPositionsState<
 		console.log(performance.measure("itemGroups", "itemGroups-start"));
 	}
 
+	public resetGroupsAndItems(): void {
+		this.#itemGroupsSignalController?.abort();
+
+		this.#groups = [];
+		this.#groupLineSets = [];
+		this.#groupPositions = [];
+		this.#groupSizes = [];
+		this.#itemGroups = [];
+		this.#items = [];
+	}
+
 	public setDefaultLineSize(defaultLineSize: number | undefined): void {
 		this.#defaultLineSize = defaultLineSize ?? GROUP_LINE_SIZE_DEFAULT;
 
