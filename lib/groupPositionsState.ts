@@ -325,35 +325,14 @@ export class GroupPositionsState<
 		}
 	}
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Work in progress
-	private async prepareItemGroups(): Promise<void> {
-		performance.mark("itemGroups-start");
-
-		this.#itemGroupsSignalController?.abort();
-
-		const itemGroupsSignalController = new AbortController();
-		this.#itemGroupsSignalController = itemGroupsSignalController;
-		const itemGroupsSignal = itemGroupsSignalController.signal;
-
+	private async buildItemGroupsMap(
+		signal: AbortSignal,
+	): Promise<Map<TGroupId, TItem[]> | undefined> {
 		const asyncProcessingSize = this.#asyncProcessingSize;
-		const groups = this.#groups;
 		const items = this.#items;
-
-		await new Promise((resolve) => setTimeout(resolve, ZERO));
-
-		if (itemGroupsSignal.aborted) {
-			return;
-		}
-
-		if (groups.length === ZERO || items.length === ZERO) {
-			this.#itemGroups = [];
-			this.dispatchEvent(new CustomEvent("renderRequest"));
-			return;
-		}
 
 		const itemGroupsMap = new Map<TGroupId, TItem[]>();
 
-		performance.mark("itemGroupsSet-start");
 		for (const [itemIndex, item] of items.entries()) {
 			let itemGroup = itemGroupsMap.get(item.groupId);
 
@@ -365,64 +344,70 @@ export class GroupPositionsState<
 			itemGroup.push(item);
 
 			if ((itemIndex + UNIT) % asyncProcessingSize === ZERO) {
-				// biome-ignore lint/suspicious/noConsole: Testing
-				console.log("itemGroups-itemIndex", itemIndex);
-				// biome-ignore lint/suspicious/noConsole: Testing
-				console.log(
-					performance.measure("itemGroupsSet", "itemGroupsSet-start"),
-				);
-				performance.mark("itemGroupsSet-start");
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
-				if (itemGroupsSignal.aborted) {
+				if (signal.aborted) {
 					return;
 				}
 			}
 		}
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(performance.measure("itemGroupsSet", "itemGroupsSet-start"));
+
+		return itemGroupsMap;
+	}
+
+	private async prepareItemGroups(): Promise<void> {
+		this.#itemGroupsSignalController?.abort();
+
+		const signalController = new AbortController();
+		this.#itemGroupsSignalController = signalController;
+		const signal = signalController.signal;
+
+		const asyncProcessingSize = this.#asyncProcessingSize;
+		const groups = this.#groups;
+		const items = this.#items;
+
+		await new Promise((resolve) => setTimeout(resolve, ZERO));
+
+		if (signal.aborted) {
+			return;
+		}
+
+		if (groups.length === ZERO || items.length === ZERO) {
+			this.#itemGroups = [];
+			this.dispatchEvent(new CustomEvent("renderRequest"));
+			return;
+		}
+
+		const itemGroupsMap = await this.buildItemGroupsMap(signal);
+		if (itemGroupsMap === undefined) {
+			return;
+		}
 
 		const itemGroups: (readonly Readonly<TItem>[])[] = [];
 
-		performance.mark("itemGroupsSet-start");
 		for (const [groupIndex, group] of groups.entries()) {
 			itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
 
 			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
-				// biome-ignore lint/suspicious/noConsole: Testing
-				console.log("itemGroups-groupIndex", groupIndex);
-				// biome-ignore lint/suspicious/noConsole: Testing
-				console.log(
-					performance.measure("itemGroupsSet", "itemGroupsSet-start"),
-				);
-				performance.mark("itemGroupsSet-start");
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
-				if (itemGroupsSignal.aborted) {
+				if (signal.aborted) {
 					return;
 				}
 			}
 		}
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(performance.measure("itemGroupsSet", "itemGroupsSet-start"));
-		performance.mark("itemGroupsEnd-start");
 
-		if (itemGroupsSignal.aborted) {
+		if (signal.aborted) {
 			return;
 		}
 
 		this.#itemGroups = itemGroups;
 
-		if (this.#itemGroupsSignalController === itemGroupsSignalController) {
+		if (this.#itemGroupsSignalController === signalController) {
 			this.#itemGroupsSignalController = undefined;
 		}
 
 		this.dispatchEvent(new CustomEvent("renderRequest"));
-
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(performance.measure("itemGroupsEnd", "itemGroupsEnd-start"));
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(performance.measure("itemGroups", "itemGroups-start"));
 	}
 
 	public resetGroupsAndItems(): void {
