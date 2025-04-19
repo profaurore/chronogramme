@@ -144,138 +144,60 @@ export class BarState {
 		this.recalcSides();
 	}
 
-	private recalcSides(): void {
-		const newSizes = this.#resizeStrategy(this);
-		this.validateResizeStrategyReturn(newSizes);
-
-		this.#startSize = newSizes.startSize;
-		this.#endSize = newSizes.endSize;
+	public get endIdeal(): number | undefined {
+		return this.#endIdeal;
 	}
 
-	private setSidesSizeAndIdeal(
-		startSize: number | undefined,
-		endSize: number | undefined,
-	): void {
-		const size = this.#size;
-
-		this.#startSize = startSize;
-		this.#startIdeal = startSize;
-
-		this.#endSize = endSize;
-		this.#endIdeal = endSize;
-
-		this.#middleIdeal = size - (startSize ?? ZERO) - (endSize ?? ZERO);
+	public get endMax(): number {
+		return this.#endMax;
 	}
 
-	private validateResizeStrategyReturn(
-		value: unknown,
-	): asserts value is ReturnType<ResizeStrategy> {
-		validateObject("resizeStrategy()", value, [], ["endSize", "startSize"]);
-
-		const endSize = value.endSize;
-		const startSize = value.startSize;
-
-		if (startSize !== undefined) {
-			const startMin = this.#startMin;
-			const startMax = this.#startMax;
-
-			validateSize(
-				"resizeStrategy().startSize",
-				startSize,
-				startMin,
-				true,
-				startMax,
-				true,
-			);
-		}
-
-		if (endSize !== undefined) {
-			const endMin = this.#endMin;
-			const endMax = this.#endMax;
-
-			validateSize(
-				"resizeStrategy().endSize",
-				endSize,
-				endMin,
-				true,
-				endMax,
-				true,
-			);
-		}
-
-		const containerSize = this.#size;
-		const middleMin = this.#middleMin;
-
-		const sumBarMax = Math.max(ZERO, containerSize - middleMin);
-		const sumBarsSize = (startSize ?? ZERO) + (endSize ?? ZERO);
-
-		if (sumBarsSize > sumBarMax) {
-			throw new SizeRangeError(
-				"resizeStrategy()",
-				sumBarsSize,
-				ZERO,
-				true,
-				sumBarMax,
-				true,
-			);
-		}
+	public get endMin(): number {
+		return this.#endMin;
 	}
 
-	private validateSideResizeStrategyReturn(
-		value: unknown,
-		barMin: number,
-		barMax: number,
-		otherBarMin: number,
-		otherBarMax: number,
-	): asserts value is ReturnType<SideResizeStrategy> {
-		validateObject(
-			"sideResizeStrategy()",
-			value,
-			[],
-			["barSize", "otherBarSize"],
-		);
+	public get endSize(): number | undefined {
+		return this.#endSize;
+	}
 
-		const barSize = value.barSize;
-		const otherBarSize = value.otherBarSize;
+	public get middleIdeal(): number {
+		return this.#middleIdeal;
+	}
 
-		if (barSize !== undefined) {
-			validateSize(
-				"sideResizeStrategy().barSize",
-				barSize,
-				barMin,
-				true,
-				barMax,
-				true,
-			);
-		}
+	public get middleMin(): number {
+		return this.#middleMin;
+	}
 
-		if (otherBarSize !== undefined) {
-			validateSize(
-				"sideResizeStrategy().otherBarSize",
-				otherBarSize,
-				otherBarMin,
-				true,
-				otherBarMax,
-				true,
-			);
-		}
+	public get middleSize(): number {
+		return this.#size - (this.#startSize ?? ZERO) - (this.#endSize ?? ZERO);
+	}
 
-		const containerSize = this.#size;
-		const middleMin = this.#middleMin;
+	public get resizeStrategy(): ResizeStrategy {
+		return this.#resizeStrategy;
+	}
 
-		const sumBarMax = containerSize - middleMin;
-		const sumBarsSize = (barSize ?? ZERO) + (otherBarSize ?? ZERO);
+	public get sideResizeStrategy(): SideResizeStrategy {
+		return this.#sideResizeStrategy;
+	}
 
-		if (sumBarsSize > sumBarMax) {
-			throw new SizeRangeError(
-				"sideResizeStrategy()",
-				sumBarsSize,
-				ZERO,
-				true,
-				sumBarMax,
-				true,
-			);
-		}
+	public get size(): number {
+		return this.#size;
+	}
+
+	public get startIdeal(): number | undefined {
+		return this.#startIdeal;
+	}
+
+	public get startMax(): number {
+		return this.#startMax;
+	}
+
+	public get startMin(): number {
+		return this.#startMin;
+	}
+
+	public get startSize(): number | undefined {
+		return this.#startSize;
 	}
 
 	/**
@@ -452,59 +374,137 @@ export class BarState {
 		this.setSidesSizeAndIdeal(newSizes.barSize, newSizes.otherBarSize);
 	}
 
-	public get endIdeal(): number | undefined {
-		return this.#endIdeal;
+	private recalcSides(): void {
+		const newSizes = this.#resizeStrategy(this);
+		this.validateResizeStrategyReturn(newSizes);
+
+		this.#startSize = newSizes.startSize;
+		this.#endSize = newSizes.endSize;
 	}
 
-	public get endMax(): number {
-		return this.#endMax;
+	private setSidesSizeAndIdeal(
+		startSize: number | undefined,
+		endSize: number | undefined,
+	): void {
+		const size = this.#size;
+
+		this.#startSize = startSize;
+		this.#startIdeal = startSize;
+
+		this.#endSize = endSize;
+		this.#endIdeal = endSize;
+
+		this.#middleIdeal = size - (startSize ?? ZERO) - (endSize ?? ZERO);
 	}
 
-	public get endMin(): number {
-		return this.#endMin;
+	private validateResizeStrategyReturn(
+		value: unknown,
+	): asserts value is ReturnType<ResizeStrategy> {
+		validateObject("resizeStrategy()", value, [], ["endSize", "startSize"]);
+
+		const endSize = value.endSize;
+		const startSize = value.startSize;
+
+		if (startSize !== undefined) {
+			const startMin = this.#startMin;
+			const startMax = this.#startMax;
+
+			validateSize(
+				"resizeStrategy().startSize",
+				startSize,
+				startMin,
+				true,
+				startMax,
+				true,
+			);
+		}
+
+		if (endSize !== undefined) {
+			const endMin = this.#endMin;
+			const endMax = this.#endMax;
+
+			validateSize(
+				"resizeStrategy().endSize",
+				endSize,
+				endMin,
+				true,
+				endMax,
+				true,
+			);
+		}
+
+		const containerSize = this.#size;
+		const middleMin = this.#middleMin;
+
+		const sumBarMax = Math.max(ZERO, containerSize - middleMin);
+		const sumBarsSize = (startSize ?? ZERO) + (endSize ?? ZERO);
+
+		if (sumBarsSize > sumBarMax) {
+			throw new SizeRangeError(
+				"resizeStrategy()",
+				sumBarsSize,
+				ZERO,
+				true,
+				sumBarMax,
+				true,
+			);
+		}
 	}
 
-	public get endSize(): number | undefined {
-		return this.#endSize;
-	}
+	private validateSideResizeStrategyReturn(
+		value: unknown,
+		barMin: number,
+		barMax: number,
+		otherBarMin: number,
+		otherBarMax: number,
+	): asserts value is ReturnType<SideResizeStrategy> {
+		validateObject(
+			"sideResizeStrategy()",
+			value,
+			[],
+			["barSize", "otherBarSize"],
+		);
 
-	public get middleIdeal(): number {
-		return this.#middleIdeal;
-	}
+		const barSize = value.barSize;
+		const otherBarSize = value.otherBarSize;
 
-	public get middleMin(): number {
-		return this.#middleMin;
-	}
+		if (barSize !== undefined) {
+			validateSize(
+				"sideResizeStrategy().barSize",
+				barSize,
+				barMin,
+				true,
+				barMax,
+				true,
+			);
+		}
 
-	public get middleSize(): number {
-		return this.#size - (this.#startSize ?? ZERO) - (this.#endSize ?? ZERO);
-	}
+		if (otherBarSize !== undefined) {
+			validateSize(
+				"sideResizeStrategy().otherBarSize",
+				otherBarSize,
+				otherBarMin,
+				true,
+				otherBarMax,
+				true,
+			);
+		}
 
-	public get resizeStrategy(): ResizeStrategy {
-		return this.#resizeStrategy;
-	}
+		const containerSize = this.#size;
+		const middleMin = this.#middleMin;
 
-	public get sideResizeStrategy(): SideResizeStrategy {
-		return this.#sideResizeStrategy;
-	}
+		const sumBarMax = containerSize - middleMin;
+		const sumBarsSize = (barSize ?? ZERO) + (otherBarSize ?? ZERO);
 
-	public get size(): number {
-		return this.#size;
-	}
-
-	public get startIdeal(): number | undefined {
-		return this.#startIdeal;
-	}
-
-	public get startMax(): number {
-		return this.#startMax;
-	}
-
-	public get startMin(): number {
-		return this.#startMin;
-	}
-
-	public get startSize(): number | undefined {
-		return this.#startSize;
+		if (sumBarsSize > sumBarMax) {
+			throw new SizeRangeError(
+				"sideResizeStrategy()",
+				sumBarsSize,
+				ZERO,
+				true,
+				sumBarMax,
+				true,
+			);
+		}
 	}
 }

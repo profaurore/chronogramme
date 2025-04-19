@@ -19,7 +19,7 @@ export interface BaseGroup<TGroupId = number> {
 const TIMELINE_OBSERVED_ATTRIBUTES = [
 	"h-extrema",
 	"h-window",
-	"row-height",
+	"line-size",
 ] as const;
 
 export class Timeline<
@@ -55,6 +55,18 @@ export class Timeline<
 		this.#groupPositionsState = groupPositionsState;
 	}
 
+	public setGroups(groups: readonly Readonly<TGroup>[]): void {
+		this.#groupPositionsState.setGroups(groups);
+	}
+
+	public setItems(items: readonly Readonly<TItem>[]): void {
+		this.#groupPositionsState.setItems(items);
+	}
+
+	public setLineSize(lineSize: number | undefined): void {
+		this.#groupPositionsState.setLineSize(lineSize);
+	}
+
 	protected override attributeChangedCallback(
 		name: string,
 		oldValue: string | null,
@@ -67,10 +79,8 @@ export class Timeline<
 		}
 
 		switch (name) {
-			case "row-height": {
-				this.#groupPositionsState.setDefaultLineSize(
-					parseFloatAttribute(newValue),
-				);
+			case "line-size": {
+				this.setLineSize(parseFloatAttribute(newValue));
 				break;
 			}
 
@@ -84,7 +94,7 @@ export class Timeline<
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 
-		this.#groupPositionsState.setDefaultLineSize(
+		this.#groupPositionsState.setLineSize(
 			parseFloatAttribute(this.getAttribute("row-height")),
 		);
 
@@ -96,19 +106,9 @@ export class Timeline<
 	}
 
 	protected override disconnectedCallback(): void {
-		this.#groupPositionsState.resetGroupsAndItems();
+		this.#groupPositionsState.clearGroupsAndItems();
 
 		super.disconnectedCallback();
-	}
-
-	private updateFullHeight() {
-		const groupPositionsState = this.#groupPositionsState;
-
-		const fullHeight = groupPositionsState.getHeight();
-		const bbox = this.getBoundingClientRect();
-		const vSize = bbox.height;
-
-		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
 	}
 
 	private render(): void {
@@ -206,12 +206,14 @@ export class Timeline<
 		console.log(perf);
 	}
 
-	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groupPositionsState.setGroups(groups);
-	}
+	private updateFullHeight() {
+		const groupPositionsState = this.#groupPositionsState;
 
-	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#groupPositionsState.setItems(items);
+		const fullHeight = groupPositionsState.getHeight();
+		const bbox = this.getBoundingClientRect();
+		const vSize = bbox.height;
+
+		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
 	}
 }
 

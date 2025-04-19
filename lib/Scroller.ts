@@ -62,26 +62,6 @@ export class Scroller extends HTMLElement {
 	protected observedAttributes: readonly string[] =
 		SCROLLER_OBSERVED_ATTRIBUTES;
 
-	#barResizeState: DragState | undefined;
-
-	#scrollDragState: DragState | undefined;
-
-	readonly #containerElement: HTMLDivElement;
-
-	readonly #contentElement: HTMLDivElement;
-
-	readonly #hBarState: BarState;
-
-	readonly #hScrollState: ScrollState;
-
-	#scrollSkip: boolean;
-
-	readonly #shadow: ShadowRoot;
-
-	readonly #vBarState: BarState;
-
-	readonly #vScrollState: ScrollState;
-
 	private static readonly resizeHandler = new Singleton(
 		() => {
 			return new ResizeObserver(([entry]: readonly ResizeObserverEntry[]) => {
@@ -100,6 +80,26 @@ export class Scroller extends HTMLElement {
 			resizeObserver.disconnect();
 		},
 	);
+
+	#barResizeState: DragState | undefined;
+
+	readonly #containerElement: HTMLDivElement;
+
+	readonly #contentElement: HTMLDivElement;
+
+	readonly #hBarState: BarState;
+
+	readonly #hScrollState: ScrollState;
+
+	#scrollDragState: DragState | undefined;
+
+	#scrollSkip: boolean;
+
+	readonly #shadow: ShadowRoot;
+
+	readonly #vBarState: BarState;
+
+	readonly #vScrollState: ScrollState;
 
 	public constructor() {
 		super();
@@ -204,6 +204,502 @@ export class Scroller extends HTMLElement {
 
 		this.#hBarState = new BarState({ size: SCROLLER_INIT_WIDTH });
 		this.#vBarState = new BarState({ size: SCROLLER_INIT_HEIGHT });
+	}
+
+	public get hEndIdeal(): number | undefined {
+		return this.#hBarState.endIdeal;
+	}
+
+	public get hEndMax(): number {
+		return this.#hBarState.endMax;
+	}
+
+	public get hEndMin(): number {
+		return this.#hBarState.endMin;
+	}
+
+	public get hEndSize(): number | undefined {
+		return this.#hBarState.endSize;
+	}
+
+	public get hMax(): number {
+		return this.#hScrollState.max;
+	}
+
+	public get hMaxElementSize(): number {
+		return this.#hScrollState.maxElementSize;
+	}
+
+	public get hMiddleIdeal(): number {
+		return this.#hBarState.middleIdeal;
+	}
+
+	public get hMiddleMin(): number {
+		return this.#hBarState.middleMin;
+	}
+
+	public get hMiddleSize(): number {
+		return this.#hBarState.middleSize;
+	}
+
+	public get hMin(): number {
+		return this.#hScrollState.min;
+	}
+
+	public get hRange(): number {
+		return this.#hScrollState.range;
+	}
+
+	public get hResizeStrategy(): ResizeStrategy {
+		return this.#hBarState.resizeStrategy;
+	}
+
+	public get hResyncThresholdSize(): number {
+		return this.#hScrollState.resyncThresholdSize;
+	}
+
+	public get hScrollPos(): number {
+		return this.#hScrollState.scrollPos;
+	}
+
+	public get hScrollSize(): number {
+		return this.#hScrollState.scrollSize;
+	}
+
+	public get hSideResizeStrategy(): SideResizeStrategy {
+		return this.#hBarState.sideResizeStrategy;
+	}
+
+	public get hSize(): number {
+		return this.#hBarState.size;
+	}
+
+	public get hStartIdeal(): number | undefined {
+		return this.#hBarState.startIdeal;
+	}
+
+	public get hStartMax(): number {
+		return this.#hBarState.startMax;
+	}
+
+	public get hStartMin(): number {
+		return this.#hBarState.startMin;
+	}
+
+	public get hStartSize(): number | undefined {
+		return this.#hBarState.startSize;
+	}
+
+	public get hWindowMax(): number {
+		return this.#hScrollState.windowMax;
+	}
+
+	public get hWindowMin(): number {
+		return this.#hScrollState.windowMin;
+	}
+
+	public get hWindowRange(): number {
+		return this.#hScrollState.windowRange;
+	}
+
+	public get hWindowSize(): number {
+		return this.#hScrollState.windowSize;
+	}
+
+	public get vEndIdeal(): number | undefined {
+		return this.#vBarState.endIdeal;
+	}
+
+	public get vEndMax(): number {
+		return this.#vBarState.endMax;
+	}
+
+	public get vEndMin(): number {
+		return this.#vBarState.endMin;
+	}
+
+	public get vEndSize(): number | undefined {
+		return this.#vBarState.endSize;
+	}
+
+	public get vMax(): number {
+		return this.#vScrollState.max;
+	}
+
+	public get vMaxElementSize(): number {
+		return this.#vScrollState.maxElementSize;
+	}
+
+	public get vMiddleIdeal(): number {
+		return this.#vBarState.middleIdeal;
+	}
+
+	public get vMiddleMin(): number {
+		return this.#vBarState.middleMin;
+	}
+
+	public get vMiddleSize(): number {
+		return this.#vBarState.middleSize;
+	}
+
+	public get vMin(): number {
+		return this.#vScrollState.min;
+	}
+
+	public get vRange(): number {
+		return this.#vScrollState.range;
+	}
+
+	public get vResizeStrategy(): ResizeStrategy {
+		return this.#vBarState.resizeStrategy;
+	}
+
+	public get vResyncThresholdSize(): number {
+		return this.#vScrollState.resyncThresholdSize;
+	}
+
+	public get vScrollPos(): number {
+		return this.#vScrollState.scrollPos;
+	}
+
+	public get vScrollSize(): number {
+		return this.#vScrollState.scrollSize;
+	}
+
+	public get vSideResizeStrategy(): SideResizeStrategy {
+		return this.#vBarState.sideResizeStrategy;
+	}
+
+	public get vSize(): number {
+		return this.#vBarState.size;
+	}
+
+	public get vStartIdeal(): number | undefined {
+		return this.#vBarState.startIdeal;
+	}
+
+	public get vStartMax(): number {
+		return this.#vBarState.startMax;
+	}
+
+	public get vStartMin(): number {
+		return this.#vBarState.startMin;
+	}
+
+	public get vStartSize(): number | undefined {
+		return this.#vBarState.startSize;
+	}
+
+	public get vWindowMax(): number {
+		return this.#vScrollState.windowMax;
+	}
+
+	public get vWindowMin(): number {
+		return this.#vScrollState.windowMin;
+	}
+
+	public get vWindowRange(): number {
+		return this.#vScrollState.windowRange;
+	}
+
+	public get vWindowSize(): number {
+		return this.#vScrollState.windowSize;
+	}
+
+	public getHPos(value: number): number {
+		const hScrollState = this.#hScrollState;
+
+		return hScrollState.getPos(value);
+	}
+
+	public getVPos(value: number): number {
+		const vScrollState = this.#vScrollState;
+
+		return vScrollState.getPos(value);
+	}
+
+	public setDefaultResizeHandles(defaultResizeHandles: boolean): void {
+		const dividers = this.#shadow.querySelectorAll('[id^="divider-"]');
+
+		if (defaultResizeHandles) {
+			for (const divider of dividers) {
+				divider.classList.add("default");
+			}
+		} else {
+			for (const divider of dividers) {
+				divider.classList.remove("default");
+			}
+		}
+	}
+
+	public setHEndExtrema(
+		min: number | undefined,
+		max: number | undefined,
+	): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setEndExtrema(min, max);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHEndSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setEndSize(size);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHExtrema(min: number | undefined, max: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#hScrollState.setExtrema(min, max);
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindow();
+	}
+
+	public setHMaxElementSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+
+		this.#hScrollState.setMaxElementSize(size);
+
+		updateScrollPos();
+		updateScrollSize();
+	}
+
+	public setHMiddleMin(min: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setMiddleMin(min);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHResizeStrategy(strategy: string | undefined): void {
+		const strategyFn = getResizeStrategy(strategy);
+
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setResizeStrategy(strategyFn);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHResyncThresholdSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+
+		this.#hScrollState.setResyncThresholdSize(size);
+
+		updateScrollPos();
+		updateScrollSize();
+	}
+
+	public setHSideResizeStrategy(strategy: string | undefined): void {
+		const strategyFn = getSideResizeStrategy(strategy);
+		this.#hBarState.setSideResizeStrategy(strategyFn);
+	}
+
+	public setHStartExtrema(
+		min: number | undefined,
+		max: number | undefined,
+	): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setEndExtrema(min, max);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHStartSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setStartSize(size);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHWindow(min: number | undefined, max: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#hScrollState.setWindowExtrema(min, max);
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindow();
+	}
+
+	public setVEndExtrema(
+		min: number | undefined,
+		max: number | undefined,
+	): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setEndExtrema(min, max);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVEndSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setEndSize(size);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVExtrema(min: number | undefined, max: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#vScrollState.setExtrema(min, max);
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindow();
+	}
+
+	public setVMaxElementSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+
+		this.#vScrollState.setMaxElementSize(size);
+
+		updateScrollPos();
+		updateScrollSize();
+	}
+
+	public setVMiddleMin(min: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setMiddleMin(min);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVResizeStrategy(strategy: string | undefined): void {
+		const strategyFn = getResizeStrategy(strategy);
+
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setResizeStrategy(strategyFn);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVResyncThresholdSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+
+		this.#vScrollState.setResyncThresholdSize(size);
+
+		updateScrollPos();
+		updateScrollSize();
+	}
+
+	public setVSideResizeStrategy(strategy: string | undefined): void {
+		const strategyFn = getSideResizeStrategy(strategy);
+		this.#vBarState.setSideResizeStrategy(strategyFn);
+	}
+
+	public setVStartExtrema(
+		min: number | undefined,
+		max: number | undefined,
+	): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setEndExtrema(min, max);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVStartSize(size: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setStartSize(size);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVWindow(min: number | undefined, max: number | undefined): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#vScrollState.setWindowExtrema(min, max);
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindow();
 	}
 
 	protected attributeChangedCallback(
@@ -463,6 +959,23 @@ export class Scroller extends HTMLElement {
 		);
 	}
 
+	protected disconnectedCallback(): void {
+		this.clearResizeState();
+
+		Scroller.resizeHandler.unsubscribe((resizeObserver) => {
+			resizeObserver.unobserve(this);
+		});
+
+		scrollerStylesheet.unsubscribe();
+
+		this.dispatchEvent(
+			new CustomEvent<DisconnectedEventDetail>("disconnected", {
+				bubbles: true,
+				composed: true,
+			}),
+		);
+	}
+
 	private clearResizeState(): void {
 		const barResizeState = this.#barResizeState;
 
@@ -491,23 +1004,6 @@ export class Scroller extends HTMLElement {
 
 			this.#scrollDragState = undefined;
 		}
-	}
-
-	protected disconnectedCallback(): void {
-		this.clearResizeState();
-
-		Scroller.resizeHandler.unsubscribe((resizeObserver) => {
-			resizeObserver.unobserve(this);
-		});
-
-		scrollerStylesheet.unsubscribe();
-
-		this.dispatchEvent(
-			new CustomEvent<DisconnectedEventDetail>("disconnected", {
-				bubbles: true,
-				composed: true,
-			}),
-		);
 	}
 
 	private onHEndBarResizeHandler(event: MouseEvent): void {
@@ -836,6 +1332,19 @@ export class Scroller extends HTMLElement {
 		};
 	}
 
+	private setScrollPos(hScrollPos: number, vScrollPos: number): void {
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindow = this.setupUpdateWindow();
+
+		this.#hScrollState.setScrollPos(hScrollPos);
+		this.#vScrollState.setScrollPos(vScrollPos);
+
+		updateWindow();
+		updateScrollPos();
+		updateScrollSize();
+	}
+
 	private updateHBarDimensions(): void {
 		const container = this.#containerElement;
 		const styles = container.style;
@@ -868,6 +1377,14 @@ export class Scroller extends HTMLElement {
 		this.#contentElement.scrollTo({ left: hScrollState.scrollPos });
 	}
 
+	// private upgradeProperty(property: string): void {
+	// 	if (this.hasOwnProperty(property)) {
+	// 		let value = this[property];
+	// 		delete this[property];
+	// 		this[property] = value;
+	// 	}
+	// }
+
 	private updateVBarDimensions(): void {
 		const container = this.#containerElement;
 		const styles = container.style;
@@ -898,523 +1415,6 @@ export class Scroller extends HTMLElement {
 		styles.setProperty("--v-size", `${vScrollState.scrollSize}px`);
 
 		this.#contentElement.scrollTo({ top: vScrollState.scrollPos });
-	}
-
-	public getHPos(value: number): number {
-		const hScrollState = this.#hScrollState;
-
-		return hScrollState.getPos(value);
-	}
-
-	public getVPos(value: number): number {
-		const vScrollState = this.#vScrollState;
-
-		return vScrollState.getPos(value);
-	}
-
-	// private upgradeProperty(property: string): void {
-	// 	if (this.hasOwnProperty(property)) {
-	// 		let value = this[property];
-	// 		delete this[property];
-	// 		this[property] = value;
-	// 	}
-	// }
-
-	public setDefaultResizeHandles(defaultResizeHandles: boolean): void {
-		const dividers = this.#shadow.querySelectorAll('[id^="divider-"]');
-
-		if (defaultResizeHandles) {
-			for (const divider of dividers) {
-				divider.classList.add("default");
-			}
-		} else {
-			for (const divider of dividers) {
-				divider.classList.remove("default");
-			}
-		}
-	}
-
-	public setHEndExtrema(
-		min: number | undefined,
-		max: number | undefined,
-	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setEndExtrema(min, max);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHEndSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setEndSize(size);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHExtrema(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#hScrollState.setExtrema(min, max);
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindow();
-	}
-
-	public setHMaxElementSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-
-		this.#hScrollState.setMaxElementSize(size);
-
-		updateScrollPos();
-		updateScrollSize();
-	}
-
-	public setHMiddleMin(min: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setMiddleMin(min);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getResizeStrategy(strategy);
-
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setResizeStrategy(strategyFn);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHResyncThresholdSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-
-		this.#hScrollState.setResyncThresholdSize(size);
-
-		updateScrollPos();
-		updateScrollSize();
-	}
-
-	private setScrollPos(hScrollPos: number, vScrollPos: number): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#hScrollState.setScrollPos(hScrollPos);
-		this.#vScrollState.setScrollPos(vScrollPos);
-
-		updateWindow();
-		updateScrollPos();
-		updateScrollSize();
-	}
-
-	public setHSideResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getSideResizeStrategy(strategy);
-		this.#hBarState.setSideResizeStrategy(strategyFn);
-	}
-
-	public setHStartExtrema(
-		min: number | undefined,
-		max: number | undefined,
-	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setEndExtrema(min, max);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHStartSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setStartSize(size);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setHWindow(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#hScrollState.setWindowExtrema(min, max);
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindow();
-	}
-
-	public setVEndExtrema(
-		min: number | undefined,
-		max: number | undefined,
-	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setEndExtrema(min, max);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVEndSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setEndSize(size);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVExtrema(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#vScrollState.setExtrema(min, max);
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindow();
-	}
-
-	public setVMaxElementSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-
-		this.#vScrollState.setMaxElementSize(size);
-
-		updateScrollPos();
-		updateScrollSize();
-	}
-
-	public setVMiddleMin(min: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setMiddleMin(min);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getResizeStrategy(strategy);
-
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setResizeStrategy(strategyFn);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVResyncThresholdSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-
-		this.#vScrollState.setResyncThresholdSize(size);
-
-		updateScrollPos();
-		updateScrollSize();
-	}
-
-	public setVSideResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getSideResizeStrategy(strategy);
-		this.#vBarState.setSideResizeStrategy(strategyFn);
-	}
-
-	public setVStartExtrema(
-		min: number | undefined,
-		max: number | undefined,
-	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setEndExtrema(min, max);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVStartSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setStartSize(size);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
-	public setVWindow(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindow = this.setupUpdateWindow();
-
-		this.#vScrollState.setWindowExtrema(min, max);
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindow();
-	}
-
-	public get hEndIdeal(): number | undefined {
-		return this.#hBarState.endIdeal;
-	}
-
-	public get hEndMax(): number {
-		return this.#hBarState.endMax;
-	}
-
-	public get hEndMin(): number {
-		return this.#hBarState.endMin;
-	}
-
-	public get hEndSize(): number | undefined {
-		return this.#hBarState.endSize;
-	}
-
-	public get hMax(): number {
-		return this.#hScrollState.max;
-	}
-
-	public get hMaxElementSize(): number {
-		return this.#hScrollState.maxElementSize;
-	}
-
-	public get hMiddleIdeal(): number {
-		return this.#hBarState.middleIdeal;
-	}
-
-	public get hMiddleMin(): number {
-		return this.#hBarState.middleMin;
-	}
-
-	public get hMiddleSize(): number {
-		return this.#hBarState.middleSize;
-	}
-
-	public get hMin(): number {
-		return this.#hScrollState.min;
-	}
-
-	public get hRange(): number {
-		return this.#hScrollState.range;
-	}
-
-	public get hResizeStrategy(): ResizeStrategy {
-		return this.#hBarState.resizeStrategy;
-	}
-
-	public get hResyncThresholdSize(): number {
-		return this.#hScrollState.resyncThresholdSize;
-	}
-
-	public get hScrollPos(): number {
-		return this.#hScrollState.scrollPos;
-	}
-
-	public get hScrollSize(): number {
-		return this.#hScrollState.scrollSize;
-	}
-
-	public get hSideResizeStrategy(): SideResizeStrategy {
-		return this.#hBarState.sideResizeStrategy;
-	}
-
-	public get hSize(): number {
-		return this.#hBarState.size;
-	}
-
-	public get hStartIdeal(): number | undefined {
-		return this.#hBarState.startIdeal;
-	}
-
-	public get hStartMax(): number {
-		return this.#hBarState.startMax;
-	}
-
-	public get hStartMin(): number {
-		return this.#hBarState.startMin;
-	}
-
-	public get hStartSize(): number | undefined {
-		return this.#hBarState.startSize;
-	}
-
-	public get hWindowMax(): number {
-		return this.#hScrollState.windowMax;
-	}
-
-	public get hWindowMin(): number {
-		return this.#hScrollState.windowMin;
-	}
-
-	public get hWindowRange(): number {
-		return this.#hScrollState.windowRange;
-	}
-
-	public get hWindowSize(): number {
-		return this.#hScrollState.windowSize;
-	}
-
-	public get vEndIdeal(): number | undefined {
-		return this.#vBarState.endIdeal;
-	}
-
-	public get vEndMax(): number {
-		return this.#vBarState.endMax;
-	}
-
-	public get vEndMin(): number {
-		return this.#vBarState.endMin;
-	}
-
-	public get vEndSize(): number | undefined {
-		return this.#vBarState.endSize;
-	}
-
-	public get vMax(): number {
-		return this.#vScrollState.max;
-	}
-
-	public get vMaxElementSize(): number {
-		return this.#vScrollState.maxElementSize;
-	}
-
-	public get vMiddleIdeal(): number {
-		return this.#vBarState.middleIdeal;
-	}
-
-	public get vMiddleMin(): number {
-		return this.#vBarState.middleMin;
-	}
-
-	public get vMiddleSize(): number {
-		return this.#vBarState.middleSize;
-	}
-
-	public get vMin(): number {
-		return this.#vScrollState.min;
-	}
-
-	public get vRange(): number {
-		return this.#vScrollState.range;
-	}
-
-	public get vResizeStrategy(): ResizeStrategy {
-		return this.#vBarState.resizeStrategy;
-	}
-
-	public get vResyncThresholdSize(): number {
-		return this.#vScrollState.resyncThresholdSize;
-	}
-
-	public get vScrollPos(): number {
-		return this.#vScrollState.scrollPos;
-	}
-
-	public get vScrollSize(): number {
-		return this.#vScrollState.scrollSize;
-	}
-
-	public get vSideResizeStrategy(): SideResizeStrategy {
-		return this.#vBarState.sideResizeStrategy;
-	}
-
-	public get vSize(): number {
-		return this.#vBarState.size;
-	}
-
-	public get vStartIdeal(): number | undefined {
-		return this.#vBarState.startIdeal;
-	}
-
-	public get vStartMax(): number {
-		return this.#vBarState.startMax;
-	}
-
-	public get vStartMin(): number {
-		return this.#vBarState.startMin;
-	}
-
-	public get vStartSize(): number | undefined {
-		return this.#vBarState.startSize;
-	}
-
-	public get vWindowMax(): number {
-		return this.#vScrollState.windowMax;
-	}
-
-	public get vWindowMin(): number {
-		return this.#vScrollState.windowMin;
-	}
-
-	public get vWindowRange(): number {
-		return this.#vScrollState.windowRange;
-	}
-
-	public get vWindowSize(): number {
-		return this.#vScrollState.windowSize;
 	}
 }
 

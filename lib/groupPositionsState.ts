@@ -22,8 +22,6 @@ export class GroupPositionsState<
 > extends EventTarget {
 	#asyncProcessingSize: number;
 
-	#defaultLineSize: number;
-
 	#groups: readonly Readonly<TGroup>[];
 
 	#groupLineSets: (readonly (readonly Readonly<TItem>[])[])[];
@@ -48,6 +46,8 @@ export class GroupPositionsState<
 
 	#itemWindowMin: number;
 
+	#lineSize: number;
+
 	// The reference is the distance from the bottom of the first group in the
 	// view.
 	// #vScrollReference: ScrollReference | undefined;
@@ -56,7 +56,7 @@ export class GroupPositionsState<
 		super();
 
 		this.#asyncProcessingSize = ASYNC_PROCESSING_SIZE_DEFAULT;
-		this.#defaultLineSize = GROUP_LINE_SIZE_DEFAULT;
+		this.#lineSize = GROUP_LINE_SIZE_DEFAULT;
 		this.#groups = [];
 		this.#groupLineSets = [];
 		this.#groupOverdraw = GROUP_OVERDRAW_DEFAULT;
@@ -70,102 +70,20 @@ export class GroupPositionsState<
 		this.#itemWindowMin = ZERO;
 	}
 
-	private getFirstGroupInWindow(): [index: number, startPos: number] {
-		const defaultGroupSize = this.#defaultLineSize;
-		const groupSizes = this.#groupSizes;
+	public clearGroupsAndItems(): void {
+		this.#itemGroupsSignalController?.abort();
+		this.#itemGroupsSignalController = undefined;
 
-		const groupDrawMin = this.getGroupDrawMin();
-
-		const numGroups = groupSizes.length;
-
-		let firstGroup: [index: number, startPos: number] | undefined;
-		let currentPos = ZERO;
-
-		for (let index = ZERO; index < numGroups; index++) {
-			const groupSize = groupSizes[index] ?? defaultGroupSize;
-
-			const startPos = currentPos;
-			currentPos += groupSize;
-
-			if (currentPos > groupDrawMin) {
-				firstGroup = [index, startPos];
-				break;
-			}
-		}
-
-		return firstGroup ?? [ZERO, ZERO];
-	}
-
-	private getGroupDrawMax(): number {
-		const groupOverdraw = this.#groupOverdraw;
-		const groupWindowMax = this.#groupWindowMax;
-
-		return groupWindowMax + groupOverdraw;
-	}
-
-	private getGroupDrawMin(): number {
-		const groupOverdraw = this.#groupOverdraw;
-		const groupWindowMin = this.#groupWindowMin;
-
-		return groupWindowMin - groupOverdraw;
-	}
-
-	private getGroupSize(index: number): number {
-		const groupSizes = this.#groupSizes;
-
-		let groupSize = groupSizes[index];
-
-		if (groupSize === undefined) {
-			const defaultLineSize = this.#defaultLineSize;
-			const groupLineSets = this.#groupLineSets;
-			const groups = this.#groups;
-
-			const group = groups[index];
-			const lineSize = group?.lineSize || defaultLineSize;
-			const itemGroupLines = this.getGroupLines(index).length;
-			const lineCount = Math.max(itemGroupLines, UNIT);
-
-			groupSize = lineSize * lineCount;
-
-			groupLineSets.length = Math.min(groupLineSets.length, index + UNIT);
-			groupSizes[index] = groupSize;
-		}
-
-		return groupSize;
-	}
-
-	private getGroupLines(
-		index: number,
-	): readonly (readonly Readonly<TItem>[])[] {
-		const groupLineSets = this.#groupLineSets;
-
-		let groupLines = groupLineSets[index];
-
-		if (groupLines === undefined) {
-			const itemWindowMin = this.#itemWindowMin;
-			const itemWindowMax = this.#itemWindowMax;
-
-			const itemGroup = this.getItemGroup(index);
-
-			const lines = layoutGroupRows<TGroupId, TItemId, TItem>(
-				itemGroup,
-				itemWindowMin,
-				itemWindowMax,
-			);
-
-			if (lines.length === ZERO) {
-				lines.push([]);
-			}
-
-			groupLines = lines;
-			groupLineSets[index] = groupLines;
-		}
-
-		return groupLines;
+		this.#groups = [];
+		this.#groupLineSets = [];
+		this.#groupPositions = [];
+		this.#groupSizes = [];
+		this.#itemGroups = [];
+		this.#items = [];
 	}
 
 	public getGroupLineSize(index: number): number {
-		const defaultLineSize = this.#defaultLineSize;
+		const defaultLineSize = this.#lineSize;
 		const groups = this.#groups;
 
 		return groups[index]?.lineSize ?? defaultLineSize;
@@ -223,12 +141,6 @@ export class GroupPositionsState<
 		const groupLines = this.getGroupLines(groupIndex);
 
 		return groupLines[lineIndex]?.[itemIndex];
-	}
-
-	private getItemGroup(index: number): readonly Readonly<TItem>[] {
-		const itemGroups = this.#itemGroups;
-
-		return itemGroups[index] ?? [];
 	}
 
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
@@ -325,6 +237,47 @@ export class GroupPositionsState<
 		}
 	}
 
+	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {
+		this.#groupWindowMin = groupWindowMin;
+		this.#groupWindowMax = groupWindowMax;
+	}
+
+	public setGroups(groups: readonly Readonly<TGroup>[]): void {
+		this.#groups = groups;
+
+		this.#groupLineSets.length = ZERO;
+		this.#groupPositions.length = ZERO;
+		this.#groupSizes.length = ZERO;
+
+		this.prepareItemGroups();
+	}
+
+	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
+		this.#itemWindowMin = itemWindowMin;
+		this.#itemWindowMax = itemWindowMax;
+
+		this.#groupLineSets.length = ZERO;
+		this.#groupPositions.length = ZERO;
+		this.#groupSizes.length = ZERO;
+	}
+
+	public setItems(items: readonly Readonly<TItem>[]): void {
+		this.#items = items;
+
+		this.#groupLineSets.length = ZERO;
+		this.#groupPositions.length = ZERO;
+		this.#groupSizes.length = ZERO;
+
+		this.prepareItemGroups();
+	}
+
+	public setLineSize(lineSize: number | undefined): void {
+		this.#lineSize = lineSize ?? GROUP_LINE_SIZE_DEFAULT;
+
+		this.#groupPositions.length = ZERO;
+		this.#groupSizes.length = ZERO;
+	}
+
 	private async buildItemGroupsMap(
 		signal: AbortSignal,
 	): Promise<Map<TGroupId, TItem[]> | undefined> {
@@ -353,6 +306,106 @@ export class GroupPositionsState<
 		}
 
 		return itemGroupsMap;
+	}
+
+	private getFirstGroupInWindow(): [index: number, startPos: number] {
+		const defaultGroupSize = this.#lineSize;
+		const groupSizes = this.#groupSizes;
+
+		const groupDrawMin = this.getGroupDrawMin();
+
+		const numGroups = groupSizes.length;
+
+		let firstGroup: [index: number, startPos: number] | undefined;
+		let currentPos = ZERO;
+
+		for (let index = ZERO; index < numGroups; index++) {
+			const groupSize = groupSizes[index] ?? defaultGroupSize;
+
+			const startPos = currentPos;
+			currentPos += groupSize;
+
+			if (currentPos > groupDrawMin) {
+				firstGroup = [index, startPos];
+				break;
+			}
+		}
+
+		return firstGroup ?? [ZERO, ZERO];
+	}
+
+	private getGroupDrawMax(): number {
+		const groupOverdraw = this.#groupOverdraw;
+		const groupWindowMax = this.#groupWindowMax;
+
+		return groupWindowMax + groupOverdraw;
+	}
+
+	private getGroupDrawMin(): number {
+		const groupOverdraw = this.#groupOverdraw;
+		const groupWindowMin = this.#groupWindowMin;
+
+		return groupWindowMin - groupOverdraw;
+	}
+
+	private getGroupSize(index: number): number {
+		const groupSizes = this.#groupSizes;
+
+		let groupSize = groupSizes[index];
+
+		if (groupSize === undefined) {
+			const defaultLineSize = this.#lineSize;
+			const groupLineSets = this.#groupLineSets;
+			const groups = this.#groups;
+
+			const group = groups[index];
+			const lineSize = group?.lineSize || defaultLineSize;
+			const itemGroupLines = this.getGroupLines(index).length;
+			const lineCount = Math.max(itemGroupLines, UNIT);
+
+			groupSize = lineSize * lineCount;
+
+			groupLineSets.length = Math.min(groupLineSets.length, index + UNIT);
+			groupSizes[index] = groupSize;
+		}
+
+		return groupSize;
+	}
+
+	private getGroupLines(
+		index: number,
+	): readonly (readonly Readonly<TItem>[])[] {
+		const groupLineSets = this.#groupLineSets;
+
+		let groupLines = groupLineSets[index];
+
+		if (groupLines === undefined) {
+			const itemWindowMin = this.#itemWindowMin;
+			const itemWindowMax = this.#itemWindowMax;
+
+			const itemGroup = this.getItemGroup(index);
+
+			const lines = layoutGroupRows<TGroupId, TItemId, TItem>(
+				itemGroup,
+				itemWindowMin,
+				itemWindowMax,
+			);
+
+			if (lines.length === ZERO) {
+				lines.push([]);
+			}
+
+			groupLines = lines;
+			groupLineSets[index] = groupLines;
+		}
+
+		return groupLines;
+	}
+
+	private getItemGroup(index: number): readonly Readonly<TItem>[] {
+		const itemGroups = this.#itemGroups;
+
+		return itemGroups[index] ?? [];
 	}
 
 	private async prepareItemGroups(): Promise<void> {
@@ -408,58 +461,6 @@ export class GroupPositionsState<
 		}
 
 		this.dispatchEvent(new CustomEvent("renderRequest"));
-	}
-
-	public resetGroupsAndItems(): void {
-		this.#itemGroupsSignalController?.abort();
-
-		this.#groups = [];
-		this.#groupLineSets = [];
-		this.#groupPositions = [];
-		this.#groupSizes = [];
-		this.#itemGroups = [];
-		this.#items = [];
-	}
-
-	public setDefaultLineSize(defaultLineSize: number | undefined): void {
-		this.#defaultLineSize = defaultLineSize ?? GROUP_LINE_SIZE_DEFAULT;
-
-		this.#groupPositions.length = ZERO;
-		this.#groupSizes.length = ZERO;
-	}
-
-	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groups = groups;
-
-		this.#groupLineSets.length = ZERO;
-		this.#groupPositions.length = ZERO;
-		this.#groupSizes.length = ZERO;
-
-		this.prepareItemGroups();
-	}
-
-	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#items = items;
-
-		this.#groupLineSets.length = ZERO;
-		this.#groupPositions.length = ZERO;
-		this.#groupSizes.length = ZERO;
-
-		this.prepareItemGroups();
-	}
-
-	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {
-		this.#groupWindowMin = groupWindowMin;
-		this.#groupWindowMax = groupWindowMax;
-	}
-
-	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
-		this.#itemWindowMin = itemWindowMin;
-		this.#itemWindowMax = itemWindowMax;
-
-		this.#groupLineSets.length = ZERO;
-		this.#groupPositions.length = ZERO;
-		this.#groupSizes.length = ZERO;
 	}
 
 	// private updateVScrollPos() {

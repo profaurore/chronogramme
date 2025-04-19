@@ -131,99 +131,52 @@ export class ScrollState {
 		this.resetScrollState();
 	}
 
-	private clampWindowToRange(): void {
-		const range = this.#range;
-		const min = this.#min;
-		const max = this.#max;
-		const windowMinIdeal = this.#windowMinIdeal;
-		const windowMaxIdeal = this.#windowMaxIdeal;
-		const windowRangeIdeal = windowMaxIdeal - windowMinIdeal;
-
-		let windowMin: number;
-		let windowMax: number;
-
-		if (windowRangeIdeal > range) {
-			windowMin = min;
-			windowMax = max;
-		} else if (windowMinIdeal < min) {
-			windowMin = min;
-			windowMax = min + windowRangeIdeal;
-		} else if (windowMaxIdeal > max) {
-			windowMin = max - windowRangeIdeal;
-			windowMax = max;
-		} else {
-			windowMin = windowMinIdeal;
-			windowMax = windowMaxIdeal;
-		}
-
-		this.#windowMin = windowMin;
-		this.#windowMax = windowMax;
-		this.#windowRange = windowMax - windowMin;
-
-		this.setComputedSizes();
+	public get max(): number {
+		return this.#max;
 	}
 
-	private resetScrollState(): void {
-		const max = this.#max;
-		const maxElementSize = this.#maxElementSize;
-		const min = this.#min;
-		const pixelPerUnit = this.#pixelPerUnit;
-		const resyncThresholdSize = this.#resyncThresholdSize;
-		const windowMax = this.#windowMax;
-		const windowMin = this.#windowMin;
-		const windowSize = this.#windowSize;
-
-		const minToStartSize = pixelPerUnit * (windowMin - min);
-		const endToMaxSize = pixelPerUnit * (max - windowMax);
-		const startToMaxSize = pixelPerUnit * (max - windowMin);
-
-		const minToStarSizeWhole = Math.ceil(minToStartSize);
-		const startToMaxSizeWhole = Math.ceil(startToMaxSize);
-
-		const minOverflowSize = DOUBLE * resyncThresholdSize;
-		const maxScrollSize = Math.max(
-			maxElementSize,
-
-			// The scroll size needs to be at least the window size plus some buffer
-			// on either side.
-			windowSize + minOverflowSize + minOverflowSize,
-		);
-
-		// The size is split at the start position of the window to account for
-		// partial pixels on either side.
-		const size = minToStarSizeWhole + startToMaxSizeWhole;
-
-		const scrollSize = Math.min(size, maxScrollSize);
-
-		const maxScrollPos = scrollSize - windowSize;
-		const halfScrollPos = Math.floor(HALF * maxScrollPos);
-
-		const scrollPos = Math.round(
-			Math.min(
-				Math.max(scrollSize - startToMaxSizeWhole, halfScrollPos),
-				minToStarSizeWhole,
-			),
-		);
-
-		const isFullRange = size <= scrollSize;
-
-		this.#scrollSize = scrollSize;
-		this.#scrollPos = scrollPos;
-		this.#isMinTerminal = isFullRange || minToStartSize <= halfScrollPos;
-		this.#isMaxTerminal = isFullRange || endToMaxSize <= halfScrollPos;
+	public get maxElementSize(): number {
+		return this.#maxElementSize;
 	}
 
-	private setComputedSizes(): void {
-		const range = this.#range;
-		const windowRange = this.#windowRange;
-		const windowSize = this.#windowSize;
+	public get min(): number {
+		return this.#min;
+	}
 
-		const unitPerPixel = windowRange / windowSize;
-		const pixelPerUnit = windowSize / windowRange;
+	public get range(): number {
+		return this.#range;
+	}
 
-		this.#unitPerPixel = unitPerPixel;
-		this.#pixelPerUnit = pixelPerUnit;
-		this.#size = pixelPerUnit * range;
+	public get resyncThresholdSize(): number {
+		return this.#resyncThresholdSize;
+	}
+
+	public get scrollPos(): number {
+		return this.#scrollPos;
+	}
+
+	public get scrollSize(): number {
+		return this.#scrollSize;
+	}
+
+	public get size(): number {
+		return this.#size;
+	}
+
+	public get windowMax(): number {
+		return this.#windowMax;
+	}
+
+	public get windowMin(): number {
+		return this.#windowMin;
+	}
+
+	public get windowRange(): number {
+		return this.#windowRange;
+	}
+
+	public get windowSize(): number {
+		return this.#windowSize;
 	}
 
 	public getPos(value: number): number {
@@ -469,51 +422,98 @@ export class ScrollState {
 		}
 	}
 
-	public get max(): number {
-		return this.#max;
+	private clampWindowToRange(): void {
+		const range = this.#range;
+		const min = this.#min;
+		const max = this.#max;
+		const windowMinIdeal = this.#windowMinIdeal;
+		const windowMaxIdeal = this.#windowMaxIdeal;
+		const windowRangeIdeal = windowMaxIdeal - windowMinIdeal;
+
+		let windowMin: number;
+		let windowMax: number;
+
+		if (windowRangeIdeal > range) {
+			windowMin = min;
+			windowMax = max;
+		} else if (windowMinIdeal < min) {
+			windowMin = min;
+			windowMax = min + windowRangeIdeal;
+		} else if (windowMaxIdeal > max) {
+			windowMin = max - windowRangeIdeal;
+			windowMax = max;
+		} else {
+			windowMin = windowMinIdeal;
+			windowMax = windowMaxIdeal;
+		}
+
+		this.#windowMin = windowMin;
+		this.#windowMax = windowMax;
+		this.#windowRange = windowMax - windowMin;
+
+		this.setComputedSizes();
 	}
 
-	public get maxElementSize(): number {
-		return this.#maxElementSize;
+	private resetScrollState(): void {
+		const max = this.#max;
+		const maxElementSize = this.#maxElementSize;
+		const min = this.#min;
+		const pixelPerUnit = this.#pixelPerUnit;
+		const resyncThresholdSize = this.#resyncThresholdSize;
+		const windowMax = this.#windowMax;
+		const windowMin = this.#windowMin;
+		const windowSize = this.#windowSize;
+
+		const minToStartSize = pixelPerUnit * (windowMin - min);
+		const endToMaxSize = pixelPerUnit * (max - windowMax);
+		const startToMaxSize = pixelPerUnit * (max - windowMin);
+
+		const minToStarSizeWhole = Math.ceil(minToStartSize);
+		const startToMaxSizeWhole = Math.ceil(startToMaxSize);
+
+		const minOverflowSize = DOUBLE * resyncThresholdSize;
+		const maxScrollSize = Math.max(
+			maxElementSize,
+
+			// The scroll size needs to be at least the window size plus some buffer
+			// on either side.
+			windowSize + minOverflowSize + minOverflowSize,
+		);
+
+		// The size is split at the start position of the window to account for
+		// partial pixels on either side.
+		const size = minToStarSizeWhole + startToMaxSizeWhole;
+
+		const scrollSize = Math.min(size, maxScrollSize);
+
+		const maxScrollPos = scrollSize - windowSize;
+		const halfScrollPos = Math.floor(HALF * maxScrollPos);
+
+		const scrollPos = Math.round(
+			Math.min(
+				Math.max(scrollSize - startToMaxSizeWhole, halfScrollPos),
+				minToStarSizeWhole,
+			),
+		);
+
+		const isFullRange = size <= scrollSize;
+
+		this.#scrollSize = scrollSize;
+		this.#scrollPos = scrollPos;
+		this.#isMinTerminal = isFullRange || minToStartSize <= halfScrollPos;
+		this.#isMaxTerminal = isFullRange || endToMaxSize <= halfScrollPos;
 	}
 
-	public get min(): number {
-		return this.#min;
-	}
+	private setComputedSizes(): void {
+		const range = this.#range;
+		const windowRange = this.#windowRange;
+		const windowSize = this.#windowSize;
 
-	public get range(): number {
-		return this.#range;
-	}
+		const unitPerPixel = windowRange / windowSize;
+		const pixelPerUnit = windowSize / windowRange;
 
-	public get resyncThresholdSize(): number {
-		return this.#resyncThresholdSize;
-	}
-
-	public get scrollPos(): number {
-		return this.#scrollPos;
-	}
-
-	public get scrollSize(): number {
-		return this.#scrollSize;
-	}
-
-	public get size(): number {
-		return this.#size;
-	}
-
-	public get windowMax(): number {
-		return this.#windowMax;
-	}
-
-	public get windowMin(): number {
-		return this.#windowMin;
-	}
-
-	public get windowRange(): number {
-		return this.#windowRange;
-	}
-
-	public get windowSize(): number {
-		return this.#windowSize;
+		this.#unitPerPixel = unitPerPixel;
+		this.#pixelPerUnit = pixelPerUnit;
+		this.#size = pixelPerUnit * range;
 	}
 }
