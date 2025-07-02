@@ -1,5 +1,5 @@
-import { SIDE_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
-import { RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
+import { BAR_SIDE_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
+import { BAR_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
 import { validateFunction } from "./function.ts";
 import {
 	SizeRangeError,
@@ -14,8 +14,8 @@ export interface BarStateParameters {
 	endMin?: number;
 	endSize?: number;
 	middleMin?: number;
-	resizeStrategy?: ResizeStrategy;
-	sideResizeStrategy?: SideResizeStrategy;
+	resizeStrategy?: BarResizeStrategy;
+	sideResizeStrategy?: BarSideResizeStrategy;
 	size: number;
 	startMax?: number;
 	startMin?: number;
@@ -38,13 +38,13 @@ const optionalParameters = [
 ] as const;
 
 /** The strategy used when the container is resized. */
-export type ResizeStrategy = (state: Readonly<BarState>) => {
+export type BarResizeStrategy = (state: Readonly<BarState>) => {
 	endSize?: number | undefined;
 	startSize?: number | undefined;
 };
 
 /** The strategy used when a side is expanded beyond it's available space. */
-export type SideResizeStrategy = (
+export type BarSideResizeStrategy = (
 	state: Readonly<BarState>,
 	isStart: boolean,
 	targetSize: number | undefined,
@@ -63,9 +63,9 @@ export class BarState {
 
 	#middleMin: number;
 
-	#resizeStrategy: ResizeStrategy;
+	#resizeStrategy: BarResizeStrategy;
 
-	#sideResizeStrategy: SideResizeStrategy;
+	#sideResizeStrategy: BarSideResizeStrategy;
 
 	#size: number;
 
@@ -89,9 +89,10 @@ export class BarState {
 		const endMin = parameters.endMin ?? ZERO;
 		const endSize = parameters.endSize;
 		const middleMin = parameters.middleMin ?? ZERO;
-		const resizeStrategy = parameters.resizeStrategy ?? RESIZE_STRATEGY_DEFAULT;
+		const resizeStrategy =
+			parameters.resizeStrategy ?? BAR_RESIZE_STRATEGY_DEFAULT;
 		const sideResizeStrategy =
-			parameters.sideResizeStrategy ?? SIDE_RESIZE_STRATEGY_DEFAULT;
+			parameters.sideResizeStrategy ?? BAR_SIDE_RESIZE_STRATEGY_DEFAULT;
 		const size = parameters.size;
 		const startMax = parameters.startMax ?? Number.MAX_VALUE;
 		const startMin = parameters.startMin ?? ZERO;
@@ -132,10 +133,10 @@ export class BarState {
 		);
 		this.#middleMin = middleMin;
 
-		validateFunction<ResizeStrategy>("resizeStrategy", resizeStrategy);
+		validateFunction<BarResizeStrategy>("resizeStrategy", resizeStrategy);
 		this.#resizeStrategy = resizeStrategy;
 
-		validateFunction<SideResizeStrategy>(
+		validateFunction<BarSideResizeStrategy>(
 			"sideResizeStrategy",
 			sideResizeStrategy,
 		);
@@ -172,11 +173,11 @@ export class BarState {
 		return this.#size - (this.#startSize ?? ZERO) - (this.#endSize ?? ZERO);
 	}
 
-	public get resizeStrategy(): ResizeStrategy {
+	public get resizeStrategy(): BarResizeStrategy {
 		return this.#resizeStrategy;
 	}
 
-	public get sideResizeStrategy(): SideResizeStrategy {
+	public get sideResizeStrategy(): BarSideResizeStrategy {
 		return this.#sideResizeStrategy;
 	}
 
@@ -282,9 +283,9 @@ export class BarState {
 	 * - `startSize`
 	 */
 	public setResizeStrategy(
-		resizeStrategy: ResizeStrategy | undefined = RESIZE_STRATEGY_DEFAULT,
+		resizeStrategy: BarResizeStrategy | undefined = BAR_RESIZE_STRATEGY_DEFAULT,
 	): void {
-		validateFunction<ResizeStrategy>("resizeStrategy", resizeStrategy);
+		validateFunction<BarResizeStrategy>("resizeStrategy", resizeStrategy);
 		this.#resizeStrategy = resizeStrategy;
 
 		this.recalcSides();
@@ -295,10 +296,10 @@ export class BarState {
 	 */
 	public setSideResizeStrategy(
 		sideResizeStrategy:
-			| SideResizeStrategy
-			| undefined = SIDE_RESIZE_STRATEGY_DEFAULT,
+			| BarSideResizeStrategy
+			| undefined = BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
 	): void {
-		validateFunction<SideResizeStrategy>(
+		validateFunction<BarSideResizeStrategy>(
 			"sideResizeStrategy",
 			sideResizeStrategy,
 		);
@@ -399,7 +400,7 @@ export class BarState {
 
 	private validateResizeStrategyReturn(
 		value: unknown,
-	): asserts value is ReturnType<ResizeStrategy> {
+	): asserts value is ReturnType<BarResizeStrategy> {
 		validateObject("resizeStrategy()", value, [], ["endSize", "startSize"]);
 
 		const endSize = value.endSize;
@@ -457,7 +458,7 @@ export class BarState {
 		barMax: number,
 		otherBarMin: number,
 		otherBarMax: number,
-	): asserts value is ReturnType<SideResizeStrategy> {
+	): asserts value is ReturnType<BarSideResizeStrategy> {
 		validateObject(
 			"sideResizeStrategy()",
 			value,

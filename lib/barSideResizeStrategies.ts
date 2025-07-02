@@ -1,7 +1,7 @@
-import type { SideResizeStrategy } from "./barState.ts";
+import type { BarSideResizeStrategy } from "./barState.ts";
 import { ZERO, clampMaxWins } from "./math.ts";
 
-export const consumeSideResizeStrategy: SideResizeStrategy = (
+export const consumeSideBarResizeStrategy: BarSideResizeStrategy = (
 	state,
 	isStart,
 	targetSize,
@@ -45,7 +45,7 @@ export const consumeSideResizeStrategy: SideResizeStrategy = (
 	return { barSize: newBarSize, otherBarSize: newOtherBarSize };
 };
 
-export const constrainSideResizeStrategy: SideResizeStrategy = (
+export const constrainBarSideResizeStrategy: BarSideResizeStrategy = (
 	state,
 	isStart,
 	targetSize,

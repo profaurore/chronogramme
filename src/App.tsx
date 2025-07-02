@@ -9,16 +9,19 @@ import {
 } from "react";
 import "./App.css";
 import type { Scroller } from "../lib/Scroller.ts";
-import type { BaseItem, Timeline } from "../lib/Timeline.ts";
+import type { BaseGroup, BaseItem, Timeline } from "../lib/Timeline.ts";
 import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
+import { Timeline as RCTimeline } from "./Timeline.tsx";
 
 const timelineClass = css`
+	flex: none;
 	height: 400px;
 	margin-bottom: 1em;
 `;
 
 const scrollerClass = css`
+	flex: none;
 	height: 400px;
 	margin-bottom: 1em;
 	max-height: 80vh;
@@ -114,6 +117,7 @@ export function App(): ReactNode {
 	};
 
 	const [items, setItems] = useState<BaseItem[]>([]);
+	const [groups, setGroups] = useState<BaseGroup[]>([]);
 
 	const onAddClickHandler =
 		(addCount: number): MouseEventHandler =>
@@ -185,6 +189,7 @@ export function App(): ReactNode {
 		}
 
 		timelineRef.current?.setGroups(groups);
+		setGroups(groups);
 	}, []);
 
 	return (
@@ -210,33 +215,48 @@ export function App(): ReactNode {
 
 			<div>Extrema: {extremaString}</div>
 			<div>Window: {windowString}</div>
-			<div>
-				<cg-timeline
-					class={timelineClass}
-					h-extrema={[extremaStart, extremaEnd]}
-					h-window={[windowStart, windowEnd]}
-					ref={timelineRef}
-				/>
-			</div>
-			<div>
-				<cg-scroller
-					class={scrollerClass}
-					default-resize-handles
-					h-end-extrema={[50, 150]}
-					h-end-size={100}
-					h-window={[windowStart, windowEnd]}
-					h-extrema={[extremaStart, extremaEnd]}
-					h-start-extrema={[50, 150]}
-					h-start-size={100}
-					ref={scrollerRef}
-					v-end-extrema={[50, 150]}
-					v-end-size={100}
-					v-extrema={[0, 1000]}
-					v-start-extrema={[50, 150]}
-					v-start-size={100}
-					v-window={[0, 100]}
-				/>
-			</div>
+			<RCTimeline
+				className={timelineClass}
+				groupRenderer={({ group }) => <div>{`group-${group.id}`}</div>}
+				groups={groups}
+				itemRenderer={({ getItemProps, key }) => (
+					<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
+						{key}
+					</div>
+				)}
+				items={items}
+				rowData={null}
+				rowRenderer={({ getLayerRootProps, key }) => (
+					<div {...getLayerRootProps()} key={key}>
+						{key}
+					</div>
+				)}
+				visibleTimeEnd={windowEnd}
+				visibleTimeStart={windowStart}
+			/>
+			<cg-timeline
+				class={timelineClass}
+				h-extrema={[extremaStart, extremaEnd]}
+				h-window={[windowStart, windowEnd]}
+				ref={timelineRef}
+			/>
+			<cg-scroller
+				class={scrollerClass}
+				default-resize-handles
+				h-end-extrema={[50, 150]}
+				h-end-size={100}
+				h-window={[windowStart, windowEnd]}
+				h-extrema={[extremaStart, extremaEnd]}
+				h-start-extrema={[50, 150]}
+				h-start-size={100}
+				ref={scrollerRef}
+				v-end-extrema={[50, 150]}
+				v-end-size={100}
+				v-extrema={[0, 1000]}
+				v-start-extrema={[50, 150]}
+				v-start-size={100}
+				v-window={[0, 100]}
+			/>
 		</>
 	);
 }

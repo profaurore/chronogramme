@@ -82,6 +82,12 @@ export class GroupPositionsState<
 		this.#items = [];
 	}
 
+	public getGroup(index: number): Readonly<TGroup> | undefined {
+		const groups = this.#groups;
+
+		return groups[index];
+	}
+
 	public getGroupLineSize(index: number): number {
 		const defaultLineSize = this.#lineSize;
 		const groups = this.#groups;

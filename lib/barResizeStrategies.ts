@@ -1,4 +1,4 @@
-import type { ResizeStrategy } from "./barState.ts";
+import type { BarResizeStrategy } from "./barState.ts";
 import { UNIT, ZERO, clampMaxWins } from "./math.ts";
 
 interface FlexSegment {
@@ -105,7 +105,7 @@ function flexSegments(
 	];
 }
 
-export const proportionalResizeStrategy: ResizeStrategy = (state) => {
+export const proportionalBarResizeStrategy: BarResizeStrategy = (state) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;
@@ -141,7 +141,7 @@ export const proportionalResizeStrategy: ResizeStrategy = (state) => {
 	return { endSize, startSize };
 };
 
-export const preserveSidesResizeStrategy: ResizeStrategy = (state) => {
+export const preserveSidesBarResizeStrategy: BarResizeStrategy = (state) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;
@@ -186,7 +186,7 @@ export const preserveSidesResizeStrategy: ResizeStrategy = (state) => {
 	return { endSize, startSize };
 };
 
-export const preserveMiddleResizeStrategy: ResizeStrategy = (state) => {
+export const preserveMiddleBarResizeStrategy: BarResizeStrategy = (state) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;

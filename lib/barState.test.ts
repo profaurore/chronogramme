@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import {
+	type BarResizeStrategy,
+	type BarSideResizeStrategy,
 	BarState,
 	type BarStateParameters,
-	type ResizeStrategy,
-	type SideResizeStrategy,
 } from "./barState.ts";
 import type * as barStateUtilsImport from "./barStateUtils.ts";
 import { NotAFunctionError } from "./function.ts";
@@ -30,16 +30,16 @@ vi.mock("./barStateUtils.ts", async (importOriginal) => {
 		...original,
 
 		// biome-ignore lint/style/useNamingConvention: Mocked constant.
-		get RESIZE_STRATEGY_DEFAULT() {
+		get BAR_RESIZE_STRATEGY_DEFAULT() {
 			return mockedResizeStrategyDefault.mockImplementation(
-				original.RESIZE_STRATEGY_DEFAULT,
+				original.BAR_RESIZE_STRATEGY_DEFAULT,
 			);
 		},
 
 		// biome-ignore lint/style/useNamingConvention: Mocked constant.
-		get SIDE_RESIZE_STRATEGY_DEFAULT() {
+		get BAR_SIDE_RESIZE_STRATEGY_DEFAULT() {
 			return mockedSideResizeStrategyDefault.mockImplementation(
-				original.SIDE_RESIZE_STRATEGY_DEFAULT,
+				original.BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
 			);
 		},
 	};
@@ -3028,7 +3028,7 @@ describe("BarState", () => {
 						error: new NotAnObjectError("sideResizeStrategy()", undefined),
 						parameters: {
 							sideResizeStrategy: () =>
-								undefined as unknown as ReturnType<SideResizeStrategy>,
+								undefined as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							endSize: 100,
@@ -3042,7 +3042,7 @@ describe("BarState", () => {
 						error: new NotAnObjectError("sideResizeStrategy()", "test"),
 						parameters: {
 							sideResizeStrategy: () =>
-								"test" as unknown as ReturnType<SideResizeStrategy>,
+								"test" as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							endSize: 100,
@@ -3062,7 +3062,7 @@ describe("BarState", () => {
 							sideResizeStrategy: () =>
 								({
 									incorrectKey: true,
-								}) as unknown as ReturnType<SideResizeStrategy>,
+								}) as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							endSize: 100,
@@ -3077,7 +3077,7 @@ describe("BarState", () => {
 						parameters: {
 							sideResizeStrategy: () => ({
 								barSize:
-									"test" as unknown as ReturnType<SideResizeStrategy>["barSize"],
+									"test" as unknown as ReturnType<BarSideResizeStrategy>["barSize"],
 								otherBarSize: undefined,
 							}),
 						},
@@ -3155,7 +3155,7 @@ describe("BarState", () => {
 							sideResizeStrategy: () => ({
 								barSize: undefined,
 								otherBarSize:
-									"test" as unknown as ReturnType<SideResizeStrategy>["otherBarSize"],
+									"test" as unknown as ReturnType<BarSideResizeStrategy>["otherBarSize"],
 							}),
 						},
 						update: {
@@ -4068,7 +4068,7 @@ describe("BarState", () => {
 				Readonly<{
 					error: Readonly<Error> | null;
 					update: Readonly<{
-						resizeStrategy: ResizeStrategy | undefined;
+						resizeStrategy: BarResizeStrategy | undefined;
 					}>;
 				}>,
 			])[] = [
@@ -4144,7 +4144,7 @@ describe("BarState", () => {
 				string,
 				Readonly<{
 					update: Readonly<{
-						resizeStrategy: ResizeStrategy | undefined;
+						resizeStrategy: BarResizeStrategy | undefined;
 					}>;
 				}>,
 			])[] = [
@@ -4212,7 +4212,7 @@ describe("BarState", () => {
 				Readonly<{
 					error: Readonly<Error> | null;
 					update: Readonly<{
-						sideResizeStrategy: SideResizeStrategy | undefined;
+						sideResizeStrategy: BarSideResizeStrategy | undefined;
 					}>;
 				}>,
 			])[] = [
@@ -4288,7 +4288,7 @@ describe("BarState", () => {
 				string,
 				Readonly<{
 					update: Readonly<{
-						sideResizeStrategy: SideResizeStrategy | undefined;
+						sideResizeStrategy: BarSideResizeStrategy | undefined;
 					}>;
 				}>,
 			])[] = [
@@ -5346,7 +5346,7 @@ describe("BarState", () => {
 						error: new NotAnObjectError("sideResizeStrategy()", undefined),
 						parameters: {
 							sideResizeStrategy: () =>
-								undefined as unknown as ReturnType<SideResizeStrategy>,
+								undefined as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							startSize: 300,
@@ -5360,7 +5360,7 @@ describe("BarState", () => {
 						error: new NotAnObjectError("sideResizeStrategy()", "test"),
 						parameters: {
 							sideResizeStrategy: () =>
-								"test" as unknown as ReturnType<SideResizeStrategy>,
+								"test" as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							startSize: 300,
@@ -5380,7 +5380,7 @@ describe("BarState", () => {
 							sideResizeStrategy: () =>
 								({
 									incorrectKey: true,
-								}) as unknown as ReturnType<SideResizeStrategy>,
+								}) as unknown as ReturnType<BarSideResizeStrategy>,
 						},
 						update: {
 							startSize: 300,
@@ -5395,7 +5395,7 @@ describe("BarState", () => {
 						parameters: {
 							sideResizeStrategy: () => ({
 								barSize:
-									"test" as unknown as ReturnType<SideResizeStrategy>["barSize"],
+									"test" as unknown as ReturnType<BarSideResizeStrategy>["barSize"],
 								otherBarSize: undefined,
 							}),
 						},
@@ -5473,7 +5473,7 @@ describe("BarState", () => {
 							sideResizeStrategy: () => ({
 								barSize: undefined,
 								otherBarSize:
-									"test" as unknown as ReturnType<SideResizeStrategy>["otherBarSize"],
+									"test" as unknown as ReturnType<BarSideResizeStrategy>["otherBarSize"],
 							}),
 						},
 						update: {

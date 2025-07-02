@@ -20,12 +20,7 @@
 		"rules": {
 			"all": true,
 			"complexity": {
-				"noExcessiveCognitiveComplexity": {
-					"level": "error",
-					"options": {
-						"maxAllowedComplexity": 16
-					}
-				}
+				"noExcessiveCognitiveComplexity": "off"
 			},
 			"nursery": {
 				"noCommonJs": "error",

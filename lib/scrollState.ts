@@ -8,16 +8,26 @@ import {
 	validateSize,
 } from "./math.ts";
 import { validateObject } from "./object.ts";
+import { validateStringOptions } from "./string.ts";
 
 interface ScrollStateParameters {
 	max?: number | undefined;
 	maxElementSize?: number | undefined;
 	min?: number | undefined;
+	resizeStrategy?: ScrollResizeStrategyOptions | undefined;
 	resyncThresholdSize?: number | undefined;
 	windowMax?: number | undefined;
 	windowMin?: number | undefined;
 	windowSize: number;
 }
+
+export type ScrollResizeStrategyOptions =
+	(typeof SCROLL_RESIZE_STRATEGY_OPTIONS)[number];
+
+export const SCROLL_RESIZE_STRATEGY_OPTIONS = [
+	"preserveUnitPerPixel",
+	"preserveWindow",
+] as const;
 
 const DEFAULT_RESYNC_THRESHOLD_SIZE = 500;
 
@@ -48,6 +58,8 @@ export class ScrollState {
 	#pixelPerUnit!: number;
 
 	#range: number;
+
+	#resizeStrategy: ScrollResizeStrategyOptions;
 
 	#resyncThresholdSize: number;
 
@@ -83,11 +95,14 @@ export class ScrollState {
 		const maxElementSize =
 			parameters.maxElementSize ?? DEFAULT_MAX_ELEMENT_SIZE;
 		const min = parameters.min ?? Number.MIN_SAFE_INTEGER;
+		const resizeStrategy = parameters.resizeStrategy ?? "preserveWindow";
 		const resyncThresholdSize =
 			parameters.resyncThresholdSize ?? DEFAULT_RESYNC_THRESHOLD_SIZE;
 		const windowMax = parameters.windowMax ?? Number.MAX_SAFE_INTEGER;
 		const windowMin = parameters.windowMin ?? Number.MIN_SAFE_INTEGER;
 		const windowSize = parameters.windowSize;
+
+		this.#resizeStrategy = resizeStrategy;
 
 		validateSize(
 			"maxElementSize",
@@ -147,6 +162,10 @@ export class ScrollState {
 		return this.#range;
 	}
 
+	public get resizeStrategy(): ScrollResizeStrategyOptions {
+		return this.#resizeStrategy;
+	}
+
 	public get resyncThresholdSize(): number {
 		return this.#resyncThresholdSize;
 	}
@@ -185,6 +204,14 @@ export class ScrollState {
 		const windowMin = this.#windowMin;
 
 		return scrollPos + pixelPerUnit * (value - windowMin);
+	}
+
+	public getValue(pos: number): number {
+		const unitPerPixel = this.#unitPerPixel;
+		const scrollPos = this.#scrollPos;
+		const windowMin = this.#windowMin;
+
+		return unitPerPixel * (pos - scrollPos) + windowMin;
 	}
 
 	/**
@@ -236,6 +263,16 @@ export class ScrollState {
 		this.#maxElementSize = maxElementSize;
 
 		this.resetScrollState();
+	}
+
+	public setResizeStrategy(resizeStrategy: string | undefined): void {
+		validateStringOptions(
+			"resizeStrategy",
+			resizeStrategy,
+			SCROLL_RESIZE_STRATEGY_OPTIONS,
+		);
+
+		this.#resizeStrategy = resizeStrategy ?? "preserveWindow";
 	}
 
 	/**
@@ -416,6 +453,15 @@ export class ScrollState {
 		if (windowSize !== this.#windowSize) {
 			this.#windowSize = windowSize;
 
+			if (this.#resizeStrategy === "preserveUnitPerPixel") {
+				const windowMin = this.#windowMin;
+
+				this.setWindowExtrema(
+					windowMin,
+					this.getValue(this.getPos(windowMin) + windowSize),
+				);
+			}
+
 			this.setComputedSizes();
 
 			this.resetScrollState();
@@ -468,7 +514,7 @@ export class ScrollState {
 		const endToMaxSize = pixelPerUnit * (max - windowMax);
 		const startToMaxSize = pixelPerUnit * (max - windowMin);
 
-		const minToStarSizeWhole = Math.ceil(minToStartSize);
+		const minToStartSizeWhole = Math.ceil(minToStartSize);
 		const startToMaxSizeWhole = Math.ceil(startToMaxSize);
 
 		const minOverflowSize = DOUBLE * resyncThresholdSize;
@@ -482,7 +528,7 @@ export class ScrollState {
 
 		// The size is split at the start position of the window to account for
 		// partial pixels on either side.
-		const size = minToStarSizeWhole + startToMaxSizeWhole;
+		const size = minToStartSizeWhole + startToMaxSizeWhole;
 
 		const scrollSize = Math.min(size, maxScrollSize);
 
@@ -492,7 +538,7 @@ export class ScrollState {
 		const scrollPos = Math.round(
 			Math.min(
 				Math.max(scrollSize - startToMaxSizeWhole, halfScrollPos),
-				minToStarSizeWhole,
+				minToStartSizeWhole,
 			),
 		);
 

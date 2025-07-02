@@ -53,3 +53,17 @@ export function validateStringOptions<TOptions extends readonly string[]>(
 		throw new UnknownStringOptionError(valueName, value, options);
 	}
 }
+
+export function parseStringOptions<TOptions extends readonly string[]>(
+	valueName: string,
+	value: unknown,
+	options: TOptions,
+): TOptions[number] | undefined {
+	if (value === null) {
+		return undefined;
+	}
+
+	validateStringOptions(valueName, value, options);
+
+	return value;
+}

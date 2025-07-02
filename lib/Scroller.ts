@@ -1,9 +1,16 @@
 import {
+	type BarResizeStrategy,
+	type BarSideResizeStrategy,
 	BarState,
-	type ResizeStrategy,
-	type SideResizeStrategy,
 } from "./barState.ts";
-import { getResizeStrategy, getSideResizeStrategy } from "./barStateUtils.ts";
+import {
+	BAR_RESIZE_STRATEGY_OPTIONS,
+	BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
+	type BarResizeStrategyOptions,
+	type BarSideResizeStrategyOptions,
+	getBarResizeStrategy,
+	getBarSideResizeStrategy,
+} from "./barStateUtils.ts";
 import { parseBooleanAttribute } from "./boolean.ts";
 import {
 	type ConnectedEventDetail,
@@ -16,9 +23,13 @@ import {
 	calcMouseEventCenterOffsetY,
 } from "./events.ts";
 import { ZERO, parseFloatAttribute, parseIntervalAttribute } from "./math.ts";
-import { ScrollState } from "./scrollState.ts";
+import {
+	SCROLL_RESIZE_STRATEGY_OPTIONS,
+	type ScrollResizeStrategyOptions,
+	ScrollState,
+} from "./scrollState.ts";
 import { Singleton } from "./singleton.ts";
-import { validateStringOptions } from "./string.ts";
+import { parseStringOptions, validateStringOptions } from "./string.ts";
 import { scrollerStylesheet } from "./styles.ts";
 
 const SCROLLER_INIT_WIDTH = 100;
@@ -32,27 +43,29 @@ type DragState = {
 	// TODO: use AbortController for removeEventHandlers
 };
 
-const SCROLLER_OBSERVED_ATTRIBUTES = [
+export const SCROLLER_OBSERVED_ATTRIBUTES = [
 	"default-resize-handles",
+	"h-bar-resize-strategy",
+	"h-bar-side-resize-strategy",
 	"h-end-extrema",
 	"h-end-size",
 	"h-extrema",
 	"h-max-element-size",
 	"h-middle-min",
-	"h-resize-strategy",
 	"h-resync-threshold-size",
-	"h-side-resize-strategy",
+	"h-scroll-resize-strategy",
 	"h-start-extrema",
 	"h-start-size",
 	"h-window",
+	"v-bar-resize-strategy",
+	"v-bar-side-resize-strategy",
 	"v-end-extrema",
 	"v-end-size",
 	"v-extrema",
 	"v-max-element-size",
 	"v-middle-min",
-	"v-resize-strategy",
 	"v-resync-threshold-size",
-	"v-side-resize-strategy",
+	"v-scroll-resize-strategy",
 	"v-start-extrema",
 	"v-start-size",
 	"v-window",
@@ -108,7 +121,6 @@ export class Scroller extends HTMLElement {
 		const center = document.createElement("div");
 		center.id = "center";
 		center.addEventListener("pointerdown", this.onScrollDragHandler.bind(this));
-		center.appendChild(document.createTextNode("container"));
 
 		// Sides
 		const bars: HTMLDivElement[] = [];
@@ -117,7 +129,6 @@ export class Scroller extends HTMLElement {
 		for (const location of ["v-start", "h-start", "h-end", "v-end"]) {
 			const bar = document.createElement("div");
 			bar.id = `bar-${location}`;
-			bar.appendChild(document.createTextNode(`bar-${location}`));
 
 			bars.push(bar);
 		}
@@ -129,9 +140,6 @@ export class Scroller extends HTMLElement {
 			for (const vLocation of ["start", "end"]) {
 				const corner = document.createElement("div");
 				corner.id = `corner-h-${hLocation}-v-${vLocation}`;
-				corner.appendChild(
-					document.createTextNode(`corner-h-${hLocation}-v-${vLocation}`),
-				);
 
 				corners.push(corner);
 			}
@@ -206,6 +214,14 @@ export class Scroller extends HTMLElement {
 		this.#vBarState = new BarState({ size: SCROLLER_INIT_HEIGHT });
 	}
 
+	public get hBarResizeStrategy(): BarResizeStrategy {
+		return this.#hBarState.resizeStrategy;
+	}
+
+	public get hBarSideResizeStrategy(): BarSideResizeStrategy {
+		return this.#hBarState.sideResizeStrategy;
+	}
+
 	public get hEndIdeal(): number | undefined {
 		return this.#hBarState.endIdeal;
 	}
@@ -250,10 +266,6 @@ export class Scroller extends HTMLElement {
 		return this.#hScrollState.range;
 	}
 
-	public get hResizeStrategy(): ResizeStrategy {
-		return this.#hBarState.resizeStrategy;
-	}
-
 	public get hResyncThresholdSize(): number {
 		return this.#hScrollState.resyncThresholdSize;
 	}
@@ -262,12 +274,12 @@ export class Scroller extends HTMLElement {
 		return this.#hScrollState.scrollPos;
 	}
 
-	public get hScrollSize(): number {
-		return this.#hScrollState.scrollSize;
+	public get hScrollResizeStrategy(): ScrollResizeStrategyOptions {
+		return this.#hScrollState.resizeStrategy;
 	}
 
-	public get hSideResizeStrategy(): SideResizeStrategy {
-		return this.#hBarState.sideResizeStrategy;
+	public get hScrollSize(): number {
+		return this.#hScrollState.scrollSize;
 	}
 
 	public get hSize(): number {
@@ -304,6 +316,14 @@ export class Scroller extends HTMLElement {
 
 	public get hWindowSize(): number {
 		return this.#hScrollState.windowSize;
+	}
+
+	public get vBarResizeStrategy(): BarResizeStrategy {
+		return this.#vBarState.resizeStrategy;
+	}
+
+	public get vBarSideResizeStrategy(): BarSideResizeStrategy {
+		return this.#vBarState.sideResizeStrategy;
 	}
 
 	public get vEndIdeal(): number | undefined {
@@ -350,10 +370,6 @@ export class Scroller extends HTMLElement {
 		return this.#vScrollState.range;
 	}
 
-	public get vResizeStrategy(): ResizeStrategy {
-		return this.#vBarState.resizeStrategy;
-	}
-
 	public get vResyncThresholdSize(): number {
 		return this.#vScrollState.resyncThresholdSize;
 	}
@@ -362,12 +378,12 @@ export class Scroller extends HTMLElement {
 		return this.#vScrollState.scrollPos;
 	}
 
-	public get vScrollSize(): number {
-		return this.#vScrollState.scrollSize;
+	public get vScrollResizeStrategy(): ScrollResizeStrategyOptions {
+		return this.#vScrollState.resizeStrategy;
 	}
 
-	public get vSideResizeStrategy(): SideResizeStrategy {
-		return this.#vBarState.sideResizeStrategy;
+	public get vScrollSize(): number {
+		return this.#vScrollState.scrollSize;
 	}
 
 	public get vSize(): number {
@@ -407,15 +423,19 @@ export class Scroller extends HTMLElement {
 	}
 
 	public getHPos(value: number): number {
-		const hScrollState = this.#hScrollState;
+		return this.#hScrollState.getPos(value);
+	}
 
-		return hScrollState.getPos(value);
+	public getHValue(pos: number): number {
+		return this.#hScrollState.getValue(pos);
 	}
 
 	public getVPos(value: number): number {
-		const vScrollState = this.#vScrollState;
+		return this.#vScrollState.getPos(value);
+	}
 
-		return vScrollState.getPos(value);
+	public getVValue(pos: number): number {
+		return this.#vScrollState.getValue(pos);
 	}
 
 	public setDefaultResizeHandles(defaultResizeHandles: boolean): void {
@@ -430,6 +450,30 @@ export class Scroller extends HTMLElement {
 				divider.classList.remove("default");
 			}
 		}
+	}
+
+	public setHBarResizeStrategy(
+		strategy: BarResizeStrategyOptions | undefined,
+	): void {
+		const strategyFn = getBarResizeStrategy(strategy);
+
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#hBarState.setResizeStrategy(strategyFn);
+		this.updateHBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setHBarSideResizeStrategy(
+		strategy: BarSideResizeStrategyOptions | undefined,
+	): void {
+		const strategyFn = getBarSideResizeStrategy(strategy);
+		this.#hBarState.setSideResizeStrategy(strategyFn);
 	}
 
 	public setHEndExtrema(
@@ -496,21 +540,6 @@ export class Scroller extends HTMLElement {
 		updateWindowSize();
 	}
 
-	public setHResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getResizeStrategy(strategy);
-
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#hBarState.setResizeStrategy(strategyFn);
-		this.updateHBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
 	public setHResyncThresholdSize(size: number | undefined): void {
 		const updateScrollPos = this.setupUpdateScrollPos();
 		const updateScrollSize = this.setupUpdateScrollSize();
@@ -521,9 +550,10 @@ export class Scroller extends HTMLElement {
 		updateScrollSize();
 	}
 
-	public setHSideResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getSideResizeStrategy(strategy);
-		this.#hBarState.setSideResizeStrategy(strategyFn);
+	public setHScrollResizeStrategy(
+		resizeStrategy: ScrollResizeStrategyOptions | undefined,
+	): void {
+		this.#hScrollState.setResizeStrategy(resizeStrategy);
 	}
 
 	public setHStartExtrema(
@@ -565,6 +595,30 @@ export class Scroller extends HTMLElement {
 		updateScrollPos();
 		updateScrollSize();
 		updateWindow();
+	}
+
+	public setVBarResizeStrategy(
+		strategy: BarResizeStrategyOptions | undefined,
+	): void {
+		const strategyFn = getBarResizeStrategy(strategy);
+
+		const updateScrollPos = this.setupUpdateScrollPos();
+		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateWindowSize = this.setupUpdateWindowSize();
+
+		this.#vBarState.setResizeStrategy(strategyFn);
+		this.updateVBarDimensions();
+
+		updateScrollPos();
+		updateScrollSize();
+		updateWindowSize();
+	}
+
+	public setVBarSideResizeStrategy(
+		strategy: BarSideResizeStrategyOptions | undefined,
+	): void {
+		const strategyFn = getBarSideResizeStrategy(strategy);
+		this.#vBarState.setSideResizeStrategy(strategyFn);
 	}
 
 	public setVEndExtrema(
@@ -631,21 +685,6 @@ export class Scroller extends HTMLElement {
 		updateWindowSize();
 	}
 
-	public setVResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getResizeStrategy(strategy);
-
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
-		const updateWindowSize = this.setupUpdateWindowSize();
-
-		this.#vBarState.setResizeStrategy(strategyFn);
-		this.updateVBarDimensions();
-
-		updateScrollPos();
-		updateScrollSize();
-		updateWindowSize();
-	}
-
 	public setVResyncThresholdSize(size: number | undefined): void {
 		const updateScrollPos = this.setupUpdateScrollPos();
 		const updateScrollSize = this.setupUpdateScrollSize();
@@ -656,9 +695,10 @@ export class Scroller extends HTMLElement {
 		updateScrollSize();
 	}
 
-	public setVSideResizeStrategy(strategy: string | undefined): void {
-		const strategyFn = getSideResizeStrategy(strategy);
-		this.#vBarState.setSideResizeStrategy(strategyFn);
+	public setVScrollResizeStrategy(
+		resizeStrategy: ScrollResizeStrategyOptions | undefined,
+	): void {
+		this.#vScrollState.setResizeStrategy(resizeStrategy);
 	}
 
 	public setVStartExtrema(
@@ -719,6 +759,28 @@ export class Scroller extends HTMLElement {
 				break;
 			}
 
+			case "h-bar-resize-strategy": {
+				this.setHBarResizeStrategy(
+					parseStringOptions(
+						"h-bar-resize-strategy",
+						newValue,
+						BAR_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
+				break;
+			}
+
+			case "h-bar-side-resize-strategy": {
+				this.setHBarSideResizeStrategy(
+					parseStringOptions(
+						"h-bar-side-resize-strategy",
+						newValue,
+						BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
+				break;
+			}
+
 			case "h-end-extrema": {
 				this.setHEndExtrema(
 					...parseIntervalAttribute("h-end-extrema", newValue),
@@ -746,18 +808,19 @@ export class Scroller extends HTMLElement {
 				break;
 			}
 
-			case "h-resize-strategy": {
-				this.setHResizeStrategy(newValue ?? undefined);
-				break;
-			}
-
 			case "h-resync-threshold-size": {
 				this.setHResyncThresholdSize(parseFloatAttribute(newValue));
 				break;
 			}
 
-			case "h-side-resize-strategy": {
-				this.setHSideResizeStrategy(newValue ?? undefined);
+			case "h-scroll-resize-strategy": {
+				this.setHScrollResizeStrategy(
+					parseStringOptions(
+						"h-scroll-resize-strategy",
+						newValue,
+						SCROLL_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
 				break;
 			}
 
@@ -775,6 +838,28 @@ export class Scroller extends HTMLElement {
 
 			case "h-window": {
 				this.setHWindow(...parseIntervalAttribute("h-window", newValue));
+				break;
+			}
+
+			case "v-bar-resize-strategy": {
+				this.setVBarResizeStrategy(
+					parseStringOptions(
+						"v-bar-resize-strategy",
+						newValue,
+						BAR_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
+				break;
+			}
+
+			case "v-bar-side-resize-strategy": {
+				this.setVBarSideResizeStrategy(
+					parseStringOptions(
+						"v-bar-side-resize-strategy",
+						newValue,
+						BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
 				break;
 			}
 
@@ -805,18 +890,19 @@ export class Scroller extends HTMLElement {
 				break;
 			}
 
-			case "v-resize-strategy": {
-				this.setVResizeStrategy(newValue ?? undefined);
-				break;
-			}
-
 			case "v-resync-threshold-size": {
 				this.setVResyncThresholdSize(parseFloatAttribute(newValue));
 				break;
 			}
 
-			case "v-side-resize-strategy": {
-				this.setVSideResizeStrategy(newValue ?? undefined);
+			case "v-scroll-resize-strategy": {
+				this.setVScrollResizeStrategy(
+					parseStringOptions(
+						"v-scroll-resize-strategy",
+						newValue,
+						SCROLL_RESIZE_STRATEGY_OPTIONS,
+					),
+				);
 				break;
 			}
 
@@ -860,10 +946,10 @@ export class Scroller extends HTMLElement {
 		const hBarState = this.#hBarState;
 		hBarState.setSize(hSize);
 		hBarState.setResizeStrategy(
-			getResizeStrategy(this.getAttribute("h-resize-strategy")),
+			getBarResizeStrategy(this.getAttribute("h-bar-resize-strategy")),
 		);
 		hBarState.setSideResizeStrategy(
-			getSideResizeStrategy(this.getAttribute("h-side-resize-strategy")),
+			getBarSideResizeStrategy(this.getAttribute("h-bar-side-resize-strategy")),
 		);
 		hBarState.setStartExtrema(
 			...parseIntervalAttribute(
@@ -888,10 +974,10 @@ export class Scroller extends HTMLElement {
 		const vBarState = this.#vBarState;
 		vBarState.setSize(vSize);
 		vBarState.setResizeStrategy(
-			getResizeStrategy(this.getAttribute("v-resize-strategy")),
+			getBarResizeStrategy(this.getAttribute("v-bar-resize-strategy")),
 		);
 		vBarState.setSideResizeStrategy(
-			getSideResizeStrategy(this.getAttribute("v-side-resize-strategy")),
+			getBarSideResizeStrategy(this.getAttribute("v-bar-side-resize-strategy")),
 		);
 		vBarState.setStartExtrema(
 			...parseIntervalAttribute(
@@ -1057,12 +1143,12 @@ export class Scroller extends HTMLElement {
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		if (hSize !== hBarState.size) {
-			this.#hBarState.setSize(hSize);
+			hBarState.setSize(hSize);
 			this.updateHBarDimensions();
 		}
 
 		if (vSize !== vBarState.size) {
-			this.#vBarState.setSize(vSize);
+			vBarState.setSize(vSize);
 			this.updateVBarDimensions();
 		}
 

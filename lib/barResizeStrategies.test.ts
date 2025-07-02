@@ -1,20 +1,20 @@
 import { describe, expect, test } from "vitest";
 import {
-	preserveMiddleResizeStrategy,
-	preserveSidesResizeStrategy,
-	proportionalResizeStrategy,
+	preserveMiddleBarResizeStrategy,
+	preserveSidesBarResizeStrategy,
+	proportionalBarResizeStrategy,
 } from "./barResizeStrategies.ts";
 import {
+	type BarResizeStrategy,
 	BarState,
 	type BarStateParameters,
-	type ResizeStrategy,
 } from "./barState.ts";
 
-describe("ResizeStrategy", () => {
+describe("BarResizeStrategy", () => {
 	const testGroups: readonly (readonly [
 		string,
 		{
-			resizeStrategy: ResizeStrategy;
+			resizeStrategy: BarResizeStrategy;
 			testList: readonly (readonly [
 				string,
 				Readonly<{
@@ -32,9 +32,9 @@ describe("ResizeStrategy", () => {
 		},
 	])[] = [
 		[
-			"proportionalResizeStrategy",
+			"proportionalBarResizeStrategy",
 			{
-				resizeStrategy: proportionalResizeStrategy,
+				resizeStrategy: proportionalBarResizeStrategy,
 				testList: [
 					[
 						"Adjust defined sides on create",
@@ -288,9 +288,9 @@ describe("ResizeStrategy", () => {
 			},
 		],
 		[
-			"preserveSidesResizeStrategy",
+			"preserveSidesBarResizeStrategy",
 			{
-				resizeStrategy: preserveSidesResizeStrategy,
+				resizeStrategy: preserveSidesBarResizeStrategy,
 				testList: [
 					[
 						"Undefined initial sides",
@@ -501,9 +501,9 @@ describe("ResizeStrategy", () => {
 			},
 		],
 		[
-			"preserveMiddleResizeStrategy",
+			"preserveMiddleBarResizeStrategy",
 			{
-				resizeStrategy: preserveMiddleResizeStrategy,
+				resizeStrategy: preserveMiddleBarResizeStrategy,
 				testList: [
 					[
 						"Undefined initial sides",

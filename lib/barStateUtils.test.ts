@@ -1,26 +1,26 @@
 import { describe, expect, test } from "vitest";
 import {
-	preserveMiddleResizeStrategy,
-	preserveSidesResizeStrategy,
-	proportionalResizeStrategy,
+	preserveMiddleBarResizeStrategy,
+	preserveSidesBarResizeStrategy,
+	proportionalBarResizeStrategy,
 } from "./barResizeStrategies.ts";
 import {
-	constrainSideResizeStrategy,
-	consumeSideResizeStrategy,
+	constrainBarSideResizeStrategy,
+	consumeSideBarResizeStrategy,
 } from "./barSideResizeStrategies.ts";
-import type { ResizeStrategy, SideResizeStrategy } from "./barState.ts";
+import type { BarResizeStrategy, BarSideResizeStrategy } from "./barState.ts";
 import {
-	RESIZE_STRATEGY_DEFAULT,
-	RESIZE_STRATEGY_OPTIONS,
-	SIDE_RESIZE_STRATEGY_DEFAULT,
-	SIDE_RESIZE_STRATEGY_OPTIONS,
-	getResizeStrategy,
-	getSideResizeStrategy,
+	BAR_RESIZE_STRATEGY_DEFAULT,
+	BAR_RESIZE_STRATEGY_OPTIONS,
+	BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
+	BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
+	getBarResizeStrategy,
+	getBarSideResizeStrategy,
 } from "./barStateUtils.ts";
 import { NotAStringError, UnknownStringOptionError } from "./string.ts";
 import { getError } from "./testUtils.ts";
 
-describe("getResizeStrategy", () => {
+describe("getBarResizeStrategy", () => {
 	describe("Invalid types", () => {
 		const testList: readonly (readonly [string, Readonly<unknown>])[] = [
 			["Errors if a number", 42],
@@ -34,7 +34,7 @@ describe("getResizeStrategy", () => {
 		test.each(testList)("%s", (_testTitle, testParams) => {
 			const value = testParams;
 
-			const receivedError = getError(() => getResizeStrategy(value));
+			const receivedError = getError(() => getBarResizeStrategy(value));
 
 			expect(receivedError).toEqual(
 				new NotAStringError("resizeStrategy", value),
@@ -57,18 +57,18 @@ describe("getResizeStrategy", () => {
 					error: new UnknownStringOptionError(
 						"resizeStrategy",
 						"third",
-						RESIZE_STRATEGY_OPTIONS,
+						BAR_RESIZE_STRATEGY_OPTIONS,
 					),
 				},
 			],
 			[
 				"Errors if case does not match",
 				{
-					value: RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
+					value: BAR_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
 					error: new UnknownStringOptionError(
 						"resizeStrategy",
-						RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
-						RESIZE_STRATEGY_OPTIONS,
+						BAR_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
+						BAR_RESIZE_STRATEGY_OPTIONS,
 					),
 				},
 			],
@@ -78,7 +78,7 @@ describe("getResizeStrategy", () => {
 			const value = testParams.value;
 			const error = testParams.error;
 
-			const receivedError = getError(() => getResizeStrategy(value));
+			const receivedError = getError(() => getBarResizeStrategy(value));
 
 			expect(receivedError).toEqual(error);
 		});
@@ -88,42 +88,42 @@ describe("getResizeStrategy", () => {
 		const testList: readonly (readonly [
 			string,
 			Readonly<{
-				expected: ResizeStrategy;
+				expected: BarResizeStrategy;
 				value: string | undefined | null;
 			}>,
 		])[] = [
 			[
 				"Accepts preserveMiddle",
 				{
-					expected: preserveMiddleResizeStrategy,
+					expected: preserveMiddleBarResizeStrategy,
 					value: "preserveMiddle",
 				},
 			],
 			[
 				"Accepts preserveSides",
 				{
-					expected: preserveSidesResizeStrategy,
+					expected: preserveSidesBarResizeStrategy,
 					value: "preserveSides",
 				},
 			],
 			[
 				"Accepts proportional",
 				{
-					expected: proportionalResizeStrategy,
+					expected: proportionalBarResizeStrategy,
 					value: "proportional",
 				},
 			],
 			[
 				"Accepts undefined and returns the default",
 				{
-					expected: RESIZE_STRATEGY_DEFAULT,
+					expected: BAR_RESIZE_STRATEGY_DEFAULT,
 					value: undefined,
 				},
 			],
 			[
 				"Accepts null and returns the default",
 				{
-					expected: RESIZE_STRATEGY_DEFAULT,
+					expected: BAR_RESIZE_STRATEGY_DEFAULT,
 					value: null,
 				},
 			],
@@ -133,12 +133,12 @@ describe("getResizeStrategy", () => {
 			const expected = testParams.expected;
 			const value = testParams.value;
 
-			expect(getResizeStrategy(value)).toEqual(expected);
+			expect(getBarResizeStrategy(value)).toEqual(expected);
 		});
 	});
 });
 
-describe("getSideResizeStrategy", () => {
+describe("getBarSideResizeStrategy", () => {
 	describe("Invalid types", () => {
 		const testList: readonly (readonly [string, Readonly<unknown>])[] = [
 			["Errors if a number", 42],
@@ -152,7 +152,7 @@ describe("getSideResizeStrategy", () => {
 		test.each(testList)("%s", (_testTitle, testParams) => {
 			const value = testParams;
 
-			const receivedError = getError(() => getSideResizeStrategy(value));
+			const receivedError = getError(() => getBarSideResizeStrategy(value));
 
 			expect(receivedError).toEqual(
 				new NotAStringError("sideResizeStrategy", value),
@@ -175,18 +175,18 @@ describe("getSideResizeStrategy", () => {
 					error: new UnknownStringOptionError(
 						"sideResizeStrategy",
 						"third",
-						SIDE_RESIZE_STRATEGY_OPTIONS,
+						BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
 					),
 				},
 			],
 			[
 				"Errors if case does not match",
 				{
-					value: SIDE_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
+					value: BAR_SIDE_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
 					error: new UnknownStringOptionError(
 						"sideResizeStrategy",
-						SIDE_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
-						SIDE_RESIZE_STRATEGY_OPTIONS,
+						BAR_SIDE_RESIZE_STRATEGY_OPTIONS[0].toUpperCase(),
+						BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
 					),
 				},
 			],
@@ -196,7 +196,7 @@ describe("getSideResizeStrategy", () => {
 			const value = testParams.value;
 			const error = testParams.error;
 
-			const receivedError = getError(() => getSideResizeStrategy(value));
+			const receivedError = getError(() => getBarSideResizeStrategy(value));
 
 			expect(receivedError).toEqual(error);
 		});
@@ -206,35 +206,35 @@ describe("getSideResizeStrategy", () => {
 		const testList: readonly (readonly [
 			string,
 			Readonly<{
-				expected: SideResizeStrategy;
+				expected: BarSideResizeStrategy;
 				value: string | undefined | null;
 			}>,
 		])[] = [
 			[
 				"Accepts constrain",
 				{
-					expected: constrainSideResizeStrategy,
+					expected: constrainBarSideResizeStrategy,
 					value: "constrain",
 				},
 			],
 			[
 				"Accepts consume",
 				{
-					expected: consumeSideResizeStrategy,
+					expected: consumeSideBarResizeStrategy,
 					value: "consume",
 				},
 			],
 			[
 				"Accepts undefined and returns the default",
 				{
-					expected: SIDE_RESIZE_STRATEGY_DEFAULT,
+					expected: BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
 					value: undefined,
 				},
 			],
 			[
 				"Accepts null and returns the default",
 				{
-					expected: SIDE_RESIZE_STRATEGY_DEFAULT,
+					expected: BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
 					value: null,
 				},
 			],
@@ -244,7 +244,7 @@ describe("getSideResizeStrategy", () => {
 			const expected = testParams.expected;
 			const value = testParams.value;
 
-			expect(getSideResizeStrategy(value)).toEqual(expected);
+			expect(getBarSideResizeStrategy(value)).toEqual(expected);
 		});
 	});
 });

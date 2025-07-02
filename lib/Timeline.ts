@@ -1,7 +1,7 @@
 import { GroupPositionsState } from "./groupPositionsState.ts";
 import { ZERO, parseFloatAttribute } from "./math.ts";
 import "./Scroller.ts";
-import { Scroller } from "./Scroller.ts";
+import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./Scroller.ts";
 import { validateStringOptions } from "./string.ts";
 
 export interface BaseItem<TItemId = number, TGroupId = number> {
@@ -17,8 +17,7 @@ export interface BaseGroup<TGroupId = number> {
 }
 
 const TIMELINE_OBSERVED_ATTRIBUTES = [
-	"h-extrema",
-	"h-window",
+	...SCROLLER_OBSERVED_ATTRIBUTES,
 	"line-size",
 ] as const;
 
@@ -40,7 +39,7 @@ export class Timeline<
 	public constructor() {
 		super();
 
-		this.addEventListener("windowChange", this.render.bind(this));
+		this.addEventListener("windowChange", this.updateWindows.bind(this));
 
 		const groupPositionsState = new GroupPositionsState<
 			TGroupId,
@@ -50,9 +49,57 @@ export class Timeline<
 		>();
 		groupPositionsState.addEventListener(
 			"renderRequest",
-			this.render.bind(this),
+			this.onRenderRequestHandler.bind(this),
 		);
 		this.#groupPositionsState = groupPositionsState;
+
+		super.setVScrollResizeStrategy("preserveUnitPerPixel");
+	}
+
+	public getGroup(groupIndex: number): Readonly<TGroup> | undefined {
+		return this.#groupPositionsState.getGroup(groupIndex);
+	}
+
+	public getGroupLineSize(groupIndex: number): number {
+		return this.#groupPositionsState.getGroupLineSize(groupIndex);
+	}
+
+	public getGroupPosition(groupIndex: number): number {
+		return this.#groupPositionsState.getGroupPosition(groupIndex);
+	}
+
+	public getItem(
+		groupIndex: number,
+		lineIndex: number,
+		itemIndex: number,
+	): Readonly<TItem> | undefined {
+		return this.#groupPositionsState.getItem(groupIndex, lineIndex, itemIndex);
+	}
+
+	public getLinePosition(groupIndex: number, lineIndex: number): number {
+		return this.#groupPositionsState.getLinePosition(groupIndex, lineIndex);
+	}
+
+	public getVisibleGroupsIter(): Generator<number, void, undefined> {
+		const groupPositionsState = this.#groupPositionsState;
+
+		return groupPositionsState.getVisibleGroupsIter();
+	}
+
+	public getVisibleGroupLinesIter(
+		groupIndex: number,
+	): Generator<number, void, undefined> {
+		return this.#groupPositionsState.getVisibleGroupLinesIter(groupIndex);
+	}
+
+	public getVisibleLineItemsIter(
+		groupIndex: number,
+		lineIndex: number,
+	): Generator<number, void, undefined> {
+		return this.#groupPositionsState.getVisibleLineItemsIter(
+			groupIndex,
+			lineIndex,
+		);
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
@@ -101,8 +148,9 @@ export class Timeline<
 		const bbox = this.getBoundingClientRect();
 		const vSize = bbox.height;
 		this.setVExtrema(ZERO, vSize);
+		this.setVWindow(ZERO, vSize);
 
-		this.render();
+		this.updateFullHeight();
 	}
 
 	protected override disconnectedCallback(): void {
@@ -111,99 +159,10 @@ export class Timeline<
 		super.disconnectedCallback();
 	}
 
-	private render(): void {
-		performance.mark("render-start");
-
-		if (!this.isConnected) {
-			return;
-		}
-
-		const groupPositionsState = this.#groupPositionsState;
-
-		const hWindowMax = this.hWindowMax;
-		const hWindowMin = this.hWindowMin;
-		const vWindowMax = this.vWindowMax;
-		const vWindowMin = this.vWindowMin;
-
-		groupPositionsState.setGroupWindow(vWindowMin, vWindowMax);
-		groupPositionsState.setItemWindow(hWindowMin, hWindowMax);
-		const groups = groupPositionsState.getVisibleGroupsIter();
-
-		while (this.firstChild) {
-			this.removeChild(this.firstChild);
-		}
-
-		for (const groupIndex of groups) {
-			const lineSize = groupPositionsState.getGroupLineSize(groupIndex);
-			const lines = groupPositionsState.getVisibleGroupLinesIter(groupIndex);
-			const groupPosition = groupPositionsState.getGroupPosition(groupIndex);
-
-			for (const lineIndex of lines) {
-				const linePosition = groupPositionsState.getLinePosition(
-					groupIndex,
-					lineIndex,
-				);
-				const items = groupPositionsState.getVisibleLineItemsIter(
-					groupIndex,
-					lineIndex,
-				);
-
-				const rowElement = document.createElement("div");
-				rowElement.slot = "center";
-				rowElement.style.position = "absolute";
-				rowElement.style.insetInline = "0";
-				rowElement.style.top = `${groupPosition + linePosition}px`;
-				rowElement.style.height = `${lineSize}px`;
-				rowElement.style.border = "2px solid blue";
-				rowElement.style.background = "#9999ffaa";
-				rowElement.style.boxSizing = "border-box";
-				rowElement.style.fontSize = `${lineSize / 2}px`;
-
-				for (const itemIndex of items) {
-					const item = groupPositionsState.getItem(
-						groupIndex,
-						lineIndex,
-						itemIndex,
-					);
-
-					if (!item) {
-						continue;
-					}
-
-					const startTime = item.startTime;
-					const endTime = item.endTime;
-					const id = item.id;
-
-					const startPos = Math.max(this.getHPos(startTime), ZERO);
-					const endPos = Math.min(this.getHPos(endTime), this.hScrollSize);
-					const width = (endPos - startPos).toFixed(4);
-
-					const itemElement = document.createElement("div");
-					itemElement.style.position = "absolute";
-					itemElement.style.top = "10%";
-					itemElement.style.height = "80%";
-					itemElement.style.left = `${startPos}px`;
-					itemElement.style.width = `${width}px`;
-					itemElement.style.background = "#ff9999aa";
-					itemElement.style.border = "2px solid red";
-					itemElement.style.borderLeftColor = "white";
-					itemElement.style.boxSizing = "border-box";
-					itemElement.style.overflow = "hidden";
-
-					itemElement.appendChild(document.createTextNode(String(id)));
-
-					rowElement.appendChild(itemElement);
-				}
-
-				this.appendChild(rowElement);
-			}
-		}
-
+	private onRenderRequestHandler(): void {
 		this.updateFullHeight();
 
-		const perf = performance.measure("render", "render-start");
-		// biome-ignore lint/suspicious/noConsole: Testing
-		console.log(perf);
+		this.dispatchEvent(new CustomEvent("renderRequest"));
 	}
 
 	private updateFullHeight() {
@@ -214,6 +173,20 @@ export class Timeline<
 		const vSize = bbox.height;
 
 		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
+	}
+
+	private updateWindows() {
+		const groupPositionsState = this.#groupPositionsState;
+
+		const hWindowMax = this.hWindowMax;
+		const hWindowMin = this.hWindowMin;
+		const vWindowMax = this.vWindowMax;
+		const vWindowMin = this.vWindowMin;
+
+		groupPositionsState.setGroupWindow(vWindowMin, vWindowMax);
+		groupPositionsState.setItemWindow(hWindowMin, hWindowMax);
+
+		this.dispatchEvent(new CustomEvent("renderRequest"));
 	}
 }
 

@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
 import {
-	constrainSideResizeStrategy,
-	consumeSideResizeStrategy,
+	constrainBarSideResizeStrategy,
+	consumeSideBarResizeStrategy,
 } from "./barSideResizeStrategies.ts";
 import {
+	type BarSideResizeStrategy,
 	BarState,
 	type BarStateParameters,
-	type SideResizeStrategy,
 } from "./barState.ts";
 
-describe("SideResizeStrategy", () => {
+describe("BarSideResizeStrategy", () => {
 	const testGroups: readonly (readonly [
 		string,
 		{
-			sideResizeStrategy: SideResizeStrategy;
+			sideResizeStrategy: BarSideResizeStrategy;
 			testList: readonly (readonly [
 				string,
 				Readonly<{
@@ -32,9 +32,9 @@ describe("SideResizeStrategy", () => {
 		},
 	])[] = [
 		[
-			"consumeSideResizeStrategy",
+			"consumeBarSideResizeStrategy",
 			{
-				sideResizeStrategy: consumeSideResizeStrategy,
+				sideResizeStrategy: consumeSideBarResizeStrategy,
 				testList: [
 					[
 						"Collapse start side",
@@ -702,9 +702,9 @@ describe("SideResizeStrategy", () => {
 			},
 		],
 		[
-			"constrainSideResizeStrategy",
+			"constrainBarSideResizeStrategy",
 			{
-				sideResizeStrategy: constrainSideResizeStrategy,
+				sideResizeStrategy: constrainBarSideResizeStrategy,
 				testList: [
 					[
 						"Initial undefined other side",

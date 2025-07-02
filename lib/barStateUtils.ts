@@ -1,54 +1,62 @@
 import {
-	preserveMiddleResizeStrategy,
-	preserveSidesResizeStrategy,
-	proportionalResizeStrategy,
+	preserveMiddleBarResizeStrategy,
+	preserveSidesBarResizeStrategy,
+	proportionalBarResizeStrategy,
 } from "./barResizeStrategies.ts";
 import {
-	constrainSideResizeStrategy,
-	consumeSideResizeStrategy,
+	constrainBarSideResizeStrategy,
+	consumeSideBarResizeStrategy,
 } from "./barSideResizeStrategies.ts";
-import type { ResizeStrategy, SideResizeStrategy } from "./barState.ts";
+import type { BarResizeStrategy, BarSideResizeStrategy } from "./barState.ts";
 import { validateStringOptions } from "./string.ts";
 
-export type ResizeStrategyOptions = (typeof RESIZE_STRATEGY_OPTIONS)[number];
-export type SideResizeStrategyOptions =
-	(typeof SIDE_RESIZE_STRATEGY_OPTIONS)[number];
+export type BarResizeStrategyOptions =
+	(typeof BAR_RESIZE_STRATEGY_OPTIONS)[number];
+export type BarSideResizeStrategyOptions =
+	(typeof BAR_SIDE_RESIZE_STRATEGY_OPTIONS)[number];
 
-export const RESIZE_STRATEGY_DEFAULT = preserveSidesResizeStrategy;
-export const SIDE_RESIZE_STRATEGY_DEFAULT = consumeSideResizeStrategy;
+export const BAR_RESIZE_STRATEGY_DEFAULT = preserveSidesBarResizeStrategy;
+export const BAR_SIDE_RESIZE_STRATEGY_DEFAULT = consumeSideBarResizeStrategy;
 
-export const RESIZE_STRATEGY_OPTIONS = [
+export const BAR_RESIZE_STRATEGY_OPTIONS = [
 	"preserveMiddle",
 	"preserveSides",
 	"proportional",
 ] as const;
 
-export const SIDE_RESIZE_STRATEGY_OPTIONS = ["constrain", "consume"] as const;
+export const BAR_SIDE_RESIZE_STRATEGY_OPTIONS = [
+	"constrain",
+	"consume",
+] as const;
 
-export function getResizeStrategy(strategy: unknown): ResizeStrategy {
+export function getBarResizeStrategy(strategy: unknown): BarResizeStrategy {
 	if (strategy !== undefined && strategy !== null) {
-		validateStringOptions("resizeStrategy", strategy, RESIZE_STRATEGY_OPTIONS);
+		validateStringOptions(
+			"resizeStrategy",
+			strategy,
+			BAR_RESIZE_STRATEGY_OPTIONS,
+		);
 	}
 
-	let strategyFn: ResizeStrategy;
+	let strategyFn: BarResizeStrategy;
 	switch (strategy) {
 		case "preserveMiddle": {
-			strategyFn = preserveMiddleResizeStrategy;
+			strategyFn = preserveMiddleBarResizeStrategy;
 			break;
 		}
 
 		case "preserveSides": {
-			strategyFn = preserveSidesResizeStrategy;
+			strategyFn = preserveSidesBarResizeStrategy;
 			break;
 		}
 
 		case "proportional": {
-			strategyFn = proportionalResizeStrategy;
+			strategyFn = proportionalBarResizeStrategy;
 			break;
 		}
 
 		default: {
-			strategyFn = RESIZE_STRATEGY_DEFAULT;
+			strategyFn = BAR_RESIZE_STRATEGY_DEFAULT;
 			break;
 		}
 	}
@@ -56,29 +64,31 @@ export function getResizeStrategy(strategy: unknown): ResizeStrategy {
 	return strategyFn;
 }
 
-export function getSideResizeStrategy(strategy: unknown): SideResizeStrategy {
+export function getBarSideResizeStrategy(
+	strategy: unknown,
+): BarSideResizeStrategy {
 	if (strategy !== undefined && strategy !== null) {
 		validateStringOptions(
 			"sideResizeStrategy",
 			strategy,
-			SIDE_RESIZE_STRATEGY_OPTIONS,
+			BAR_SIDE_RESIZE_STRATEGY_OPTIONS,
 		);
 	}
 
-	let strategyFn: SideResizeStrategy;
+	let strategyFn: BarSideResizeStrategy;
 	switch (strategy) {
 		case "constrain": {
-			strategyFn = constrainSideResizeStrategy;
+			strategyFn = constrainBarSideResizeStrategy;
 			break;
 		}
 
 		case "consume": {
-			strategyFn = consumeSideResizeStrategy;
+			strategyFn = consumeSideBarResizeStrategy;
 			break;
 		}
 
 		default: {
-			strategyFn = SIDE_RESIZE_STRATEGY_DEFAULT;
+			strategyFn = BAR_SIDE_RESIZE_STRATEGY_DEFAULT;
 			break;
 		}
 	}

@@ -46,6 +46,7 @@ function buildScrollerStylesheet(): CSSStyleSheet {
 		#center {
 			background-image: repeating-linear-gradient(135deg, #00f, #f0f 100px);
 			grid-area: center;
+			isolation: isolate;
 			position: relative;
 		}
 
