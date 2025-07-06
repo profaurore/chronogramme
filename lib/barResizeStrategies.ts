@@ -1,5 +1,5 @@
 import type { BarResizeStrategy } from "./barState.ts";
-import { UNIT, ZERO, clampMaxWins } from "./math.ts";
+import { clampMaxWins, UNIT, ZERO } from "./math.ts";
 
 interface FlexSegment {
 	idealSize: number;
@@ -87,11 +87,11 @@ function flexSegments(
 			const min = segment.min;
 			const max = segment.max;
 
-			const targetSize = size + factor * ratio;
-			const clampedSize = clampMaxWins(targetSize, min, max);
+			const computedSize = size + factor * ratio;
+			const clampedSize = clampMaxWins(computedSize, min, max);
 			segment.size = clampedSize;
 
-			if (clampedSize === size || clampedSize !== targetSize) {
+			if (clampedSize === size || clampedSize !== computedSize) {
 				segment.factor = ZERO;
 				numFlexibleSegments -= UNIT;
 			}

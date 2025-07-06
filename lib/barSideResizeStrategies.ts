@@ -1,5 +1,5 @@
 import type { BarSideResizeStrategy } from "./barState.ts";
-import { ZERO, clampMaxWins } from "./math.ts";
+import { clampMaxWins, ZERO } from "./math.ts";
 
 export const consumeSideBarResizeStrategy: BarSideResizeStrategy = (
 	state,

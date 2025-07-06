@@ -5,7 +5,7 @@ import wyw from "@wyw-in-js/vite";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
-const dirnameString = fileURLToPath(new URL(".", import.meta.url));
+const dirnameString: string = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
 	build: {

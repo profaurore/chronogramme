@@ -9,13 +9,13 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { WindowChangeEventDetail } from "../lib/events.ts";
+import { HALF, UNIT, ZERO } from "../lib/math.ts";
 import type {
 	BaseGroup,
 	BaseItem,
 	Timeline as HTMLTimeline,
 } from "../lib/Timeline.ts";
-import { WindowChangeEventDetail } from "../lib/events.ts";
-import { HALF, UNIT, ZERO } from "../lib/math.ts";
 import {
 	leftResizeStyle,
 	overridableStyles,
@@ -131,8 +131,8 @@ export const Timeline = <
 	onItemSelect?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
 	onTimeChange?: (
-		visibleTimeStart: number,
-		visibleTimeEnd: number,
+		newVisibleTimeStart: number,
+		newVisibleTimeEnd: number,
 		updateScrollCanvas: (start: number, end: number) => void,
 	) => void;
 	rowData: TRowData;
@@ -193,7 +193,7 @@ export const Timeline = <
 			};
 		}
 
-		return undefined;
+		return;
 	}, [onTimeChange]);
 
 	useEffect(() => {
@@ -206,7 +206,7 @@ export const Timeline = <
 			};
 		}
 
-		return undefined;
+		return;
 	});
 
 	const renderedGroups: ReactNode[] = [];
@@ -329,35 +329,34 @@ export const Timeline = <
 									onDoubleClick: params.onDoubleClick,
 									onContextMenu: params.onContextMenu,
 									slot: "center",
-									style: Object.assign(
-										{},
-										params.style,
-										overridableStyles,
-										itemIsSelected ? selectedStyle : {},
-										itemIsSelected && itemCanMove ? selectedAndCanMove : {},
-										itemIsSelected && itemCanResizeLeft
+									style: {
+										...params.style,
+										...overridableStyles,
+										...(itemIsSelected ? selectedStyle : {}),
+										...(itemIsSelected && itemCanMove
+											? selectedAndCanMove
+											: {}),
+										...(itemIsSelected && itemCanResizeLeft
 											? selectedAndCanResizeLeft
-											: {},
-										itemIsSelected && itemCanResizeLeft && itemIsDragging
+											: {}),
+										...(itemIsSelected && itemCanResizeLeft && itemIsDragging
 											? selectedAndCanResizeLeftAndDragLeft
-											: {},
-										itemIsSelected && itemCanResizeRight
+											: {}),
+										...(itemIsSelected && itemCanResizeRight
 											? selectedAndCanResizeRight
-											: {},
-										itemIsSelected && itemCanResizeRight && itemIsDragging
+											: {}),
+										...(itemIsSelected && itemCanResizeRight && itemIsDragging
 											? selectedAndCanResizeRightAndDragRight
-											: {},
-										{
-											position: "absolute",
-											boxSizing: "border-box",
-											slot: "center",
-											left: `${hStartPos.toFixed(4)}px`,
-											top: `${itemVStartPos.toFixed(4)}px`,
-											width: `${hSize.toFixed(4)}px`,
-											height: `${itemVSize.toFixed(4)}px`,
-											lineHeight: `${itemVSize.toFixed(4)}px`,
-										},
-									),
+											: {}),
+										position: "absolute",
+										boxSizing: "border-box",
+										slot: "center",
+										left: `${hStartPos.toFixed(4)}px`,
+										top: `${itemVStartPos.toFixed(4)}px`,
+										width: `${hSize.toFixed(4)}px`,
+										height: `${itemVSize.toFixed(4)}px`,
+										lineHeight: `${itemVSize.toFixed(4)}px`,
+									},
 								};
 							},
 							getResizeProps: ({
@@ -372,14 +371,14 @@ export const Timeline = <
 											"rct-item-handler rct-item-handler-left rct-item-handler-resize-left ",
 											leftClassName,
 										),
-										style: Object.assign({}, leftResizeStyle, leftStyle),
+										style: { ...leftResizeStyle, ...leftStyle },
 									},
 									right: {
 										className: addClass(
 											"rct-item-handler rct-item-handler-right rct-item-handler-resize-right",
 											rightClassName,
 										),
-										style: Object.assign({}, rightResizeStyle, rightStyle),
+										style: { ...rightResizeStyle, ...rightStyle },
 									},
 								};
 							},

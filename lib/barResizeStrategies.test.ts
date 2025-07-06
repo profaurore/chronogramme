@@ -150,8 +150,8 @@ describe("BarResizeStrategy", () => {
 						"Shrink 1 segment to min and 2 proportionally",
 						{
 							expected: {
-								endSize: 66.66666666666667,
-								middleSize: 133.33333333333331,
+								endSize: 66.666_666_666_666_67,
+								middleSize: 133.333_333_333_333_31,
 								startSize: 250,
 							},
 							parameters: {
@@ -173,8 +173,8 @@ describe("BarResizeStrategy", () => {
 						"Shrink 3 segments proportionally",
 						{
 							expected: {
-								endSize: 83.33333333333334,
-								middleSize: 166.66666666666666,
+								endSize: 83.333_333_333_333_34,
+								middleSize: 166.666_666_666_666_66,
 								startSize: 250,
 							},
 							parameters: {
@@ -219,8 +219,8 @@ describe("BarResizeStrategy", () => {
 						"Expand 3 segments proportionally",
 						{
 							expected: {
-								endSize: 116.66666666666666,
-								middleSize: 233.33333333333334,
+								endSize: 116.666_666_666_666_66,
+								middleSize: 233.333_333_333_333_34,
 								startSize: 350,
 							},
 							parameters: {
@@ -242,8 +242,8 @@ describe("BarResizeStrategy", () => {
 						"Expand 1 segment to max and 2 proportionally",
 						{
 							expected: {
-								endSize: 133.33333333333334,
-								middleSize: 266.66666666666663,
+								endSize: 133.333_333_333_333_34,
+								middleSize: 266.666_666_666_666_63,
 								startSize: 350,
 							},
 							parameters: {

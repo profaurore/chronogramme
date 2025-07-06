@@ -1,11 +1,11 @@
 import {
+	clampInterval,
 	DOUBLE,
 	HALF,
-	ZERO,
-	clampInterval,
 	validateNumberInterval,
 	validatePosition,
 	validateSize,
+	ZERO,
 } from "./math.ts";
 import { validateObject } from "./object.ts";
 import { validateStringOptions } from "./string.ts";
@@ -31,7 +31,7 @@ export const SCROLL_RESIZE_STRATEGY_OPTIONS = [
 
 const DEFAULT_RESYNC_THRESHOLD_SIZE = 500;
 
-export const DEFAULT_MAX_ELEMENT_SIZE = 100000;
+export const DEFAULT_MAX_ELEMENT_SIZE = 100_000;
 
 const requiredParameters = ["windowSize"] as const;
 

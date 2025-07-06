@@ -8,9 +8,9 @@ import {
 	useState,
 } from "react";
 import "./App.css";
+import { WindowChangeEventDetail } from "../lib/events.ts";
 import type { Scroller } from "../lib/Scroller.ts";
 import type { BaseGroup, BaseItem, Timeline } from "../lib/Timeline.ts";
-import { WindowChangeEventDetail } from "../lib/events.ts";
 import { TIME_MAX, TIME_MIN } from "../lib/time.ts";
 import { Timeline as RCTimeline } from "./Timeline.tsx";
 
@@ -67,7 +67,7 @@ function datesFromStartDate(start: number): [number, number] {
 	];
 }
 
-const GROUP_COUNT = 1_000;
+const GROUP_COUNT = 1000;
 
 export function App(): ReactNode {
 	const timelineRef = useRef<Timeline>(null);
@@ -126,17 +126,15 @@ export function App(): ReactNode {
 				const now = Date.now();
 				const groupItemCount = addCount / GROUP_COUNT;
 				const indexOffsetFactor = 5_000_000_000 / groupItemCount;
-				const items = prevItems.slice(0);
-				let prevCount = items.length;
+				const newItems = prevItems.slice(0);
+				let prevCount = newItems.length;
 
 				for (let i = 0; i < GROUP_COUNT; i++) {
 					for (let j = 0; j < groupItemCount; j++) {
 						const startTime =
-							now +
-							Math.random() * 1 * indexOffsetFactor +
-							j * indexOffsetFactor;
+							now + Math.random() * indexOffsetFactor + j * indexOffsetFactor;
 
-						items.push({
+						newItems.push({
 							endTime: startTime + 10_000_000 + Math.random() * 50_000_000,
 							groupId: i,
 							id: prevCount,
@@ -147,9 +145,9 @@ export function App(): ReactNode {
 					}
 				}
 
-				timelineRef.current?.setItems(items);
+				timelineRef.current?.setItems(newItems);
 
-				return items;
+				return newItems;
 			});
 		};
 
@@ -175,21 +173,21 @@ export function App(): ReactNode {
 			};
 		}
 
-		return undefined;
+		return;
 	}, []);
 
 	useEffect(() => {
-		const groups: { id: number; lineSize: number }[] = [];
+		const newGroups: { id: number; lineSize: number }[] = [];
 
 		for (let i = 0; i < GROUP_COUNT; i++) {
-			groups.push({
+			newGroups.push({
 				id: i,
 				lineSize: i % 2 ? 10 : 20,
 			});
 		}
 
-		timelineRef.current?.setGroups(groups);
-		setGroups(groups);
+		timelineRef.current?.setGroups(newGroups);
+		setGroups(newGroups);
 	}, []);
 
 	return (
@@ -242,7 +240,7 @@ export function App(): ReactNode {
 			/>
 			<cg-scroller
 				class={scrollerClass}
-				default-resize-handles
+				default-resize-handles={true}
 				h-end-extrema={[50, 150]}
 				h-end-size={100}
 				h-window={[windowStart, windowEnd]}

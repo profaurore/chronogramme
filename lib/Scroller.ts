@@ -14,15 +14,15 @@ import {
 import { parseBooleanAttribute } from "./boolean.ts";
 import {
 	type ConnectedEventDetail,
+	calcMouseEventCenterOffsetX,
+	calcMouseEventCenterOffsetY,
 	type DisconnectedEventDetail,
 	ScrollPosChangeEventDetail,
 	ScrollSizeChangeEventDetail,
 	WindowChangeEventDetail,
 	WindowSizeChangeEventDetail,
-	calcMouseEventCenterOffsetX,
-	calcMouseEventCenterOffsetY,
 } from "./events.ts";
-import { ZERO, parseFloatAttribute, parseIntervalAttribute } from "./math.ts";
+import { parseFloatAttribute, parseIntervalAttribute, ZERO } from "./math.ts";
 import {
 	SCROLL_RESIZE_STRATEGY_OPTIONS,
 	type ScrollResizeStrategyOptions,
@@ -1099,12 +1099,12 @@ export class Scroller extends HTMLElement {
 			// to the cursor.
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
-			const onMove = (event: MouseEvent): void => {
+			const onMove = (moveEvent: MouseEvent): void => {
 				// The right side is calculated here in case the container resizes
 				// during bar resizing.
 				const target = Math.max(
 					ZERO,
-					this.getBoundingClientRect().right - event.clientX - offsetX,
+					this.getBoundingClientRect().right - moveEvent.clientX - offsetX,
 				);
 				this.setHEndSize(target);
 			};
@@ -1120,12 +1120,12 @@ export class Scroller extends HTMLElement {
 			// to the cursor.
 			const offsetX = calcMouseEventCenterOffsetX(event);
 
-			const onMove = (event: MouseEvent): void => {
+			const onMove = (moveEvent: MouseEvent): void => {
 				// The left side is calculated here in case the container resizes
 				// during bar resizing.
 				const target = Math.max(
 					ZERO,
-					event.clientX + offsetX - this.getBoundingClientRect().left,
+					moveEvent.clientX + offsetX - this.getBoundingClientRect().left,
 				);
 				this.setHStartSize(target);
 			};
@@ -1165,10 +1165,10 @@ export class Scroller extends HTMLElement {
 			let hLastPos = event.clientX;
 			let vLastPos = event.clientY;
 
-			const onMove = (event: MouseEvent): void => {
-				if (event.buttons & 0x01) {
-					const hPos = event.clientX;
-					const vPos = event.clientY;
+			const onMove = (moveEvent: MouseEvent): void => {
+				if (moveEvent.buttons & 0x01) {
+					const hPos = moveEvent.clientX;
+					const vPos = moveEvent.clientY;
 
 					this.setScrollPos(
 						this.#hScrollState.scrollPos - (hPos - hLastPos),
@@ -1220,12 +1220,12 @@ export class Scroller extends HTMLElement {
 			// to the cursor.
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
-			const onMove = (event: MouseEvent): void => {
+			const onMove = (moveEvent: MouseEvent): void => {
 				// The bottom side is calculated here in case the container resizes
 				// during bar resizing.
 				const target = Math.max(
 					ZERO,
-					this.getBoundingClientRect().bottom - event.clientY - offsetY,
+					this.getBoundingClientRect().bottom - moveEvent.clientY - offsetY,
 				);
 				this.setVEndSize(target);
 			};
@@ -1241,12 +1241,12 @@ export class Scroller extends HTMLElement {
 			// to the cursor.
 			const offsetY = calcMouseEventCenterOffsetY(event);
 
-			const onMove = (event: MouseEvent): void => {
+			const onMove = (moveEvent: MouseEvent): void => {
 				// The top side is calculated here in case the container resizes
 				// during bar resizing.
 				const target = Math.max(
 					ZERO,
-					event.clientY + offsetY - this.getBoundingClientRect().top,
+					moveEvent.clientY + offsetY - this.getBoundingClientRect().top,
 				);
 				this.setVStartSize(target);
 			};

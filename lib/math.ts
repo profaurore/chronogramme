@@ -135,12 +135,12 @@ export function clampInterval(
 export function mean(...values: readonly number[]): number {
 	const ratio = UNIT / values.length;
 
-	let mean = ZERO;
+	let result = ZERO;
 	for (const value of values) {
-		mean += ratio * value;
+		result += ratio * value;
 	}
 
-	return mean;
+	return result;
 }
 
 function isNumber(value: unknown): value is number {
@@ -407,7 +407,7 @@ export function parseIntervalAttribute(
 
 	const [parsedStart, parsedEnd] = value
 		.split(",", PARSE_INTERVAL_NUM_PARTS)
-		.map((value) => Number.parseFloat(value));
+		.map((part) => Number.parseFloat(part));
 
 	if (parsedStart === undefined || parsedEnd === undefined) {
 		throw new NotAnIntervalError(name, value);

@@ -1,11 +1,13 @@
-import { BAR_SIDE_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
-import { BAR_RESIZE_STRATEGY_DEFAULT } from "./barStateUtils.ts";
+import {
+	BAR_RESIZE_STRATEGY_DEFAULT,
+	BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
+} from "./barStateUtils.ts";
 import { validateFunction } from "./function.ts";
 import {
 	SizeRangeError,
-	ZERO,
 	validateSize,
 	validateSizeInterval,
+	ZERO,
 } from "./math.ts";
 import { validateObject } from "./object.ts";
 

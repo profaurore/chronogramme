@@ -16,7 +16,7 @@ describe("validateObject", () => {
 			["Errors if a boolean", true],
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
-			["Errors if a symbol", Symbol()],
+			["Errors if a symbol", Symbol("Symbol")],
 			["Errors if a function", () => undefined],
 		];
 

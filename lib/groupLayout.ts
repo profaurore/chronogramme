@@ -1,5 +1,5 @@
-import type { BaseItem } from "./Timeline.ts";
 import { MOST_SIGNIFICANT_BIT, UNIT, ZERO } from "./math.ts";
+import type { BaseItem } from "./Timeline.ts";
 
 export function layoutGroupRows<
 	TGroupId = number,
@@ -125,8 +125,8 @@ export function layoutGroupRowsReference<
 	for (const item of filteredItems) {
 		const startTime = item.startTime;
 
-		let row = rows.find((row) => {
-			const lastItem = row[row.length - 1];
+		let row = rows.find((r) => {
+			const lastItem = r.at(-1);
 
 			return lastItem && lastItem.endTime <= startTime;
 		});
@@ -149,8 +149,8 @@ export function groupOrderedItems<
 >(items: readonly Readonly<TItem>[]): Map<TGroupId, TItem[]> {
 	const orderedItemsByGroup = Map.groupBy(items, (item) => item.groupId);
 
-	for (const items of orderedItemsByGroup.values()) {
-		items.sort((a, b) => a.startTime - b.startTime);
+	for (const groupItems of orderedItemsByGroup.values()) {
+		groupItems.sort((a, b) => a.startTime - b.startTime);
 	}
 
 	return orderedItemsByGroup;

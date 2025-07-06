@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import type { BaseItem } from "./Timeline.ts";
 import {
 	groupOrderedItems,
 	layoutGroupRows,
 	layoutGroupRowsReference,
 } from "./groupLayout.ts";
+import type { BaseItem } from "./Timeline.ts";
 
 describe("layoutGroupRows", () => {
 	test("No items returns an empty list of rows", () => {
@@ -12,7 +12,7 @@ describe("layoutGroupRows", () => {
 	});
 
 	test("Random values match reference implementation", () => {
-		const itemCount = 1_000;
+		const itemCount = 1000;
 		const items: BaseItem[] = [];
 
 		let min = Number.POSITIVE_INFINITY;

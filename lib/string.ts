@@ -60,7 +60,7 @@ export function parseStringOptions<TOptions extends readonly string[]>(
 	options: TOptions,
 ): TOptions[number] | undefined {
 	if (value === null) {
-		return undefined;
+		return;
 	}
 
 	validateStringOptions(valueName, value, options);

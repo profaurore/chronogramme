@@ -1,18 +1,18 @@
 import { describe, expect, test } from "vitest";
 import {
-	IntervalExtremaError,
-	NotANumberError,
-	NotAPositionError,
-	NotASizeError,
-	NotAnIntervalError,
-	PositionRangeError,
-	SizeRangeError,
 	clampInterval,
 	clampMaxWins,
 	clampMinWins,
+	IntervalExtremaError,
 	mean,
+	NotANumberError,
+	NotAnIntervalError,
+	NotAPositionError,
+	NotASizeError,
+	PositionRangeError,
 	parseFloatAttribute,
 	parseIntervalAttribute,
+	SizeRangeError,
 	validateNumberInterval,
 	validatePosition,
 	validateSize,
@@ -360,7 +360,7 @@ describe("validateSize", () => {
 			["Errors if a boolean", true],
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
-			["Errors if a symbol", Symbol()],
+			["Errors if a symbol", Symbol("Symbol")],
 			["Errors if a function", () => undefined],
 			["Errors if infinite", Number.NEGATIVE_INFINITY],
 			["Errors if not a number", Number.NaN],
@@ -485,7 +485,7 @@ describe("validateSize", () => {
 			[
 				"Accepts if value is after the exclusive minimum",
 				{
-					value: 100.0000000001,
+					value: 100.000_000_000_1,
 					minimum: 100,
 					inclusiveMinimum: false,
 					maximum: 200,
@@ -495,7 +495,7 @@ describe("validateSize", () => {
 			[
 				"Accepts if value is before the exclusive maximum",
 				{
-					value: 199.9999999999,
+					value: 199.999_999_999_9,
 					minimum: 100,
 					inclusiveMinimum: true,
 					maximum: 200,
@@ -542,7 +542,7 @@ describe("validatePosition", () => {
 			["Errors if a boolean", true],
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
-			["Errors if a symbol", Symbol()],
+			["Errors if a symbol", Symbol("Symbol")],
 			["Errors if a function", () => undefined],
 			["Errors if infinite", Number.NEGATIVE_INFINITY],
 			["Errors if not a number", Number.NaN],
@@ -621,7 +621,7 @@ describe("validatePosition", () => {
 			[
 				"Accepts if value is between the inclusive minimum and maximum",
 				{
-					value: 100.0000000001,
+					value: 100.000_000_000_1,
 					minimum: 100,
 					maximum: 200,
 				},
@@ -648,7 +648,7 @@ describe("validatePosition", () => {
 
 describe("validateNumberInterval", () => {
 	describe("Invalid values", () => {
-		const symbol = Symbol();
+		const symbol = Symbol("Symbol");
 		const fn = () => undefined;
 
 		const testList: readonly (readonly [
@@ -697,8 +697,6 @@ describe("validateNumberInterval", () => {
 			[
 				"Errors if min is a symbol",
 				(() => {
-					const symbol = Symbol();
-
 					return {
 						interval: [symbol, 10],
 						error: new NotANumberError("min", symbol),
@@ -708,8 +706,6 @@ describe("validateNumberInterval", () => {
 			[
 				"Errors if min is a function",
 				(() => {
-					const fn = () => undefined;
-
 					return {
 						interval: [fn, 10],
 						error: new NotANumberError("min", fn),
@@ -837,7 +833,7 @@ describe("validateNumberInterval", () => {
 
 describe("validateSizeInterval", () => {
 	describe("Invalid values", () => {
-		const symbol = Symbol();
+		const symbol = Symbol("Symbol");
 		const fn = () => undefined;
 
 		const testList: readonly (readonly [
@@ -886,8 +882,6 @@ describe("validateSizeInterval", () => {
 			[
 				"Errors if min is a symbol",
 				(() => {
-					const symbol = Symbol();
-
 					return {
 						interval: [symbol, 10],
 						error: new NotASizeError("min", symbol),
@@ -897,8 +891,6 @@ describe("validateSizeInterval", () => {
 			[
 				"Errors if min is a function",
 				(() => {
-					const fn = () => undefined;
-
 					return {
 						interval: [fn, 10],
 						error: new NotASizeError("min", fn),

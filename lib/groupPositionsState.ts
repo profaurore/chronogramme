@@ -1,6 +1,6 @@
-import type { BaseGroup, BaseItem } from "./Timeline.ts";
 import { layoutGroupRows } from "./groupLayout.ts";
-import { UNIT, ZERO, clampMinWins } from "./math.ts";
+import { clampMinWins, UNIT, ZERO } from "./math.ts";
+import type { BaseGroup, BaseItem } from "./Timeline.ts";
 
 const GROUP_LINE_SIZE_DEFAULT = 30;
 
@@ -20,13 +20,13 @@ export class GroupPositionsState<
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > extends EventTarget {
-	#asyncProcessingSize: number;
+	readonly #asyncProcessingSize: number;
 
 	#groups: readonly Readonly<TGroup>[];
 
 	#groupLineSets: (readonly (readonly Readonly<TItem>[])[])[];
 
-	#groupOverdraw: number;
+	readonly #groupOverdraw: number;
 
 	#groupPositions: number[];
 
@@ -101,8 +101,6 @@ export class GroupPositionsState<
 		let groupPosition = groupPositions[index];
 
 		if (groupPosition === undefined) {
-			const groupPositions = this.#groupPositions;
-
 			let lastKnownPosition: number | undefined;
 			let lastKnownIndex = index;
 			for (; lastKnownIndex >= ZERO; lastKnownIndex--) {
@@ -255,7 +253,7 @@ export class GroupPositionsState<
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
 
-		this.prepareItemGroups();
+		void this.prepareItemGroups();
 	}
 
 	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
@@ -274,7 +272,7 @@ export class GroupPositionsState<
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
 
-		this.prepareItemGroups();
+		void this.prepareItemGroups();
 	}
 
 	public setLineSize(lineSize: number | undefined): void {
@@ -303,6 +301,7 @@ export class GroupPositionsState<
 			itemGroup.push(item);
 
 			if ((itemIndex + UNIT) % asyncProcessingSize === ZERO) {
+				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
 				if (signal.aborted) {
@@ -448,6 +447,8 @@ export class GroupPositionsState<
 			itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
 
 			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
+				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
+				await new Promise((resolve) => setTimeout(resolve, ZERO));
 				await new Promise((resolve) => setTimeout(resolve, ZERO));
 
 				if (signal.aborted) {

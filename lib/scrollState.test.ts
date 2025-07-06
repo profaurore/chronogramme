@@ -3156,7 +3156,7 @@ describe("TimelineScroll", () => {
 									scrollSize: 91,
 									size: 90,
 									windowMax: 10,
-									windowMin: 1.1102230246251565e-16,
+									windowMin: 1.110_223_024_625_156_5e-16,
 								},
 								parameters: {
 									max: 30,
@@ -3218,8 +3218,8 @@ describe("TimelineScroll", () => {
 								parameters: {
 									max: 30,
 									min: 10,
-									windowMax: 14.000000000000002,
-									windowMin: 12.000000000000002,
+									windowMax: 14.000_000_000_000_002,
+									windowMin: 12.000_000_000_000_002,
 									windowSize: 7,
 								},
 								update: {
@@ -3356,8 +3356,8 @@ describe("TimelineScroll", () => {
 								parameters: {
 									max: 16,
 									min: 10,
-									windowMax: 13.999999999999998,
-									windowMin: 11.999999999999998,
+									windowMax: 13.999_999_999_999_998,
+									windowMin: 11.999_999_999_999_998,
 									windowSize: 7,
 								},
 								update: {
@@ -3373,8 +3373,8 @@ describe("TimelineScroll", () => {
 									scrollPos: 15,
 									scrollSize: 19,
 									size: 18,
-									windowMax: 11.999999999999998,
-									windowMin: 9.999999999999998,
+									windowMax: 11.999_999_999_999_998,
+									windowMin: 9.999_999_999_999_998,
 								},
 								parameters: {
 									max: 12,

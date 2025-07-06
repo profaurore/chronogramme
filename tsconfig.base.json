@@ -1,5 +1,8 @@
 {
 	"compilerOptions": {
+		/* Because of happy-dom */
+		"skipLibCheck": true,
+
 		/* Type Checking */
 		"allowUnusedLabels": false,
 		"allowUnreachableCode": false,

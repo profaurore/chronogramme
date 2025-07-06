@@ -15,8 +15,10 @@ export type BarResizeStrategyOptions =
 export type BarSideResizeStrategyOptions =
 	(typeof BAR_SIDE_RESIZE_STRATEGY_OPTIONS)[number];
 
-export const BAR_RESIZE_STRATEGY_DEFAULT = preserveSidesBarResizeStrategy;
-export const BAR_SIDE_RESIZE_STRATEGY_DEFAULT = consumeSideBarResizeStrategy;
+export const BAR_RESIZE_STRATEGY_DEFAULT: BarResizeStrategy =
+	preserveSidesBarResizeStrategy;
+export const BAR_SIDE_RESIZE_STRATEGY_DEFAULT: BarSideResizeStrategy =
+	consumeSideBarResizeStrategy;
 
 export const BAR_RESIZE_STRATEGY_OPTIONS = [
 	"preserveMiddle",

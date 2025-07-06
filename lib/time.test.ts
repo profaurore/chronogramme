@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
-	TIME_MAX,
-	TIME_MIN,
 	clampTime,
 	clampTimeInterval,
 	clampTimeIntervalProperties,
+	TIME_MAX,
+	TIME_MIN,
 } from "./time.ts";
 
 test("Time constants are valid", () => {
@@ -56,21 +56,23 @@ describe.each([
 	// Test the functions that check the input value.
 	if (isChecked) {
 		test("NaN start time throws an error", () => {
-			const test = (): void => {
+			const tester = (): void => {
 				fn(Number.NaN, TIME_MAX, TIME_MIN, TIME_MAX);
 			};
 
-			expect(test).toThrowError(
+			expect(tester).toThrowError(
 				new Error("timeStart must be a finite number."),
 			);
 		});
 
 		test("NaN end time throws an error", () => {
-			const test = (): void => {
+			const tester = (): void => {
 				fn(TIME_MIN, Number.NaN, TIME_MIN, TIME_MAX);
 			};
 
-			expect(test).toThrowError(new Error("timeEnd must be a finite number."));
+			expect(tester).toThrowError(
+				new Error("timeEnd must be a finite number."),
+			);
 		});
 	}
 

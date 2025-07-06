@@ -5,5 +5,5 @@ export function getError<TError>(call: () => unknown): TError | undefined {
 		return error as TError;
 	}
 
-	return undefined;
+	return;
 }

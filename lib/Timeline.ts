@@ -1,5 +1,5 @@
 import { GroupPositionsState } from "./groupPositionsState.ts";
-import { ZERO, parseFloatAttribute } from "./math.ts";
+import { parseFloatAttribute, ZERO } from "./math.ts";
 import "./Scroller.ts";
 import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./Scroller.ts";
 import { validateStringOptions } from "./string.ts";
@@ -165,7 +165,7 @@ export class Timeline<
 		this.dispatchEvent(new CustomEvent("renderRequest"));
 	}
 
-	private updateFullHeight() {
+	private updateFullHeight(): void {
 		const groupPositionsState = this.#groupPositionsState;
 
 		const fullHeight = groupPositionsState.getHeight();
@@ -175,7 +175,7 @@ export class Timeline<
 		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
 	}
 
-	private updateWindows() {
+	private updateWindows(): void {
 		const groupPositionsState = this.#groupPositionsState;
 
 		const hWindowMax = this.hWindowMax;
