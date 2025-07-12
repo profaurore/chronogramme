@@ -21,6 +21,9 @@
 			"url": "https://github.com/profaurore"
 		}
 	],
+	"engines": {
+		"node": ">=22.12"
+	},
 	"devEngines": {
 		"packageManager": {
 			"name": "pnpm",
