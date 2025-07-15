@@ -10,22 +10,24 @@
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
-		"noPropertyAccessFromIndexSignature": true,
+		"noPropertyAccessFromIndexSignature": false,
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"strict": true,
 
 		/* Modules */
-		"allowImportingTsExtensions": true,
 		"module": "esnext",
 		"moduleResolution": "bundler",
-		"resolveJsonModule": true,
+
+		/* Emit */
+		"sourceMap": true,
 
 		/* JavaScript Support */
 		"allowJs": false,
 
 		/* Interop Constraints */
+		"erasableSyntaxOnly": true,
 		"isolatedModules": true,
 		"verbatimModuleSyntax": true,
 
@@ -33,17 +35,12 @@
 		"jsx": "preserve",
 		"lib": ["dom", "dom.iterable", "esnext"],
 		"target": "esnext",
-		"useDefineForClassFields": true,
 
 		/* Projects */
 		"composite": true,
-		"incremental": true,
 		"declarationMap": true,
 
 		/* Output Formatting */
-		"noErrorTruncation": true,
-
-		/* Source Maps */
-		"sourceMap": true
+		"noErrorTruncation": true
 	}
 }

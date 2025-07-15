@@ -9,9 +9,9 @@ export default {
 		"**/*.tsbuildinfo",
 		"**/*.yml",
 		"**/*.yaml",
-		"coverage/**/*",
-		"dist/**/*",
-		"node_modules/**/*",
+		"**/coverage/**/*",
+		"**/dist/**/*",
+		"**/node_modules/**/*",
 	],
 	overrides: [
 		{

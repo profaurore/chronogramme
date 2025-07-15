@@ -1,6 +1,7 @@
 {
-	"name": "chronogramme",
+	"name": "@chronogramme",
 	"version": "0.1.0",
+	"private": true,
 	"description": "A virtualized timeline",
 	"keywords": [
 		"timeline"
@@ -14,64 +15,31 @@
 		"url": "https://github.com/profaurore/chronogramme"
 	},
 	"license": "SEE LICENSE IN LICENSE.md",
-	"contributors": [
-		{
-			"name": "Jeffrey René Ouimet",
-			"email": "profaurore@gmail.com",
-			"url": "https://github.com/profaurore"
-		}
-	],
-	"engines": {
-		"node": ">=22.12"
-	},
-	"devEngines": {
-		"packageManager": {
-			"name": "pnpm",
-			"onFail": "error"
-		}
-	},
 	"type": "module",
-	"main": "dist/chronogramme.js",
-	"types": "dist/lib/main.d.ts",
-	"files": [
-		"dist"
-	],
+	"engines": {
+		"node": ">=22.12",
+		"pnpm": ">=8"
+	},
 	"scripts": {
-		"build": "tsc --p ./tsconfig.lib.json && vite build",
-		"dev": "vite",
 		"fix": "pnpm fix:code && pnpm fix:css",
 		"fix:css": "stylelint --fix \"**/*\"",
 		"fix:code": "biome check --write .",
 		"lint": "pnpm lint:code && pnpm lint:css && pnpm lint:knip",
 		"lint:css": "stylelint \"**/*\"",
 		"lint:code": "biome check .",
-		"lint:knip": "knip",
+		"lint:knip": "knip && knip --production --config knip.prod.jsonc",
 		"pre-commit": "lefthook run checks",
 		"pre-commit-fix": "lefthook run pre-commit",
 		"pre-push": "lefthook run pre-push",
 		"prepare": "lefthook install",
-		"prepublishOnly": "pnpm build",
-		"preview": "vite preview",
 		"test": "vitest"
 	},
-	"dependencies": {
-		"react": "^19.1.0",
-		"react-dom": "^19.1.0"
-	},
 	"devDependencies": {
-		"@babel/core": "^7.28.0",
-		"@babel/preset-react": "^7.27.1",
-		"@babel/preset-typescript": "^7.27.1",
-		"@biomejs/biome": "^2.0.6",
-		"@linaria/core": "^6.3.0",
-		"@types/node": "^24.0.10",
-		"@types/react": "^19.1.8",
-		"@types/react-dom": "^19.1.6",
-		"@vitejs/plugin-react-swc": "^3.10.2",
+		"@biomejs/biome": "^2.1.1",
+		"@types/node": "^24.0.13",
 		"@vitest/coverage-v8": "^3.2.4",
-		"@wyw-in-js/vite": "^0.7.0",
 		"knip": "^5.61.3",
-		"lefthook": "^1.11.16",
+		"lefthook": "^1.12.2",
 		"postcss": "^8.5.6",
 		"postcss-html": "^1.8.0",
 		"postcss-jsx": "^0.36.4",
@@ -82,8 +50,6 @@
 		"stylelint-config-html": "^1.1.0",
 		"stylelint-config-standard": "^38.0.0",
 		"typescript": "^5.8.3",
-		"vite": "^7.0.2",
-		"vite-plugin-dts": "^4.5.4",
 		"vitest": "^3.2.4"
 	}
 }

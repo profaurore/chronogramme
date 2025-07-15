@@ -1,0 +1,52 @@
+{
+	"name": "@chronogramme/chronogramme-rct",
+	"version": "0.1.0",
+	"description": "A virtualized timeline for React",
+	"keywords": [
+		"timeline"
+	],
+	"homepage": "https://github.com/profaurore/chronogramme",
+	"bugs": {
+		"url": "https://github.com/profaurore/chronogramme/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/profaurore/chronogramme"
+	},
+	"license": "SEE LICENSE IN LICENSE.md",
+	"type": "module",
+	"engines": {
+		"node": ">=22.12",
+		"pnpm": ">=8"
+	},
+	"main": "./dist/chronogramme-rct.js",
+	"module": "./dist/chronogramme-rct.js",
+	"exports": {
+		".": {
+			"import": "./dist/chronogramme-rct.js",
+			"types": "./dist/types/index.d.ts"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "vite build && tsc --p ./tsconfig.json",
+		"prepublishOnly": "pnpm build"
+	},
+	"dependencies": {
+		"@chronogramme/chronogramme": "workspace:^"
+	},
+	"devDependencies": {
+		"@types/node": "^24.0.13",
+		"@types/react": "^19.1.8",
+		"@vitejs/plugin-react-swc": "^3.10.2",
+		"typescript": "^5.8.3",
+		"vite": "^7.0.2",
+		"vitest": "^3.2.4"
+	},
+	"peerDependencies": {
+		"react": "^19",
+		"react-dom": "^19"
+	}
+}

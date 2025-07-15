@@ -1,17 +1,8 @@
 {
-	"extends": "./tsconfig.base.json",
-
-	"compilerOptions": {
-		/* Emit */
-		"noEmit": true,
-		"noPropertyAccessFromIndexSignature": false
-	},
-
-	"include": ["lib/**/*", "src/**/*"],
-
+	"files": [],
 	"references": [
-		{
-			"path": "./tsconfig.node.json"
-		}
+		{ "path": "./packages/chronogramme" },
+		{ "path": "./packages/chronogramme-rct" },
+		{ "path": "./packages/chronogramme-rct/examples" }
 	]
 }

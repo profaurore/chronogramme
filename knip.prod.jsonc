@@ -1,0 +1,24 @@
+{
+	"ignore": [".husky/**", "lefthook.yml"],
+
+	"ignoreDependencies": [
+		// For Vitest
+		"happy-dom"
+	],
+
+	"workspaces": {
+		"packages/*": {
+			"project": ["src/**/*.{ts,tsx}"]
+		},
+
+		"packages/*/examples": {
+			"ignoreDependencies": ["@chronogramme/chronogramme-rct"],
+			"project": ["src/**/*.{ts,tsx}"]
+		},
+
+		"packages/chronogramme-rct": {
+			"ignoreDependencies": ["@chronogramme/chronogramme"],
+			"project": ["src/**/*.{ts,tsx}"]
+		}
+	}
+}

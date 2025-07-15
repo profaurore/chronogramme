@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
 	"css": {
 		"formatter": {
 			"enabled": true
@@ -9,7 +9,7 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/coverage/", "!**/dist/"]
+		"includes": ["**", "!**/coverage/**", "!**/dist/**"]
 	},
 	"json": {
 		"parser": {
@@ -151,7 +151,7 @@
 				"noVoidTypeReturn": "error",
 				"useExhaustiveDependencies": "error",
 				"useHookAtTopLevel": "error",
-				"useImportExtensions": "error",
+				"useImportExtensions": "off",
 				"useIsNan": "error",
 				"useJsxKeyInIterable": "error",
 				"useValidForDirection": "error",
@@ -380,7 +380,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["**/lib/main.ts"],
+			"includes": ["**/src/index.ts"],
 			"linter": {
 				"rules": {
 					"performance": {

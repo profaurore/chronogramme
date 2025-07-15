@@ -1,13 +1,16 @@
 {
-	"entry": ["src/main.tsx", "lib/main.ts"],
 	"ignoreDependencies": [
-		// For Vite
-		"@babel/preset-react",
-		"@babel/preset-typescript",
-		"happy-dom",
-
-		// Peer Dependency
-		"@babel/core"
+		// For Vitest
+		"happy-dom"
 	],
-	"project": ["lib/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"]
+
+	"workspaces": {
+		"packages/*": {
+			"project": ["src/**/*.{ts,tsx}"]
+		},
+
+		"packages/*/examples": {
+			"project": ["src/**/*.{ts,tsx}"]
+		}
+	}
 }
