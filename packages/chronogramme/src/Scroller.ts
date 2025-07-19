@@ -36,6 +36,7 @@ const SCROLLER_INIT_WIDTH = 100;
 const SCROLLER_INIT_HEIGHT = 100;
 
 type DragState = {
+	onEscape: (event: KeyboardEvent) => void;
 	onMove: (event: MouseEvent) => void;
 	onStop: () => void;
 	onVisibilityChange: () => void;
@@ -1070,8 +1071,12 @@ export class Scroller extends HTMLElement {
 				"visibilityChange",
 				barResizeState.onVisibilityChange,
 			);
-			document.removeEventListener("pointermove", barResizeState.onMove);
+			document.removeEventListener("keydown", barResizeState.onEscape);
+			document.removeEventListener("pointercancel", barResizeState.onStop);
 			document.removeEventListener("pointerup", barResizeState.onStop);
+			document.removeEventListener("contextmenu", barResizeState.onStop);
+			document.removeEventListener("pointermove", barResizeState.onMove);
+			window.removeEventListener("blur", barResizeState.onStop);
 
 			this.#barResizeState = undefined;
 		}
@@ -1085,8 +1090,12 @@ export class Scroller extends HTMLElement {
 				"visibilityChange",
 				scrollDragState.onVisibilityChange,
 			);
-			document.removeEventListener("pointermove", scrollDragState.onMove);
+			document.removeEventListener("keydown", scrollDragState.onEscape);
+			document.removeEventListener("pointercancel", scrollDragState.onStop);
 			document.removeEventListener("pointerup", scrollDragState.onStop);
+			document.removeEventListener("contextmenu", scrollDragState.onStop);
+			document.removeEventListener("pointermove", scrollDragState.onMove);
+			window.removeEventListener("blur", scrollDragState.onStop);
 
 			this.#scrollDragState = undefined;
 		}
@@ -1190,14 +1199,25 @@ export class Scroller extends HTMLElement {
 				}
 			};
 
+			const onEscape = (e: KeyboardEvent) => {
+				if (e.key === "Escape") {
+					this.clearScrollDragState();
+				}
+			};
+
 			this.#scrollDragState = {
+				onEscape,
 				onMove,
 				onStop,
 				onVisibilityChange,
 			};
 
+			window.addEventListener("blur", onStop, { once: true });
 			document.addEventListener("pointermove", onMove);
+			document.addEventListener("contextmenu", onStop, { once: true });
 			document.addEventListener("pointerup", onStop, { once: true });
+			document.addEventListener("pointercancel", onStop, { once: true });
+			document.addEventListener("keydown", onEscape, { once: true });
 			document.addEventListener("visibilitychange", onVisibilityChange);
 		}
 	}
@@ -1275,14 +1295,25 @@ export class Scroller extends HTMLElement {
 			}
 		};
 
+		const onEscape = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				this.clearScrollDragState();
+			}
+		};
+
 		this.#barResizeState = {
+			onEscape,
 			onMove: onMoveWithCheck,
 			onStop,
 			onVisibilityChange,
 		};
 
+		window.addEventListener("blur", onStop, { once: true });
 		document.addEventListener("pointermove", onMoveWithCheck);
+		document.addEventListener("contextmenu", onStop, { once: true });
 		document.addEventListener("pointerup", onStop, { once: true });
+		document.addEventListener("pointercancel", onStop, { once: true });
+		document.addEventListener("keydown", onEscape, { once: true });
 		document.addEventListener("visibilitychange", onVisibilityChange);
 	}
 
