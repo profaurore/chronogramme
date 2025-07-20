@@ -7,7 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import "./App.css";
+import "./styles.css";
 import {
 	type BaseGroup,
 	type BaseItem,
