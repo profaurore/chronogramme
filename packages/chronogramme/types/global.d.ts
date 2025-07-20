@@ -3,9 +3,9 @@ import type {
 	BarSideResizeStrategyOptions,
 } from "../src/barStateUtils";
 import type { Interval, IntervalString } from "../src/math";
-import type { Scroller } from "../src/Scroller";
+import type { Scroller } from "../src/scroller";
 import type { ScrollResizeStrategyOptions } from "../src/scrollState";
-import type { BaseGroup, BaseItem, Timeline } from "../src/Timeline";
+import type { BaseGroup, BaseItem, Timeline } from "../src/timeline";
 
 declare global {
 	// biome-ignore lint/style/noNamespace: Required for web components.
