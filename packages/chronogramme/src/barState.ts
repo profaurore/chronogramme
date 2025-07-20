@@ -234,7 +234,14 @@ export class BarState {
 	 */
 	public setEndSize(endSize: number | undefined): void {
 		if (endSize !== undefined) {
-			validateSize("endSize", endSize, ZERO, true, Number.MAX_VALUE, true);
+			validateSize(
+				"endSize",
+				endSize,
+				-Number.MAX_VALUE,
+				true,
+				Number.MAX_VALUE,
+				true,
+			);
 		}
 
 		const startMin = this.#startMin;
@@ -357,7 +364,14 @@ export class BarState {
 	 */
 	public setStartSize(startSize: number | undefined): void {
 		if (startSize !== undefined) {
-			validateSize("startSize", startSize, ZERO, true, Number.MAX_VALUE, true);
+			validateSize(
+				"startSize",
+				startSize,
+				-Number.MAX_VALUE,
+				true,
+				Number.MAX_VALUE,
+				true,
+			);
 		}
 
 		const startMin = this.#startMin;

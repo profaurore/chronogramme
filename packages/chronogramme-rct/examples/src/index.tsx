@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@chronogramme/chronogramme";
-import { App } from "./App";
+import { App } from "./app";
 
 const root = document.getElementById("root");
 

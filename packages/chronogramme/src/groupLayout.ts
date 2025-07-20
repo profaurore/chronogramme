@@ -1,5 +1,5 @@
 import { MOST_SIGNIFICANT_BIT, UNIT, ZERO } from "./math";
-import type { BaseItem } from "./Timeline";
+import type { BaseItem } from "./timeline";
 
 export function layoutGroupRows<
 	TGroupId = number,

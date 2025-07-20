@@ -1,6 +1,6 @@
 import { layoutGroupRows } from "./groupLayout";
 import { clampMinWins, UNIT, ZERO } from "./math";
-import type { BaseGroup, BaseItem } from "./Timeline";
+import type { BaseGroup, BaseItem } from "./timeline";
 
 const GROUP_LINE_SIZE_DEFAULT = 30;
 

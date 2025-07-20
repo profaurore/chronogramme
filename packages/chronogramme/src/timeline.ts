@@ -1,7 +1,7 @@
 import { GroupPositionsState } from "./groupPositionsState";
 import { parseFloatAttribute, ZERO } from "./math";
-import "./Scroller";
-import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./Scroller";
+import "./scroller";
+import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./scroller";
 import { validateStringOptions } from "./string";
 
 export interface BaseItem<TItemId = number, TGroupId = number> {

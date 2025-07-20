@@ -4,7 +4,7 @@ import {
 	layoutGroupRows,
 	layoutGroupRowsReference,
 } from "./groupLayout";
-import type { BaseItem } from "./Timeline";
+import type { BaseItem } from "./timeline";
 
 describe("layoutGroupRows", () => {
 	test("No items returns an empty list of rows", () => {

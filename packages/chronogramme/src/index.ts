@@ -19,7 +19,7 @@ export {
 	NotAnObjectError,
 	UnknownPropertyError,
 } from "./object";
-export { Scroller } from "./Scroller";
+export { Scroller } from "./scroller";
 export { NotAStringError, UnknownStringOptionError } from "./string";
-export { type BaseGroup, type BaseItem, Timeline } from "./Timeline";
 export { TIME_MAX, TIME_MIN } from "./time";
+export { type BaseGroup, type BaseItem, Timeline } from "./timeline";

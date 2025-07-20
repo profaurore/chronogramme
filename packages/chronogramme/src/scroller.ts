@@ -12,17 +12,23 @@ import {
 	getBarSideResizeStrategy,
 } from "./barStateUtils";
 import { parseBooleanAttribute } from "./boolean";
+import { DragState } from "./dragState";
 import {
 	type ConnectedEventDetail,
-	calcMouseEventCenterOffsetX,
-	calcMouseEventCenterOffsetY,
 	type DisconnectedEventDetail,
+	DragMoveEventDetail,
+	DragStartEventDetail,
 	ScrollPosChangeEventDetail,
 	ScrollSizeChangeEventDetail,
 	WindowChangeEventDetail,
 	WindowSizeChangeEventDetail,
 } from "./events";
-import { parseFloatAttribute, parseIntervalAttribute, ZERO } from "./math";
+import {
+	HALF,
+	parseFloatAttribute,
+	parseIntervalAttribute,
+	ZERO,
+} from "./math";
 import {
 	SCROLL_RESIZE_STRATEGY_OPTIONS,
 	type ScrollResizeStrategyOptions,
@@ -32,17 +38,13 @@ import { Singleton } from "./singleton";
 import { parseStringOptions, validateStringOptions } from "./string";
 import { scrollerStylesheet } from "./styles";
 
+interface BarResizeState {
+	xOffsetFromCenter: number;
+	yOffsetFromCenter: number;
+}
+
 const SCROLLER_INIT_WIDTH = 100;
 const SCROLLER_INIT_HEIGHT = 100;
-
-type DragState = {
-	onEscape: (event: KeyboardEvent) => void;
-	onMove: (event: MouseEvent) => void;
-	onStop: () => void;
-	onVisibilityChange: () => void;
-
-	// TODO: use AbortController for removeEventHandlers
-};
 
 export const SCROLLER_OBSERVED_ATTRIBUTES = [
 	"default-resize-handles",
@@ -95,7 +97,7 @@ export class Scroller extends HTMLElement {
 		},
 	);
 
-	#barResizeState: DragState | undefined;
+	readonly #barResizeState: DragState<BarResizeState>;
 
 	readonly #containerElement: HTMLDivElement;
 
@@ -105,7 +107,7 @@ export class Scroller extends HTMLElement {
 
 	readonly #hScrollState: ScrollState;
 
-	#scrollDragState: DragState | undefined;
+	readonly #scrollDragState: DragState;
 
 	#scrollSkip: boolean;
 
@@ -121,7 +123,6 @@ export class Scroller extends HTMLElement {
 		// Center
 		const center = document.createElement("div");
 		center.id = "center";
-		center.addEventListener("pointerdown", this.onScrollDragHandler.bind(this));
 
 		// Sides
 		const bars: HTMLDivElement[] = [];
@@ -158,31 +159,15 @@ export class Scroller extends HTMLElement {
 		// Dividers
 		const dividerHStart = document.createElement("slot");
 		dividerHStart.id = "divider-h-start";
-		dividerHStart.addEventListener(
-			"pointerdown",
-			this.onHStartBarResizeHandler.bind(this),
-		);
 
 		const dividerHEnd = document.createElement("slot");
 		dividerHEnd.id = "divider-h-end";
-		dividerHEnd.addEventListener(
-			"pointerdown",
-			this.onHEndBarResizeHandler.bind(this),
-		);
 
 		const dividerVStart = document.createElement("slot");
 		dividerVStart.id = "divider-v-start";
-		dividerVStart.addEventListener(
-			"pointerdown",
-			this.onVStartBarResizeHandler.bind(this),
-		);
 
 		const dividerVEnd = document.createElement("slot");
 		dividerVEnd.id = "divider-v-end";
-		dividerVEnd.addEventListener(
-			"pointerdown",
-			this.onVEndBarResizeHandler.bind(this),
-		);
 
 		// Slots
 		const centerSlot = document.createElement("slot");
@@ -213,6 +198,29 @@ export class Scroller extends HTMLElement {
 
 		this.#hBarState = new BarState({ size: SCROLLER_INIT_WIDTH });
 		this.#vBarState = new BarState({ size: SCROLLER_INIT_HEIGHT });
+
+		const scrollDragState = new DragState();
+		scrollDragState.setupDragListener(center);
+		scrollDragState.addEventListener(
+			"move",
+			this.onScrollDragHandler.bind(this),
+		);
+		this.#scrollDragState = scrollDragState;
+
+		const barResizeState = new DragState<BarResizeState>();
+		barResizeState.setupDragListener(dividerHStart);
+		barResizeState.setupDragListener(dividerHEnd);
+		barResizeState.setupDragListener(dividerVStart);
+		barResizeState.setupDragListener(dividerVEnd);
+		barResizeState.addEventListener(
+			"start",
+			this.onBarResizeStartHandler.bind(this),
+		);
+		barResizeState.addEventListener(
+			"move",
+			this.onBarResizeMoveHandler.bind(this),
+		);
+		this.#barResizeState = barResizeState;
 	}
 
 	public get hBarResizeStrategy(): BarResizeStrategy {
@@ -1047,7 +1055,8 @@ export class Scroller extends HTMLElement {
 	}
 
 	protected disconnectedCallback(): void {
-		this.clearResizeState();
+		this.#barResizeState.reset();
+		this.#scrollDragState.reset();
 
 		Scroller.resizeHandler.unsubscribe((resizeObserver) => {
 			resizeObserver.unobserve(this);
@@ -1063,83 +1072,83 @@ export class Scroller extends HTMLElement {
 		);
 	}
 
-	private clearResizeState(): void {
-		const barResizeState = this.#barResizeState;
+	private onBarResizeMoveHandler(event: Event): void {
+		const data = this.#barResizeState.data;
 
-		if (barResizeState) {
-			document.removeEventListener(
-				"visibilityChange",
-				barResizeState.onVisibilityChange,
-			);
-			document.removeEventListener("keydown", barResizeState.onEscape);
-			document.removeEventListener("pointercancel", barResizeState.onStop);
-			document.removeEventListener("pointerup", barResizeState.onStop);
-			document.removeEventListener("contextmenu", barResizeState.onStop);
-			document.removeEventListener("pointermove", barResizeState.onMove);
-			window.removeEventListener("blur", barResizeState.onStop);
+		if (data !== undefined && event instanceof CustomEvent) {
+			const detail = event.detail;
 
-			this.#barResizeState = undefined;
+			if (detail instanceof DragMoveEventDetail) {
+				const target = detail.target;
+
+				switch (target.id) {
+					case "divider-h-start": {
+						const hStartSize = this.hStartSize;
+
+						if (hStartSize !== undefined) {
+							const newCenter = detail.event.clientX + data.xOffsetFromCenter;
+							this.setHStartSize(newCenter - this.getBoundingClientRect().left);
+						}
+
+						break;
+					}
+
+					case "divider-h-end": {
+						const hEndSize = this.hEndSize;
+
+						if (hEndSize !== undefined) {
+							const newCenter = detail.event.clientX + data.xOffsetFromCenter;
+							this.setHEndSize(this.getBoundingClientRect().right - newCenter);
+						}
+
+						break;
+					}
+
+					case "divider-v-start": {
+						const vStartSize = this.vStartSize;
+
+						if (vStartSize !== undefined) {
+							const newCenter = detail.event.clientY + data.yOffsetFromCenter;
+							this.setVStartSize(newCenter - this.getBoundingClientRect().top);
+						}
+
+						break;
+					}
+
+					case "divider-v-end": {
+						const vEndSize = this.vEndSize;
+
+						if (vEndSize !== undefined) {
+							const newCenter = detail.event.clientY + data.yOffsetFromCenter;
+							this.setVEndSize(this.getBoundingClientRect().bottom - newCenter);
+						}
+
+						break;
+					}
+
+					default:
+						break;
+				}
+			}
 		}
 	}
 
-	private clearScrollDragState(): void {
-		const scrollDragState = this.#scrollDragState;
+	private onBarResizeStartHandler(event: Event): void {
+		if (event instanceof CustomEvent) {
+			const detail = event.detail;
 
-		if (scrollDragState) {
-			document.removeEventListener(
-				"visibilityChange",
-				scrollDragState.onVisibilityChange,
-			);
-			document.removeEventListener("keydown", scrollDragState.onEscape);
-			document.removeEventListener("pointercancel", scrollDragState.onStop);
-			document.removeEventListener("pointerup", scrollDragState.onStop);
-			document.removeEventListener("contextmenu", scrollDragState.onStop);
-			document.removeEventListener("pointermove", scrollDragState.onMove);
-			window.removeEventListener("blur", scrollDragState.onStop);
+			if (detail instanceof DragStartEventDetail) {
+				const barResizeState = this.#barResizeState;
 
-			this.#scrollDragState = undefined;
-		}
-	}
+				const bbox = detail.target.getBoundingClientRect();
+				const xCenter = HALF * bbox.left + HALF * bbox.right;
+				const yCenter = HALF * bbox.top + HALF * bbox.bottom;
 
-	private onHEndBarResizeHandler(event: MouseEvent): void {
-		// Only the primary mouse button triggers resize.
-		if (event.button === ZERO) {
-			// The offset is required to maintain the position of the divider relative
-			// to the cursor.
-			const offsetX = calcMouseEventCenterOffsetX(event);
-
-			const onMove = (moveEvent: MouseEvent): void => {
-				// The right side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					this.getBoundingClientRect().right - moveEvent.clientX - offsetX,
-				);
-				this.setHEndSize(target);
-			};
-
-			this.setBarResizeState(onMove);
-		}
-	}
-
-	private onHStartBarResizeHandler(event: MouseEvent): void {
-		// Only the primary mouse button triggers resize.
-		if (event.button === ZERO) {
-			// The offset is required to maintain the position of the divider relative
-			// to the cursor.
-			const offsetX = calcMouseEventCenterOffsetX(event);
-
-			const onMove = (moveEvent: MouseEvent): void => {
-				// The left side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					moveEvent.clientX + offsetX - this.getBoundingClientRect().left,
-				);
-				this.setHStartSize(target);
-			};
-
-			this.setBarResizeState(onMove);
+				barResizeState.setStateData({
+					xOffsetFromCenter: xCenter - detail.event.clientX,
+					yOffsetFromCenter: yCenter - detail.event.clientY,
+				});
+			}
 		}
 	}
 
@@ -1166,59 +1175,16 @@ export class Scroller extends HTMLElement {
 		updateWindowSize();
 	}
 
-	private onScrollDragHandler(event: MouseEvent): void {
-		// Only the primary mouse button triggers scroll drag.
-		if (event.button === ZERO) {
-			this.clearScrollDragState();
+	private onScrollDragHandler(event: Event): void {
+		if (event instanceof CustomEvent) {
+			const detail = event.detail;
 
-			let hLastPos = event.clientX;
-			let vLastPos = event.clientY;
-
-			const onMove = (moveEvent: MouseEvent): void => {
-				if (moveEvent.buttons & 0x01) {
-					const hPos = moveEvent.clientX;
-					const vPos = moveEvent.clientY;
-
-					this.setScrollPos(
-						this.#hScrollState.scrollPos - (hPos - hLastPos),
-						this.#vScrollState.scrollPos - (vPos - vLastPos),
-					);
-
-					hLastPos = hPos;
-					vLastPos = vPos;
-				} else {
-					this.clearScrollDragState();
-				}
-			};
-
-			const onStop = this.clearScrollDragState.bind(this);
-
-			const onVisibilityChange = () => {
-				if (document.visibilityState === "hidden") {
-					this.clearScrollDragState();
-				}
-			};
-
-			const onEscape = (e: KeyboardEvent) => {
-				if (e.key === "Escape") {
-					this.clearScrollDragState();
-				}
-			};
-
-			this.#scrollDragState = {
-				onEscape,
-				onMove,
-				onStop,
-				onVisibilityChange,
-			};
-
-			window.addEventListener("blur", onStop, { once: true });
-			document.addEventListener("pointermove", onMove);
-			document.addEventListener("contextmenu", onStop, { once: true });
-			document.addEventListener("pointerup", onStop, { once: true });
-			document.addEventListener("pointercancel", onStop, { once: true });
-			document.addEventListener("keydown", onEscape, { once: true });
-			document.addEventListener("visibilitychange", onVisibilityChange);
+			if (detail instanceof DragMoveEventDetail) {
+				this.setScrollPos(
+					this.#hScrollState.scrollPos - detail.xDelta,
+					this.#vScrollState.scrollPos - detail.yDelta,
+				);
+			}
 		}
 	}
 
@@ -1231,90 +1197,6 @@ export class Scroller extends HTMLElement {
 		const contentElement = this.#contentElement;
 
 		this.setScrollPos(contentElement.scrollLeft, contentElement.scrollTop);
-	}
-
-	private onVEndBarResizeHandler(event: MouseEvent): void {
-		// Only the primary mouse button triggers resize.
-		if (event.button === ZERO) {
-			// The offset is required to maintain the position of the divider relative
-			// to the cursor.
-			const offsetY = calcMouseEventCenterOffsetY(event);
-
-			const onMove = (moveEvent: MouseEvent): void => {
-				// The bottom side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					this.getBoundingClientRect().bottom - moveEvent.clientY - offsetY,
-				);
-				this.setVEndSize(target);
-			};
-
-			this.setBarResizeState(onMove);
-		}
-	}
-
-	private onVStartBarResizeHandler(event: MouseEvent): void {
-		// Only the primary mouse button triggers resize.
-		if (event.button === ZERO) {
-			// The offset is required to maintain the position of the divider relative
-			// to the cursor.
-			const offsetY = calcMouseEventCenterOffsetY(event);
-
-			const onMove = (moveEvent: MouseEvent): void => {
-				// The top side is calculated here in case the container resizes
-				// during bar resizing.
-				const target = Math.max(
-					ZERO,
-					moveEvent.clientY + offsetY - this.getBoundingClientRect().top,
-				);
-				this.setVStartSize(target);
-			};
-
-			this.setBarResizeState(onMove);
-		}
-	}
-
-	private setBarResizeState(onMove: (event: MouseEvent) => void): void {
-		this.clearResizeState();
-
-		const onMoveWithCheck = (event: MouseEvent) => {
-			if (event.buttons & 0x01) {
-				onMove(event);
-			} else {
-				this.clearResizeState();
-			}
-		};
-
-		// const onStop = this.clearResizeState.bind(this);
-		const onStop = this.clearResizeState.bind(this);
-
-		const onVisibilityChange = () => {
-			if (document.visibilityState === "hidden") {
-				this.clearResizeState();
-			}
-		};
-
-		const onEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
-				this.clearScrollDragState();
-			}
-		};
-
-		this.#barResizeState = {
-			onEscape,
-			onMove: onMoveWithCheck,
-			onStop,
-			onVisibilityChange,
-		};
-
-		window.addEventListener("blur", onStop, { once: true });
-		document.addEventListener("pointermove", onMoveWithCheck);
-		document.addEventListener("contextmenu", onStop, { once: true });
-		document.addEventListener("pointerup", onStop, { once: true });
-		document.addEventListener("pointercancel", onStop, { once: true });
-		document.addEventListener("keydown", onEscape, { once: true });
-		document.addEventListener("visibilitychange", onVisibilityChange);
 	}
 
 	private setupUpdateScrollPos(): () => void {

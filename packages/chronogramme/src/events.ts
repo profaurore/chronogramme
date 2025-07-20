@@ -1,8 +1,74 @@
-import { HALF } from "./math";
-
 export type ConnectedEventDetail = undefined;
 
 export type DisconnectedEventDetail = undefined;
+
+export class DragCancelEventDetail {
+	public target: HTMLElement;
+
+	public constructor(target: HTMLElement) {
+		this.target = target;
+	}
+}
+
+export class DragEndEventDetail {
+	public event: PointerEvent;
+
+	public target: HTMLElement;
+
+	public constructor(target: HTMLElement, event: PointerEvent) {
+		this.event = event;
+		this.target = target;
+	}
+}
+
+export class DragMoveEventDetail {
+	public event: PointerEvent;
+
+	public x: number;
+
+	public xPrevious: number;
+
+	public target: HTMLElement;
+
+	public y: number;
+
+	public yPrevious: number;
+
+	public constructor(
+		target: HTMLElement,
+		event: PointerEvent,
+		xPrevious: number,
+		yPrevious: number,
+		x: number,
+		y: number,
+	) {
+		this.event = event;
+		this.x = x;
+		this.xPrevious = xPrevious;
+		this.target = target;
+		this.y = y;
+		this.yPrevious = yPrevious;
+	}
+
+	public get xDelta(): number {
+		return this.x - this.xPrevious;
+	}
+
+	public get yDelta(): number {
+		return this.y - this.yPrevious;
+	}
+}
+
+export class DragStartEventDetail {
+	public event: PointerEvent;
+
+	public target: HTMLElement;
+
+	public constructor(event: PointerEvent, target: HTMLElement) {
+		this.event = event;
+		this.target = target;
+	}
+}
 
 export class ScrollPosChangeEventDetail {
 	public hScrollPos: number;
@@ -107,29 +173,3 @@ export class WindowSizeChangeEventDetail {
 		this.vWindowSize = vWindowSize;
 	}
 }
-
-export const calcMouseEventCenterOffsetX = (event: MouseEvent) => {
-	const currentTarget = event.currentTarget as HTMLElement;
-	const clientX = event.clientX;
-
-	const targetBBox = currentTarget.getBoundingClientRect();
-	const left = targetBBox.left;
-	const right = targetBBox.right;
-	const centerX = HALF * left + HALF * right;
-	const offsetX = centerX - clientX;
-
-	return offsetX;
-};
-
-export const calcMouseEventCenterOffsetY = (event: MouseEvent) => {
-	const currentTarget = event.currentTarget as HTMLElement;
-	const clientY = event.clientY;
-
-	const targetBBox = currentTarget.getBoundingClientRect();
-	const top = targetBBox.top;
-	const bottom = targetBBox.bottom;
-	const centerY = HALF * top + HALF * bottom;
-	const offsetY = centerY - clientY;
-
-	return offsetY;
-};
