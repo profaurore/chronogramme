@@ -27,7 +27,7 @@ export class Timeline<
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > extends Scroller {
-	protected override observedAttributes = TIMELINE_OBSERVED_ATTRIBUTES;
+	protected static override observedAttributes = TIMELINE_OBSERVED_ATTRIBUTES;
 
 	readonly #groupPositionsState: GroupPositionsState<
 		TGroupId,
@@ -99,6 +99,38 @@ export class Timeline<
 		return this.#groupPositionsState.getVisibleLineItemsIter(
 			groupIndex,
 			lineIndex,
+		);
+	}
+
+	public itemDrag(clientX: number, clientY: number): void {
+		const rect = this.getBoundingClientRect();
+		const dragTime = this.getHValue(clientX - rect.left);
+		const dragGroupPos = this.vScrollPos + clientY - rect.top;
+
+		this.#groupPositionsState.itemDrag(dragTime, dragGroupPos);
+	}
+
+	public itemDragCancel(): void {
+		this.#groupPositionsState.itemDragCancel();
+	}
+
+	public itemDragEnd(skipRender?: boolean):
+		| {
+				endTime: number;
+				groupId: TGroupId;
+				id: TItemId;
+				startTime: number;
+		  }
+		| undefined {
+		return this.#groupPositionsState.itemDragEnd(skipRender);
+	}
+
+	public itemDragStart(id: TItemId, clientX: number): void {
+		const rect = this.getBoundingClientRect();
+
+		this.#groupPositionsState.itemDragStart(
+			id,
+			this.getHValue(clientX - rect.left + this.scrollLeft),
 		);
 	}
 

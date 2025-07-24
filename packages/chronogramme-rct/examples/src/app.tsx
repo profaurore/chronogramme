@@ -1,8 +1,11 @@
 import { css } from "@linaria/core";
 import {
+	type ComponentProps,
 	type MouseEventHandler,
 	type ReactNode,
+	useCallback,
 	useEffect,
+	useId,
 	useMemo,
 	useRef,
 	useState,
@@ -41,6 +44,7 @@ const scrollerClass = css`
 `;
 
 const buttonsClass = css`
+	align-items: center;
 	display: flex;
 	gap: 5px;
 `;
@@ -178,7 +182,7 @@ export function App(): ReactNode {
 			};
 		}
 
-		return;
+		return undefined;
 	}, []);
 
 	useEffect(() => {
@@ -194,6 +198,29 @@ export function App(): ReactNode {
 		timelineRef.current?.setGroups(newGroups);
 		setGroups(newGroups);
 	}, []);
+
+	const onItemMoveHandler = useCallback<
+		Exclude<ComponentProps<typeof RCTimeline>["onItemMove"], undefined>
+	>((itemId, dragTime, newGroupOrder) => {
+		setItems((prev) => {
+			return prev.map((item) => {
+				if (item.id === itemId) {
+					const newItem = { ...item };
+					newItem.startTime = dragTime;
+					newItem.endTime = dragTime + (item.endTime - item.startTime);
+					newItem.groupId = newGroupOrder;
+
+					return newItem;
+				}
+
+				return item;
+			});
+		});
+	}, []);
+
+	const rctId = useId();
+	const timelineId = useId();
+	const scrollerId = useId();
 
 	return (
 		<>
@@ -213,27 +240,40 @@ export function App(): ReactNode {
 				<button onClick={onAddClickHandler(250_000)} type="button">
 					Add 250k items
 				</button>
-				<span>{Intl.NumberFormat("en").format(items.length)}</span>
+				<span>{Intl.NumberFormat("en").format(items.length)} items</span>
 			</div>
 
 			<div>Extrema: {extremaString}</div>
 			<div>Window: {windowString}</div>
 			<RCTimeline
+				id={rctId}
 				className={timelineClass}
 				groupRenderer={({ group }) => <div>{`group-${group.id}`}</div>}
 				groups={groups}
-				itemRenderer={({ getItemProps, key }) => (
+				itemRenderer={({ getItemProps, item, key }) => (
 					<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
-						{key}
+						{item.groupId}-{item.id}
 					</div>
 				)}
 				items={items}
+				onItemMove={onItemMoveHandler}
 				rowData={null}
-				rowRenderer={({ getLayerRootProps, key }) => (
-					<div {...getLayerRootProps()} key={key}>
-						{key}
-					</div>
-				)}
+				rowRenderer={({ getLayerRootProps, group, key }) => {
+					const props = getLayerRootProps();
+
+					return (
+						<div
+							{...props}
+							key={key}
+							style={{
+								...props.style,
+								backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+							}}
+						>
+							{key}
+						</div>
+					);
+				}}
 				visibleTimeEnd={windowEnd}
 				visibleTimeStart={windowStart}
 			/>
@@ -241,6 +281,7 @@ export function App(): ReactNode {
 				class={timelineClass}
 				h-extrema={[extremaStart, extremaEnd]}
 				h-window={[windowStart, windowEnd]}
+				id={timelineId}
 				ref={timelineRef}
 			/>
 			<cg-scroller
@@ -252,6 +293,7 @@ export function App(): ReactNode {
 				h-extrema={[extremaStart, extremaEnd]}
 				h-start-extrema={[50, 150]}
 				h-start-size={100}
+				id={scrollerId}
 				ref={scrollerRef}
 				v-end-extrema={[50, 150]}
 				v-end-size={100}

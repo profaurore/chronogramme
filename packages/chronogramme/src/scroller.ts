@@ -75,7 +75,7 @@ export const SCROLLER_OBSERVED_ATTRIBUTES = [
 ] as const;
 
 export class Scroller extends HTMLElement {
-	protected observedAttributes: readonly string[] =
+	protected static observedAttributes: readonly string[] =
 		SCROLLER_OBSERVED_ATTRIBUTES;
 
 	private static readonly resizeHandler = new Singleton(
@@ -1086,7 +1086,7 @@ export class Scroller extends HTMLElement {
 						const hStartSize = this.hStartSize;
 
 						if (hStartSize !== undefined) {
-							const newCenter = detail.event.clientX + data.xOffsetFromCenter;
+							const newCenter = detail.x + data.xOffsetFromCenter;
 							this.setHStartSize(newCenter - this.getBoundingClientRect().left);
 						}
 
@@ -1097,7 +1097,7 @@ export class Scroller extends HTMLElement {
 						const hEndSize = this.hEndSize;
 
 						if (hEndSize !== undefined) {
-							const newCenter = detail.event.clientX + data.xOffsetFromCenter;
+							const newCenter = detail.x + data.xOffsetFromCenter;
 							this.setHEndSize(this.getBoundingClientRect().right - newCenter);
 						}
 
@@ -1108,7 +1108,7 @@ export class Scroller extends HTMLElement {
 						const vStartSize = this.vStartSize;
 
 						if (vStartSize !== undefined) {
-							const newCenter = detail.event.clientY + data.yOffsetFromCenter;
+							const newCenter = detail.y + data.yOffsetFromCenter;
 							this.setVStartSize(newCenter - this.getBoundingClientRect().top);
 						}
 
@@ -1119,7 +1119,7 @@ export class Scroller extends HTMLElement {
 						const vEndSize = this.vEndSize;
 
 						if (vEndSize !== undefined) {
-							const newCenter = detail.event.clientY + data.yOffsetFromCenter;
+							const newCenter = detail.y + data.yOffsetFromCenter;
 							this.setVEndSize(this.getBoundingClientRect().bottom - newCenter);
 						}
 
@@ -1145,8 +1145,8 @@ export class Scroller extends HTMLElement {
 				const yCenter = HALF * bbox.top + HALF * bbox.bottom;
 
 				barResizeState.setStateData({
-					xOffsetFromCenter: xCenter - detail.event.clientX,
-					yOffsetFromCenter: yCenter - detail.event.clientY,
+					xOffsetFromCenter: xCenter - detail.clientX,
+					yOffsetFromCenter: yCenter - detail.clientY,
 				});
 			}
 		}
@@ -1373,9 +1373,13 @@ export class Scroller extends HTMLElement {
 
 		styles.setProperty("--h-size", `${hScrollState.scrollSize}px`);
 
-		this.#contentElement.scrollTo({ left: hScrollState.scrollPos });
+		// This works around scroll restoration.
+		requestAnimationFrame(() => {
+			this.#contentElement.scrollTo({ left: hScrollState.scrollPos });
+		});
 	}
 
+	// TODO
 	// private upgradeProperty(property: string): void {
 	// 	if (this.hasOwnProperty(property)) {
 	// 		let value = this[property];
@@ -1413,7 +1417,10 @@ export class Scroller extends HTMLElement {
 
 		styles.setProperty("--v-size", `${vScrollState.scrollSize}px`);
 
-		this.#contentElement.scrollTo({ top: vScrollState.scrollPos });
+		// This works around scroll restoration.
+		requestAnimationFrame(() => {
+			this.#contentElement.scrollTo({ top: vScrollState.scrollPos });
+		});
 	}
 }
 

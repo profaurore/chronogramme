@@ -8,7 +8,7 @@ import type { BaseItem } from "./timeline";
 
 describe("layoutGroupRows", () => {
 	test("No items returns an empty list of rows", () => {
-		expect(layoutGroupRows([], 0, 100)).toEqual([]);
+		expect(layoutGroupRows([], undefined, undefined, 0, 100)).toEqual([]);
 	});
 
 	test("Random values match reference implementation", () => {
@@ -39,7 +39,7 @@ describe("layoutGroupRows", () => {
 		min++;
 		max--;
 
-		expect(layoutGroupRows(items, min, max)).toEqual(
+		expect(layoutGroupRows(items, undefined, undefined, min, max)).toEqual(
 			layoutGroupRowsReference(items, min, max),
 		);
 

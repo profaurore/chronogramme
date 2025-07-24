@@ -11,19 +11,14 @@ export class DragCancelEventDetail {
 }
 
 export class DragEndEventDetail {
-	public event: PointerEvent;
-
 	public target: HTMLElement;
 
-	public constructor(target: HTMLElement, event: PointerEvent) {
-		this.event = event;
+	public constructor(target: HTMLElement) {
 		this.target = target;
 	}
 }
 
 export class DragMoveEventDetail {
-	public event: PointerEvent;
-
 	public x: number;
 
 	public xPrevious: number;
@@ -36,13 +31,11 @@ export class DragMoveEventDetail {
 
 	public constructor(
 		target: HTMLElement,
-		event: PointerEvent,
 		xPrevious: number,
 		yPrevious: number,
 		x: number,
 		y: number,
 	) {
-		this.event = event;
 		this.x = x;
 		this.xPrevious = xPrevious;
 		this.target = target;
@@ -60,13 +53,16 @@ export class DragMoveEventDetail {
 }
 
 export class DragStartEventDetail {
-	public event: PointerEvent;
+	public clientX: number;
+
+	public clientY: number;
 
 	public target: HTMLElement;
 
-	public constructor(event: PointerEvent, target: HTMLElement) {
-		this.event = event;
+	public constructor(target: HTMLElement, clientX: number, clientY: number) {
 		this.target = target;
+		this.clientX = clientX;
+		this.clientY = clientY;
 	}
 }
 

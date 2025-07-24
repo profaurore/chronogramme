@@ -1,5 +1,7 @@
 /// <reference path="../types/global.d.ts" preserve="true" />
 
+export { NotABooleanError } from "./boolean";
+export { DragState } from "./dragState";
 export { WindowChangeEventDetail } from "./events";
 export { NotAFunctionError } from "./function";
 export {

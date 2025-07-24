@@ -5,7 +5,13 @@ export function layoutGroupRows<
 	TGroupId = number,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
->(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
+>(
+	items: readonly Readonly<TItem>[],
+	draggedItemInit: TItem | undefined,
+	draggedItem: TItem | undefined,
+	min: number,
+	max: number,
+): TItem[][] {
 	const rows: TItem[][] = [];
 	const rowMaxs: number[] = [];
 	const leftMinOfMaxs: number[] = [];
@@ -80,9 +86,23 @@ export function layoutGroupRows<
 		}
 	}
 
-	const filteredItems = items.filter((item) => {
-		return item.startTime < max && item.endTime > min;
-	});
+	const filteredItems: TItem[] = [];
+
+	for (const item of items) {
+		if (
+			item.startTime < max &&
+			item.endTime > min &&
+			item !== draggedItemInit
+		) {
+			filteredItems.push(item);
+		}
+	}
+
+	if (draggedItem && draggedItem.startTime < max && draggedItem.endTime > min) {
+		filteredItems.push(draggedItem);
+	}
+
+	// TODO: Implement a manual algorithm (heap sort).
 	filteredItems.sort((a, b) => a.startTime - b.startTime);
 
 	for (const item of filteredItems) {

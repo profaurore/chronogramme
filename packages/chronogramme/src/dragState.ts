@@ -1,3 +1,4 @@
+import { validateBoolean } from "./boolean";
 import {
 	DragCancelEventDetail,
 	DragEndEventDetail,
@@ -5,31 +6,54 @@ import {
 	DragStartEventDetail,
 } from "./events";
 import { MOUSE_BUTTON_PRIMARY, MOUSE_BUTTONS_PRIMARY } from "./mouse";
+import { validateObject } from "./object";
+
+const requiredParameters = [] as const;
+
+const optionalParameters = ["endOnDisconnect"] as const;
 
 interface ActiveState<StateData> {
 	abortController: AbortController;
 	data: StateData | undefined;
-	mutationObserver: MutationObserver;
+	mutationObserver: MutationObserver | undefined;
 	target: HTMLElement;
 	xPrevious: number;
 	yPrevious: number;
 }
 
+interface DragStateParameters {
+	endOnDisconnect: boolean;
+}
+
 export class DragState<StateData = undefined> extends EventTarget {
 	#activeState: ActiveState<StateData> | undefined;
 
-	readonly #mutationObserver: MutationObserver;
+	readonly #endOnDisconnect: boolean;
 
-	public constructor() {
+	public constructor(parameters?: Readonly<DragStateParameters>) {
 		super();
 
-		this.#mutationObserver = new MutationObserver(
-			this.onRemoveHandler.bind(this),
-		);
+		if (parameters !== undefined) {
+			validateObject(
+				"parameters",
+				parameters,
+				requiredParameters,
+				optionalParameters,
+			);
+		}
+
+		const endOnDisconnect = parameters?.endOnDisconnect ?? true;
+
+		validateBoolean("endOnDisconnect", endOnDisconnect);
+		this.#endOnDisconnect = endOnDisconnect;
 	}
 
 	public get data(): StateData | undefined {
 		return this.#activeState?.data;
+	}
+
+	public reset(): void {
+		this.endAndMaybeCommit();
 	}
 
 	public setStateData(data: StateData): void {
@@ -44,8 +68,14 @@ export class DragState<StateData = undefined> extends EventTarget {
 		element.addEventListener("pointerdown", this.onStartHandler.bind(this));
 	}
 
-	public reset(): void {
-		this.endAndMaybeCommit();
+	public start(
+		event: Pick<
+			PointerEvent,
+			"button" | "clientX" | "clientY" | "currentTarget"
+		>,
+		data?: StateData,
+	): void {
+		this.onStartHandler(event, data);
 	}
 
 	private endAndMaybeCommit(event?: PointerEvent): void {
@@ -55,14 +85,14 @@ export class DragState<StateData = undefined> extends EventTarget {
 			const target = activeState.target;
 
 			activeState.abortController.abort();
-			activeState.mutationObserver.disconnect();
+			activeState.mutationObserver?.disconnect();
 
 			this.#activeState = undefined;
 
 			if (event) {
 				this.dispatchEvent(
 					new CustomEvent<DragEndEventDetail>("end", {
-						detail: new DragEndEventDetail(target, event),
+						detail: new DragEndEventDetail(target),
 					}),
 				);
 			} else {
@@ -92,7 +122,6 @@ export class DragState<StateData = undefined> extends EventTarget {
 				new CustomEvent<DragMoveEventDetail>("move", {
 					detail: new DragMoveEventDetail(
 						activeState.target,
-						event,
 						activeState.xPrevious,
 						activeState.yPrevious,
 						x,
@@ -111,13 +140,19 @@ export class DragState<StateData = undefined> extends EventTarget {
 	private onRemoveHandler(): void {
 		const activeState = this.#activeState;
 
-		if (activeState && !activeState?.target.isConnected) {
+		if (activeState && !activeState.target.isConnected) {
 			this.endAndMaybeCommit();
 		}
 	}
 
-	private onStartHandler(event: PointerEvent): void {
-		const target = event.target;
+	private onStartHandler(
+		event: Pick<
+			PointerEvent,
+			"button" | "clientX" | "clientY" | "currentTarget"
+		>,
+		data?: StateData,
+	): void {
+		const target = event.currentTarget;
 
 		// Only the primary mouse button triggers scroll drag.
 		if (
@@ -130,9 +165,14 @@ export class DragState<StateData = undefined> extends EventTarget {
 			if (parent) {
 				this.endAndMaybeCommit();
 
-				const mutationObserver = new MutationObserver(
-					this.onRemoveHandler.bind(this),
-				);
+				let mutationObserver: MutationObserver | undefined;
+
+				if (this.#endOnDisconnect) {
+					mutationObserver = new MutationObserver(
+						this.onRemoveHandler.bind(this),
+					);
+					mutationObserver.observe(parent, { childList: true });
+				}
 
 				const abortController = new AbortController();
 				const signal = abortController.signal;
@@ -142,14 +182,12 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 				this.#activeState = {
 					abortController,
-					data: undefined,
+					data,
 					mutationObserver,
 					target,
 					xPrevious: x,
 					yPrevious: y,
 				};
-
-				this.#mutationObserver.observe(parent, { childList: true });
 
 				const onCancel = this.reset.bind(this);
 				const onStop = this.onStopHandler.bind(this);
@@ -174,7 +212,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 				this.dispatchEvent(
 					new CustomEvent<DragStartEventDetail>("start", {
-						detail: new DragStartEventDetail(event, target),
+						detail: new DragStartEventDetail(target, x, y),
 					}),
 				);
 			}
