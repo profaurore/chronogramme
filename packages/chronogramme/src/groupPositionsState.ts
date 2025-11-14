@@ -1,6 +1,7 @@
 import { layoutGroupRows } from "./groupLayout";
 import { clampMinWins, UNIT, ZERO } from "./math";
 import type { BaseGroup, BaseItem } from "./timeline";
+import { yieldToMain } from "./yieldToMain";
 
 const GROUP_LINE_SIZE_DEFAULT = 30;
 
@@ -526,7 +527,7 @@ export class GroupPositionsState<
 
 			if ((itemIndex + UNIT) % asyncProcessingSize === ZERO) {
 				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
-				await new Promise((resolve) => setTimeout(resolve, ZERO));
+				await yieldToMain();
 
 				if (signal.aborted) {
 					return;
@@ -692,7 +693,7 @@ export class GroupPositionsState<
 		const groups = this.#groups;
 		const items = this.#items;
 
-		await new Promise((resolve) => setTimeout(resolve, ZERO));
+		await yieldToMain();
 
 		if (signal.aborted) {
 			return;
@@ -716,8 +717,7 @@ export class GroupPositionsState<
 
 			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
 				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
-				await new Promise((resolve) => setTimeout(resolve, ZERO));
-				await new Promise((resolve) => setTimeout(resolve, ZERO));
+				await yieldToMain();
 
 				if (signal.aborted) {
 					return;
