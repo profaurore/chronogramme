@@ -41,12 +41,9 @@ describe("clampTime", () => {
 			Number.POSITIVE_INFINITY,
 			timeMax,
 		],
-	])(
-		"%s the range returns %s",
-		(_positionDescription, _resultDescription, time, result) => {
-			expect(clampTime(time, timeMin, timeMax)).toEqual(result);
-		},
-	);
+	])("%s the range returns %s", (_positionDescription, _resultDescription, time, result) => {
+		expect(clampTime(time, timeMin, timeMax)).toEqual(result);
+	});
 });
 
 describe.each([
@@ -123,20 +120,7 @@ describe.each([
 			timeMax - timeRange,
 			timeMax,
 		],
-	])(
-		"%s the range returns %s",
-		(
-			_positionDescription,
-			_resultDescription,
-			start,
-			end,
-			resultStart,
-			resultEnd,
-		) => {
-			expect(fn(start, end, timeMin, timeMax)).toEqual([
-				resultStart,
-				resultEnd,
-			]);
-		},
-	);
+	])("%s the range returns %s", (_positionDescription, _resultDescription, start, end, resultStart, resultEnd) => {
+		expect(fn(start, end, timeMin, timeMax)).toEqual([resultStart, resultEnd]);
+	});
 });

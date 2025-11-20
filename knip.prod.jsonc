@@ -1,5 +1,5 @@
 {
-	"ignore": [".husky/**", "lefthook.yml"],
+	"ignore": [".husky/**", "lefthook.yml", "vite-base.config.ts"],
 
 	"ignoreDependencies": [
 		// For Vitest

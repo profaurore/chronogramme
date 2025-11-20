@@ -603,7 +603,7 @@ export class GroupPositionsState<
 			itemGroup.push(item);
 
 			if ((itemIndex + UNIT) % asyncProcessingSize === ZERO) {
-				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
+				// biome-ignore lint/performance/noAwaitInLoops: This is intentional to break up the processing of the list.
 				await yieldToMain();
 
 				if (signal.aborted) {
@@ -832,7 +832,7 @@ export class GroupPositionsState<
 			itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
 
 			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
-				// biome-ignore lint/nursery/noAwaitInLoop: This is intentional to break up the processing of the list.
+				// biome-ignore lint/performance/noAwaitInLoops: This is intentional to break up the processing of the list.
 				await yieldToMain();
 
 				if (signal.aborted) {

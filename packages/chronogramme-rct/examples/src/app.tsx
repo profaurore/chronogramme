@@ -35,10 +35,10 @@ const scrollerClass = css`
 	max-height: 80vh;
 	outline: 1px solid #f00;
 
-	&::part(divider-top),
-	&::part(divider-left),
-	&::part(divider-right),
-	&::part(divider-bottom) {
+	::part(divider-top),
+	::part(divider-left),
+	::part(divider-right),
+	::part(divider-bottom) {
 		display: block;
 	}
 `;
