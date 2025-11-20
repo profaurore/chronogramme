@@ -515,10 +515,13 @@ export const Timeline = <
 				}
 			};
 
-			timeline.addEventListener("windowChange", onWindowChangeHandler);
+			const controller = new AbortController();
+			timeline.addEventListener("windowChange", onWindowChangeHandler, {
+				signal: controller.signal,
+			});
 
 			return () => {
-				timeline.removeEventListener("windowChange", onWindowChangeHandler);
+				controller.abort();
 			};
 		}
 
@@ -530,7 +533,6 @@ export const Timeline = <
 
 		if (timeline) {
 			const abortController = new AbortController();
-
 			timeline.addEventListener("renderRequest", render, {
 				signal: abortController.signal,
 			});
@@ -548,33 +550,54 @@ export const Timeline = <
 		const timeline = timelineRef.current;
 
 		if (timeline) {
-			itemDragState.addEventListener("move", (event) => {
-				if (event instanceof CustomEvent) {
-					const detail = event.detail;
+			const controller = new AbortController();
+			const options = { signal: controller.signal };
 
-					if (detail instanceof DragMoveEventDetail) {
-						timeline.itemDrag(detail.x, detail.y);
+			itemDragState.addEventListener(
+				"move",
+				(event) => {
+					if (event instanceof CustomEvent) {
+						const detail = event.detail;
+
+						if (detail instanceof DragMoveEventDetail) {
+							timeline.itemDrag(detail.x, detail.y);
+						}
 					}
-				}
-			});
+				},
+				options,
+			);
 
-			itemDragState.addEventListener("end", (event) => {
-				if (event instanceof CustomEvent) {
-					// If a move callback is set, skip rendering to avoid a flicker of
-					// the item snapping back to it's original size.
-					const skipRender = onItemMove !== undefined;
-					const result = timeline.itemDragEnd(skipRender);
+			itemDragState.addEventListener(
+				"end",
+				(event) => {
+					if (event instanceof CustomEvent) {
+						// If a move callback is set, skip rendering to avoid a flicker of
+						// the item snapping back to it's original size.
+						const skipRender = onItemMove !== undefined;
+						const result = timeline.itemDragEnd(skipRender);
 
-					if (result) {
-						onItemMove?.(result.id, result.startTime, result.groupId);
+						if (result) {
+							onItemMove?.(result.id, result.startTime, result.groupId);
+						}
 					}
-				}
-			});
+				},
+				options,
+			);
 
-			itemDragState.addEventListener("cancel", () => {
-				timeline.itemDragEnd();
-			});
+			itemDragState.addEventListener(
+				"cancel",
+				() => {
+					timeline.itemDragEnd();
+				},
+				options,
+			);
+
+			return () => {
+				controller.abort();
+			};
 		}
+
+		return undefined;
 	}, [onItemMove]);
 
 	useEffect(() => {
@@ -582,37 +605,58 @@ export const Timeline = <
 		const timeline = timelineRef.current;
 
 		if (timeline) {
-			itemResizeState.addEventListener("move", (event) => {
-				if (event instanceof CustomEvent) {
-					const detail = event.detail;
+			const controller = new AbortController();
+			const options = { signal: controller.signal };
 
-					if (detail instanceof DragMoveEventDetail) {
-						timeline.itemResize(detail.x);
-					}
-				}
-			});
+			itemResizeState.addEventListener(
+				"move",
+				(event) => {
+					if (event instanceof CustomEvent) {
+						const detail = event.detail;
 
-			itemResizeState.addEventListener("end", (event) => {
-				if (event instanceof CustomEvent) {
-					// If a move callback is set, skip rendering to avoid a flicker of
-					// the item snapping back to it's original size.
-					const skipRender = onItemResize !== undefined;
-					const result = timeline.itemResizeEnd(skipRender);
-
-					if (result) {
-						if ("startTime" in result) {
-							onItemResize?.(result.id, result.startTime, "left");
-						} else {
-							onItemResize?.(result.id, result.endTime, "right");
+						if (detail instanceof DragMoveEventDetail) {
+							timeline.itemResize(detail.x);
 						}
 					}
-				}
-			});
+				},
+				options,
+			);
 
-			itemResizeState.addEventListener("cancel", () => {
-				timeline.itemResizeEnd();
-			});
+			itemResizeState.addEventListener(
+				"end",
+				(event) => {
+					if (event instanceof CustomEvent) {
+						// If a move callback is set, skip rendering to avoid a flicker of
+						// the item snapping back to it's original size.
+						const skipRender = onItemResize !== undefined;
+						const result = timeline.itemResizeEnd(skipRender);
+
+						if (result) {
+							if ("startTime" in result) {
+								onItemResize?.(result.id, result.startTime, "left");
+							} else {
+								onItemResize?.(result.id, result.endTime, "right");
+							}
+						}
+					}
+				},
+				options,
+			);
+
+			itemResizeState.addEventListener(
+				"cancel",
+				() => {
+					timeline.itemResizeEnd();
+				},
+				options,
+			);
+
+			return () => {
+				controller.abort();
+			};
 		}
+
+		return undefined;
 	}, [onItemResize]);
 
 	return (

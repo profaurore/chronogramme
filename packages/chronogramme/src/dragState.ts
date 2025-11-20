@@ -65,6 +65,9 @@ export class DragState<StateData = undefined> extends EventTarget {
 	}
 
 	public setupDragListener(element: HTMLElement) {
+		// The only places where this method are called do not require removing the
+		// event listener, because the only case when that would happen is when the
+		// element is garbage collected.
 		element.addEventListener("pointerdown", this.onStartHandler.bind(this));
 	}
 

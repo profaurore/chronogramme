@@ -173,12 +173,13 @@ export function App(): ReactNode {
 				}
 			};
 
-			scroller.addEventListener("windowChange", windowChangeHandler);
-			timeline.addEventListener("windowChange", windowChangeHandler);
+			const controller = new AbortController();
+			const options = { signal: controller.signal };
+			scroller.addEventListener("windowChange", windowChangeHandler, options);
+			timeline.addEventListener("windowChange", windowChangeHandler, options);
 
 			return () => {
-				scroller.removeEventListener("windowChange", windowChangeHandler);
-				timeline.removeEventListener("windowChange", windowChangeHandler);
+				controller.abort();
 			};
 		}
 
