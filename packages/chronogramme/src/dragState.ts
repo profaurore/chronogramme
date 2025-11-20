@@ -68,7 +68,9 @@ export class DragState<StateData = undefined> extends EventTarget {
 		// The only places where this method are called do not require removing the
 		// event listener, because the only case when that would happen is when the
 		// element is garbage collected.
-		element.addEventListener("pointerdown", this.onStartHandler.bind(this));
+		element.addEventListener("pointerdown", this.onStartHandler.bind(this), {
+			passive: true,
+		});
 	}
 
 	public start(
@@ -198,8 +200,8 @@ export class DragState<StateData = undefined> extends EventTarget {
 				const onVisibilityChange = this.onVisibilityChangeHandler.bind(this);
 				const onEscape = this.onEscapeHandler.bind(this);
 
-				const options = { signal };
-				const onceOptions = { once: true, signal };
+				const options = { passive: true, signal };
+				const onceOptions = { once: true, passive: true, signal };
 
 				document.addEventListener("contextmenu", onCancel, onceOptions);
 				document.addEventListener("keydown", onEscape, onceOptions);

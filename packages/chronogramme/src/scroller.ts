@@ -151,7 +151,9 @@ export class Scroller extends HTMLElement {
 		const content = document.createElement("div");
 		this.#contentElement = content;
 		content.id = "content";
-		content.addEventListener("scroll", this.onScrollHandler.bind(this));
+		content.addEventListener("scroll", this.onScrollHandler.bind(this), {
+			passive: true,
+		});
 		content.appendChild(center);
 		content.append(...bars);
 		content.append(...corners);
@@ -204,6 +206,7 @@ export class Scroller extends HTMLElement {
 		scrollDragState.addEventListener(
 			"move",
 			this.onScrollDragHandler.bind(this),
+			{ passive: true },
 		);
 		this.#scrollDragState = scrollDragState;
 
@@ -215,10 +218,12 @@ export class Scroller extends HTMLElement {
 		barResizeState.addEventListener(
 			"start",
 			this.onBarResizeStartHandler.bind(this),
+			{ passive: true },
 		);
 		barResizeState.addEventListener(
 			"move",
 			this.onBarResizeMoveHandler.bind(this),
+			{ passive: true },
 		);
 		this.#barResizeState = barResizeState;
 	}

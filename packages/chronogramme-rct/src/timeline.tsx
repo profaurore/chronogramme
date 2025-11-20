@@ -517,6 +517,7 @@ export const Timeline = <
 
 			const controller = new AbortController();
 			timeline.addEventListener("windowChange", onWindowChangeHandler, {
+				passive: true,
 				signal: controller.signal,
 			});
 
@@ -534,6 +535,7 @@ export const Timeline = <
 		if (timeline) {
 			const abortController = new AbortController();
 			timeline.addEventListener("renderRequest", render, {
+				passive: true,
 				signal: abortController.signal,
 			});
 
@@ -551,7 +553,7 @@ export const Timeline = <
 
 		if (timeline) {
 			const controller = new AbortController();
-			const options = { signal: controller.signal };
+			const options = { passive: true, signal: controller.signal };
 
 			itemDragState.addEventListener(
 				"move",
@@ -606,7 +608,7 @@ export const Timeline = <
 
 		if (timeline) {
 			const controller = new AbortController();
-			const options = { signal: controller.signal };
+			const options = { passive: true, signal: controller.signal };
 
 			itemResizeState.addEventListener(
 				"move",

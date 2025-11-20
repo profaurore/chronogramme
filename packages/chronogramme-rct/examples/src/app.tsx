@@ -174,7 +174,7 @@ export function App(): ReactNode {
 			};
 
 			const controller = new AbortController();
-			const options = { signal: controller.signal };
+			const options = { passive: true, signal: controller.signal };
 			scroller.addEventListener("windowChange", windowChangeHandler, options);
 			timeline.addEventListener("windowChange", windowChangeHandler, options);
 

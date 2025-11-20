@@ -39,7 +39,9 @@ export class Timeline<
 	public constructor() {
 		super();
 
-		this.addEventListener("windowChange", this.updateWindows.bind(this));
+		this.addEventListener("windowChange", this.updateWindows.bind(this), {
+			passive: true,
+		});
 
 		const groupPositionsState = new GroupPositionsState<
 			TGroupId,
@@ -50,6 +52,7 @@ export class Timeline<
 		groupPositionsState.addEventListener(
 			"renderRequest",
 			this.onRenderRequestHandler.bind(this),
+			{ passive: true },
 		);
 		this.#groupPositionsState = groupPositionsState;
 
