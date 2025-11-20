@@ -104,10 +104,11 @@ export class Timeline<
 
 	public itemDrag(clientX: number, clientY: number): void {
 		const rect = this.getBoundingClientRect();
-		const dragTime = this.getHValue(clientX - rect.left);
-		const dragGroupPos = this.vScrollPos + clientY - rect.top;
 
-		this.#groupPositionsState.itemDrag(dragTime, dragGroupPos);
+		this.#groupPositionsState.itemDrag(
+			this.getHValue(clientX - rect.left),
+			this.vScrollPos + clientY - rect.top,
+		);
 	}
 
 	public itemDragCancel(): void {
@@ -129,6 +130,47 @@ export class Timeline<
 		const rect = this.getBoundingClientRect();
 
 		this.#groupPositionsState.itemDragStart(
+			id,
+			this.getHValue(clientX - rect.left + this.scrollLeft),
+		);
+	}
+
+	public itemResize(clientX: number): void {
+		const rect = this.getBoundingClientRect();
+
+		this.#groupPositionsState.itemResize(this.getHValue(clientX - rect.left));
+	}
+
+	public itemResizeCancel(): void {
+		this.#groupPositionsState.itemResizeCancel();
+	}
+
+	public itemResizeEnd(skipRender?: boolean):
+		| {
+				endTime: number;
+				id: TItemId;
+		  }
+		| {
+				id: TItemId;
+				startTime: number;
+		  }
+		| undefined {
+		return this.#groupPositionsState.itemResizeEnd(skipRender);
+	}
+
+	public itemEndResizeStart(id: TItemId, clientX: number): void {
+		const rect = this.getBoundingClientRect();
+
+		this.#groupPositionsState.itemEndResizeStart(
+			id,
+			this.getHValue(clientX - rect.left + this.scrollLeft),
+		);
+	}
+
+	public itemStartResizeStart(id: TItemId, clientX: number): void {
+		const rect = this.getBoundingClientRect();
+
+		this.#groupPositionsState.itemStartResizeStart(
 			id,
 			this.getHValue(clientX - rect.left + this.scrollLeft),
 		);

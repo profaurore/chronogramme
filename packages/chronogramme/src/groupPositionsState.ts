@@ -3,6 +3,12 @@ import { clampMinWins, UNIT, ZERO } from "./math";
 import type { BaseGroup, BaseItem } from "./timeline";
 import { yieldToMain } from "./yieldToMain";
 
+const ITEM_CHANGE_TYPE = {
+	drag: 0,
+	resizeEnd: 1,
+	resizeStart: 2,
+} as const;
+
 const GROUP_LINE_SIZE_DEFAULT = 30;
 
 const GROUP_OVERDRAW_DEFAULT = 100;
@@ -37,9 +43,10 @@ export class GroupPositionsState<
 
 	#groupWindowMin: number;
 
-	#itemDragState:
+	#itemChangeState:
 		| {
-				initDragTime: number;
+				changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
+				triggerTime: number;
 				item: TItem;
 				newItem: TItem;
 		  }
@@ -275,20 +282,20 @@ export class GroupPositionsState<
 	public setItems(items: readonly Readonly<TItem>[]): void {
 		this.#items = items;
 
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
-		if (itemDragState) {
-			const draggedItem = this.getItemById(itemDragState.item.id);
+		if (itemChangeState) {
+			const changedItem = this.getItemById(itemChangeState.item.id);
 
-			if (draggedItem) {
-				const previousNewItem = itemDragState.newItem;
-				const newItem = { ...draggedItem };
+			if (changedItem) {
+				const previousNewItem = itemChangeState.newItem;
+				const newItem = { ...changedItem };
 				newItem.startTime = previousNewItem.startTime;
 				newItem.endTime = previousNewItem.endTime;
 				newItem.groupId = previousNewItem.groupId;
 
-				itemDragState.item = draggedItem;
-				itemDragState.newItem = newItem;
+				itemChangeState.item = changedItem;
+				itemChangeState.newItem = newItem;
 			}
 		}
 
@@ -305,21 +312,24 @@ export class GroupPositionsState<
 	}
 
 	public itemDrag(dragTime: number, dragGroupPos: number): void {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
-		if (itemDragState) {
-			const initDragTime = itemDragState.initDragTime;
+		if (
+			itemChangeState &&
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			const triggerTime = itemChangeState.triggerTime;
 
-			const initItem = itemDragState.item;
+			const initItem = itemChangeState.item;
 			const initStartTime = initItem.startTime;
 			const initEndTime = initItem.endTime;
 
-			const item = itemDragState.newItem;
+			const item = itemChangeState.newItem;
 			const startTime = item.startTime;
 			const endTime = item.endTime;
 			const groupId = item.groupId;
 
-			const delta = dragTime - initDragTime;
+			const delta = dragTime - triggerTime;
 			const newStartTime = initStartTime + delta;
 			const newEndTime = newStartTime + (initEndTime - initStartTime);
 
@@ -350,7 +360,7 @@ export class GroupPositionsState<
 				if (newGroupId !== undefined) {
 					newItem.groupId = newGroupId;
 				}
-				itemDragState.newItem = newItem;
+				itemChangeState.newItem = newItem;
 
 				this.dispatchEvent(new CustomEvent("renderRequest"));
 			}
@@ -358,42 +368,15 @@ export class GroupPositionsState<
 	}
 
 	public itemDragCancel(): void {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
-		if (itemDragState) {
-			this.#itemDragState = undefined;
+		if (
+			itemChangeState &&
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
 
-			const initItem = itemDragState.item;
-			const initEndTime = initItem.endTime;
-			const initGroupId = initItem.groupId;
-			const initStartTime = initItem.startTime;
-
-			const newItem = itemDragState.newItem;
-			const newEndTime = newItem.endTime;
-			const newGroupId = newItem.groupId;
-			const newStartTime = newItem.startTime;
-
-			const itemHMoved =
-				newStartTime !== initStartTime || newEndTime !== initEndTime;
-			const itemVMoved = newGroupId !== initGroupId;
-
-			if (itemVMoved) {
-				const newGroupIndex = this.getGroupIndex(newGroupId);
-
-				if (newGroupIndex !== undefined) {
-					this.#groupPositions.splice(newGroupIndex);
-				}
-			}
-
-			if (itemHMoved || itemVMoved) {
-				const groupIndex = this.getGroupIndex(initGroupId);
-
-				if (groupIndex !== undefined) {
-					this.#groupPositions.splice(groupIndex);
-				}
-
-				this.dispatchEvent(new CustomEvent("renderRequest"));
-			}
+			this.clearGroupPositions(itemChangeState);
 		}
 	}
 
@@ -405,50 +388,23 @@ export class GroupPositionsState<
 				startTime: number;
 		  }
 		| undefined {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
-		if (itemDragState) {
-			this.#itemDragState = undefined;
+		if (
+			itemChangeState &&
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
 
-			const initItem = itemDragState.item;
-			const initEndTime = initItem.endTime;
-			const initGroupId = initItem.groupId;
-			const initStartTime = initItem.startTime;
+			this.clearGroupPositions(itemChangeState, skipRender);
 
-			const newItem = itemDragState.newItem;
-			const newEndTime = newItem.endTime;
-			const newGroupId = newItem.groupId;
-			const newStartTime = newItem.startTime;
-
-			const itemHMoved =
-				newStartTime !== initStartTime || newEndTime !== initEndTime;
-			const itemVMoved = newGroupId !== initGroupId;
-
-			if (itemVMoved) {
-				const newGroupIndex = this.getGroupIndex(newGroupId);
-
-				if (newGroupIndex !== undefined) {
-					this.#groupPositions.splice(newGroupIndex);
-				}
-			}
-
-			if (itemHMoved || itemVMoved) {
-				const groupIndex = this.getGroupIndex(initGroupId);
-
-				if (groupIndex !== undefined) {
-					this.#groupPositions.splice(groupIndex);
-				}
-
-				if (!skipRender) {
-					this.dispatchEvent(new CustomEvent("renderRequest"));
-				}
-			}
+			const newItem = itemChangeState.newItem;
 
 			return {
-				endTime: newEndTime,
-				groupId: newGroupId,
+				endTime: newItem.endTime,
+				groupId: newItem.groupId,
 				id: newItem.id,
-				startTime: newStartTime,
+				startTime: newItem.startTime,
 			};
 		}
 
@@ -459,24 +415,145 @@ export class GroupPositionsState<
 		const draggedItem = this.getItemById(id);
 
 		if (draggedItem !== undefined) {
-			this.#itemDragState = {
-				initDragTime: dragTime,
+			this.#itemChangeState = {
+				changeType: ITEM_CHANGE_TYPE.drag,
+				triggerTime: dragTime,
 				item: draggedItem,
 				newItem: { ...draggedItem },
 			};
 		}
 	}
 
+	public itemEndResizeStart(id: TItemId, resizeTime: number): void {
+		const resizedItem = this.getItemById(id);
+
+		if (resizedItem !== undefined) {
+			this.#itemChangeState = {
+				changeType: ITEM_CHANGE_TYPE.resizeEnd,
+				triggerTime: resizeTime,
+				item: resizedItem,
+				newItem: { ...resizedItem },
+			};
+		}
+	}
+
+	public itemStartResizeStart(id: TItemId, resizeTime: number): void {
+		const resizedItem = this.getItemById(id);
+
+		if (resizedItem !== undefined) {
+			this.#itemChangeState = {
+				changeType: ITEM_CHANGE_TYPE.resizeStart,
+				triggerTime: resizeTime,
+				item: resizedItem,
+				newItem: { ...resizedItem },
+			};
+		}
+	}
+
+	public itemResize(resizeTime: number): void {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState &&
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+		) {
+			const triggerTime = itemChangeState.triggerTime;
+			const isStart =
+				itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart;
+
+			const initItem = itemChangeState.item;
+			const initTime = isStart ? initItem.startTime : initItem.endTime;
+
+			const item = itemChangeState.newItem;
+			const time = isStart ? item.startTime : item.endTime;
+			const groupId = item.groupId;
+
+			const delta = resizeTime - triggerTime;
+			const newTime = initTime + delta;
+
+			const itemHMoved = newTime !== time;
+
+			if (itemHMoved) {
+				const groupIndex = this.getGroupIndex(groupId);
+
+				if (groupIndex !== undefined) {
+					this.#groupPositions.splice(groupIndex);
+				}
+
+				const newItem = { ...initItem };
+
+				if (isStart) {
+					newItem.startTime = newTime;
+				} else {
+					newItem.endTime = newTime;
+				}
+
+				itemChangeState.newItem = newItem;
+
+				this.dispatchEvent(new CustomEvent("renderRequest"));
+			}
+		}
+	}
+
+	public itemResizeCancel(): void {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState &&
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
+
+			this.clearGroupPositions(itemChangeState);
+		}
+	}
+
+	public itemResizeEnd(skipRender?: boolean):
+		| {
+				endTime: number;
+				id: TItemId;
+		  }
+		| {
+				id: TItemId;
+				startTime: number;
+		  }
+		| undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState &&
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
+
+			this.clearGroupPositions(itemChangeState, skipRender);
+
+			const newItem = itemChangeState.newItem;
+
+			return itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
+				? {
+						id: newItem.id,
+						startTime: newItem.startTime,
+					}
+				: {
+						id: newItem.id,
+						endTime: newItem.endTime,
+					};
+		}
+
+		return undefined;
+	}
+
 	private buildGroupLines(index: number): TItem[][] {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 		const itemWindowMin = this.#itemWindowMin;
 		const itemWindowMax = this.#itemWindowMax;
 
 		const group = this.getGroup(index);
 
 		const itemGroup = this.getItemGroup(index);
-		const draggedItemInit = itemDragState?.item;
-		const draggedItem = itemDragState?.newItem;
+		const draggedItemInit = itemChangeState?.item;
+		const draggedItem = itemChangeState?.newItem;
 
 		const lines = layoutGroupRows<TGroupId, TItemId, TItem>(
 			itemGroup,
@@ -538,6 +615,45 @@ export class GroupPositionsState<
 		return itemGroupsMap;
 	}
 
+	private clearGroupPositions(
+		itemState: { item: TItem; newItem: TItem },
+		skipRender?: boolean | undefined,
+	): void {
+		const initItem = itemState.item;
+		const initEndTime = initItem.endTime;
+		const initGroupId = initItem.groupId;
+		const initStartTime = initItem.startTime;
+
+		const newItem = itemState.newItem;
+		const newEndTime = newItem.endTime;
+		const newGroupId = newItem.groupId;
+		const newStartTime = newItem.startTime;
+
+		const itemHMoved =
+			newStartTime !== initStartTime || newEndTime !== initEndTime;
+		const itemVMoved = newGroupId !== initGroupId;
+
+		if (itemVMoved) {
+			const newGroupIndex = this.getGroupIndex(newGroupId);
+
+			if (newGroupIndex !== undefined) {
+				this.#groupPositions.splice(newGroupIndex);
+			}
+		}
+
+		if (itemHMoved || itemVMoved) {
+			const groupIndex = this.getGroupIndex(initGroupId);
+
+			if (groupIndex !== undefined) {
+				this.#groupPositions.splice(groupIndex);
+			}
+
+			if (!skipRender) {
+				this.dispatchEvent(new CustomEvent("renderRequest"));
+			}
+		}
+	}
+
 	private clearItemCaches(): void {
 		this.#groupLineSets.length = ZERO;
 		this.#groupPositions.length = ZERO;
@@ -597,20 +713,20 @@ export class GroupPositionsState<
 	}
 
 	private getGroupSize(index: number): number {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
 		// If the dragged item is part of the initial or new item groups, then don't
 		// use the cache or cache the result, because the group and position of the
 		// dragged item could be changing quickly.
-		if (itemDragState) {
+		if (itemChangeState) {
 			const group = this.getGroup(index);
 
 			if (group) {
 				const groupId = group.id;
 
 				if (
-					itemDragState.item?.groupId === groupId ||
-					itemDragState.newItem?.groupId === groupId
+					itemChangeState.item?.groupId === groupId ||
+					itemChangeState.newItem?.groupId === groupId
 				) {
 					return this.buildGroupSize(index);
 				}
@@ -632,20 +748,20 @@ export class GroupPositionsState<
 	private getGroupLines(
 		index: number,
 	): readonly (readonly Readonly<TItem>[])[] {
-		const itemDragState = this.#itemDragState;
+		const itemChangeState = this.#itemChangeState;
 
 		// If the dragged item is part of the initial or new item groups, then don't
 		// use the cache or cache the result, because the group and position of the
 		// dragged item could be changing quickly.
-		if (itemDragState) {
+		if (itemChangeState) {
 			const group = this.getGroup(index);
 
 			if (group) {
 				const groupId = group.id;
 
 				if (
-					itemDragState.item?.groupId === groupId ||
-					itemDragState.newItem?.groupId === groupId
+					itemChangeState.item?.groupId === groupId ||
+					itemChangeState.newItem?.groupId === groupId
 				) {
 					return this.buildGroupLines(index);
 				}

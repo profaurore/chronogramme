@@ -31,7 +31,10 @@ import {
 	selectedAndCanResizeRightAndDragRight,
 	selectedStyle,
 } from "./constants";
+import type { FullRequired } from "./typeUtils";
 import { composeEvents } from "./utils";
+
+type ResizeEdge = "left" | "right";
 
 function addClass(current: string, optional?: string): string {
 	return optional ? current + optional : current;
@@ -52,6 +55,7 @@ export const Timeline = <
 	lineHeight = 30,
 	onItemDeselect,
 	onItemMove,
+	onItemResize,
 	onItemSelect,
 	onTimeChange,
 	rowData,
@@ -78,26 +82,45 @@ export const Timeline = <
 				| "onDoubleClick"
 				| "onMouseDown"
 				| "onMouseUp"
-				| "onPointerDown"
+				| "onPointerDownCapture"
 				| "onTouchEnd"
 				| "onTouchStart"
 				| "style"
 			>,
-		) => HTMLAttributes<HTMLDivElement>;
+		) => FullRequired<
+			Pick<
+				HTMLAttributes<HTMLDivElement>,
+				"className" | "onPointerDownCapture" | "slot" | "style"
+			>
+		> &
+			Pick<
+				HTMLAttributes<HTMLDivElement>,
+				| "onClick"
+				| "onMouseDown"
+				| "onMouseUp"
+				| "onTouchStart"
+				| "onTouchEnd"
+				| "onDoubleClick"
+				| "onContextMenu"
+			>;
 		getResizeProps: (params?: {
 			leftClassName?: string;
 			leftStyle?: CSSProperties;
 			rightClassName?: string;
 			rightStyle?: CSSProperties;
 		}) => {
-			left: {
-				className: string;
-				style: CSSProperties;
-			};
-			right: {
-				className: string;
-				style: CSSProperties;
-			};
+			left: FullRequired<
+				Pick<
+					HTMLAttributes<HTMLDivElement>,
+					"className" | "onPointerDownCapture" | "style"
+				>
+			>;
+			right: FullRequired<
+				Pick<
+					HTMLAttributes<HTMLDivElement>,
+					"className" | "onPointerDownCapture" | "style"
+				>
+			>;
 		};
 		item: TItem;
 		itemContext: {
@@ -142,6 +165,11 @@ export const Timeline = <
 		dragTime: number,
 		newGroupOrder: number,
 	) => void;
+	onItemResize?(
+		itemId: number,
+		endTimeOrStartTime: number,
+		edge: ResizeEdge,
+	): void;
 	onItemSelect?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onTimeChange?: (
 		newVisibleTimeStart: number,
@@ -174,6 +202,7 @@ export const Timeline = <
 			null,
 		);
 	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
+	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
 
 	const render = useCallback(() => {
 		const renderedGroups: ReactNode[] = [];
@@ -274,32 +303,54 @@ export const Timeline = <
 
 						renderedItems.push(
 							itemRenderer({
-								getItemProps: (params) => {
+								getItemProps(params) {
 									return {
 										className: "rct-item",
-										onClick: composeEvents(params.onClick, (event) => {
-											const nativeEvent = event.nativeEvent;
+										onClick: composeEvents(
+											params.onClick,
+											function onClick(event) {
+												const nativeEvent = event.nativeEvent;
 
-											if (nativeEvent instanceof MouseEvent) {
-												event.stopPropagation();
+												if (nativeEvent instanceof MouseEvent) {
+													event.stopPropagation();
 
-												if (itemIsSelectable) {
-													if (itemIsSelected) {
-														onItemDeselect?.(event);
-													} else {
-														onItemSelect?.(
-															itemId,
-															event,
-															timeline.getHValue(nativeEvent.clientX),
-														);
+													if (itemIsSelectable) {
+														if (itemIsSelected) {
+															onItemDeselect?.(event);
+														} else {
+															onItemSelect?.(
+																itemId,
+																event,
+																timeline.getHValue(nativeEvent.clientX),
+															);
+														}
 													}
 												}
-											}
-										}),
+											},
+										),
 										onMouseDown: params.onMouseDown,
 										onPointerDownCapture(event) {
+											// Because the events need to be captured, not to intefere
+											// with the library's native event handling, we need to
+											// check for nested event handlers that would have
+											// precedence.
+											for (const element of event.nativeEvent.composedPath()) {
+												if (
+													element instanceof HTMLElement &&
+													(element.classList.contains(
+														"rct-item-handler-resize-left",
+													) ||
+														element.classList.contains(
+															"rct-item-handler-resize-right",
+														))
+												) {
+													return;
+												}
+											}
+
 											event.stopPropagation();
 
+											itemResizeStateRef.current.reset();
 											itemDragStateRef.current.start(event);
 											timeline.itemDragStart(itemId, event.clientX);
 										},
@@ -351,6 +402,13 @@ export const Timeline = <
 												"rct-item-handler rct-item-handler-left rct-item-handler-resize-left ",
 												leftClassName,
 											),
+											onPointerDownCapture(event) {
+												event.stopPropagation();
+
+												itemDragStateRef.current.reset();
+												itemResizeStateRef.current.start(event);
+												timeline.itemStartResizeStart(itemId, event.clientX);
+											},
 											style: { ...leftResizeStyle, ...leftStyle },
 										},
 										right: {
@@ -358,6 +416,13 @@ export const Timeline = <
 												"rct-item-handler rct-item-handler-right rct-item-handler-resize-right",
 												rightClassName,
 											),
+											onPointerDownCapture(event) {
+												event.stopPropagation();
+
+												itemDragStateRef.current.reset();
+												itemResizeStateRef.current.start(event);
+												timeline.itemEndResizeStart(itemId, event.clientX);
+											},
 											style: { ...rightResizeStyle, ...rightStyle },
 										},
 									};
@@ -508,6 +573,41 @@ export const Timeline = <
 			});
 		}
 	}, [onItemMove]);
+
+	useEffect(() => {
+		const itemResizeState = itemResizeStateRef.current;
+		const timeline = timelineRef.current;
+
+		if (timeline) {
+			itemResizeState.addEventListener("move", (event) => {
+				if (event instanceof CustomEvent) {
+					const detail = event.detail;
+
+					if (detail instanceof DragMoveEventDetail) {
+						timeline.itemResize(detail.x);
+					}
+				}
+			});
+
+			itemResizeState.addEventListener("end", (event) => {
+				if (event instanceof CustomEvent) {
+					const result = timeline.itemResizeEnd(true);
+
+					if (result) {
+						if ("startTime" in result) {
+							onItemResize?.(result.id, result.startTime, "left");
+						} else {
+							onItemResize?.(result.id, result.endTime, "right");
+						}
+					}
+				}
+			});
+
+			itemResizeState.addEventListener("cancel", () => {
+				timeline.itemResizeEnd();
+			});
+		}
+	}, [onItemResize]);
 
 	return (
 		<cg-timeline

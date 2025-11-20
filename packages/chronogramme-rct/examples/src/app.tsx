@@ -218,6 +218,27 @@ export function App(): ReactNode {
 		});
 	}, []);
 
+	const onItemResizeHandler = useCallback<
+		Exclude<ComponentProps<typeof RCTimeline>["onItemResize"], undefined>
+	>((itemId, endTimeOrStartTime, edge) => {
+		setItems((prev) => {
+			return prev.map((item) => {
+				if (item.id === itemId) {
+					const newItem = { ...item };
+					if (edge === "left") {
+						newItem.startTime = endTimeOrStartTime;
+					} else {
+						newItem.endTime = endTimeOrStartTime;
+					}
+
+					return newItem;
+				}
+
+				return item;
+			});
+		});
+	}, []);
+
 	const rctId = useId();
 	const timelineId = useId();
 	const scrollerId = useId();
@@ -250,13 +271,26 @@ export function App(): ReactNode {
 				className={timelineClass}
 				groupRenderer={({ group }) => <div>{`group-${group.id}`}</div>}
 				groups={groups}
-				itemRenderer={({ getItemProps, item, key }) => (
-					<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
-						{item.groupId}-{item.id}
-					</div>
-				)}
+				itemRenderer={({ getItemProps, getResizeProps, item, key }) => {
+					const { left: leftProps, right: rightProps } = getResizeProps();
+
+					leftProps.style.background = "#f00";
+					rightProps.style.background = "#f00";
+
+					return (
+						<div
+							{...getItemProps({ style: { whiteSpace: "nowrap" } })}
+							key={key}
+						>
+							<div {...leftProps} />
+							{item.groupId}-{item.id}
+							<div {...rightProps} />
+						</div>
+					);
+				}}
 				items={items}
 				onItemMove={onItemMoveHandler}
+				onItemResize={onItemResizeHandler}
 				rowData={null}
 				rowRenderer={({ getLayerRootProps, group, key }) => {
 					const props = getLayerRootProps();
