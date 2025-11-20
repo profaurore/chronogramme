@@ -560,7 +560,10 @@ export const Timeline = <
 
 			itemDragState.addEventListener("end", (event) => {
 				if (event instanceof CustomEvent) {
-					const result = timeline.itemDragEnd(true);
+					// If a move callback is set, skip rendering to avoid a flicker of
+					// the item snapping back to it's original size.
+					const skipRender = onItemMove !== undefined;
+					const result = timeline.itemDragEnd(skipRender);
 
 					if (result) {
 						onItemMove?.(result.id, result.startTime, result.groupId);
@@ -591,7 +594,10 @@ export const Timeline = <
 
 			itemResizeState.addEventListener("end", (event) => {
 				if (event instanceof CustomEvent) {
-					const result = timeline.itemResizeEnd(true);
+					// If a move callback is set, skip rendering to avoid a flicker of
+					// the item snapping back to it's original size.
+					const skipRender = onItemResize !== undefined;
+					const result = timeline.itemResizeEnd(skipRender);
 
 					if (result) {
 						if ("startTime" in result) {
