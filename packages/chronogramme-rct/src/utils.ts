@@ -1,4 +1,5 @@
-import type { EventHandler, SyntheticEvent } from "react";
+import { UNIT, ZERO } from "@chronogramme/chronogramme";
+import { type EventHandler, type SyntheticEvent, useReducer } from "react";
 
 export function composeEvents<TEvent>(
 	...fns: (EventHandler<SyntheticEvent<TEvent>> | undefined)[]
@@ -9,4 +10,10 @@ export function composeEvents<TEvent>(
 			fn?.(event, ...args);
 		}
 	};
+}
+
+const RENDER_WRAP_BITMASK = 0xff;
+
+export function useRender(): [number, () => void] {
+	return useReducer((x) => (x + UNIT) & RENDER_WRAP_BITMASK, ZERO);
 }

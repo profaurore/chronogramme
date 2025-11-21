@@ -1,9 +1,11 @@
 import {
 	type BaseGroup,
-	type BaseItem,
+	type BaseItem as CoreBaseItem,
 	DragState,
 	HALF,
 	type Timeline as HTMLTimeline,
+	TIME_MAX,
+	TIME_MIN,
 	UNIT,
 	WindowChangeEventDetail,
 	ZERO,
@@ -11,11 +13,13 @@ import {
 import {
 	type CSSProperties,
 	type HTMLAttributes,
+	memo,
 	type ReactNode,
+	type RefObject,
 	type SyntheticEvent,
 	useEffect,
 	useLayoutEffect,
-	useReducer,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -32,40 +36,36 @@ import {
 	selectedStyle,
 } from "./constants";
 import type { FullRequired } from "./typeUtils";
-import { composeEvents } from "./utils";
+import { composeEvents, useRender } from "./utils";
 
 type ResizeEdge = "left" | "right";
 
-const RENDER_WRAP_BITMASK = 0xff;
+interface RctToCoreItem<TItem> extends CoreBaseItem {
+	originalItem: TItem;
+}
 
 function addClass(current: string, optional?: string): string {
 	return optional ? current + optional : current;
 }
 
-export const Timeline = <
+export interface BaseItem<TItemId = number, TGroupId = number> {
+	canMove?: boolean | undefined;
+	canResize?: false | "left" | "right" | "both";
+	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+	end_time: EpochTimeStamp;
+	group: TGroupId;
+	id: TItemId;
+	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+	start_time: EpochTimeStamp;
+}
+
+interface TimelineProps<
 	TItem extends BaseItem,
 	TGroup extends BaseGroup,
 	TRowData,
->({
-	className,
-	groupRenderer,
-	groups,
-	id,
-	itemHeightRatio = 0.65,
-	itemRenderer,
-	items,
-	lineHeight = 30,
-	onItemDeselect,
-	onItemMove,
-	onItemResize,
-	onItemSelect,
-	onTimeChange,
-	rowData,
-	rowRenderer,
-	sidebarWidth = 150,
-	visibleTimeEnd,
-	visibleTimeStart,
-}: {
+> {
+	canMove?: boolean;
+	canResize?: false | "left" | "right" | "both";
 	className?: string;
 	groupRenderer: (props: {
 		group: TGroup;
@@ -161,7 +161,9 @@ export const Timeline = <
 	}) => ReactNode;
 	items: TItem[];
 	lineHeight?: number;
+	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
+	onItemDoubleClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemMove?: (
 		itemId: number,
 		dragTime: number,
@@ -189,17 +191,23 @@ export const Timeline = <
 	sidebarWidth?: number;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
-}): ReactNode => {
-	const [selectedItemIds, _setSelectedItemIds] = useState<Set<number>>(
-		new Set(),
-	);
+}
 
+export const Timeline = <
+	TItem extends BaseItem,
+	TGroup extends BaseGroup,
+	TRowData,
+>({
+	groups,
+	items,
+	...properties
+}: TimelineProps<TItem, TGroup, TRowData>): ReactNode => {
 	const timelineRef =
-		useRef<InstanceType<typeof HTMLTimeline<number, TGroup, number, TItem>>>(
-			null,
-		);
-	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
-	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
+		useRef<
+			InstanceType<
+				typeof HTMLTimeline<number, TGroup, number, RctToCoreItem<TItem>>
+			>
+		>(null);
 
 	useEffect(() => {
 		const timeline = timelineRef.current;
@@ -209,49 +217,30 @@ export const Timeline = <
 		}
 	}, [groups]);
 
-	useEffect(() => {
+	useMemo(() => {
 		const timeline = timelineRef.current;
 
 		if (timeline) {
-			timeline.setItems(items);
+			timeline.setItems(
+				items.map((item) => ({
+					endTime: item.end_time,
+					groupId: item.group,
+					id: item.id,
+					isDraggable: item.canMove,
+					isEndResizable:
+						item.canResize &&
+						(item.canResize === "right" || item.canResize === "both"),
+					isStartResizable:
+						item.canResize &&
+						(item.canResize === "left" || item.canResize === "both"),
+					originalItem: item,
+					startTime: item.start_time,
+				})),
+			);
 		}
 	}, [items]);
 
-	useLayoutEffect(() => {
-		const timeline = timelineRef.current;
-
-		if (timeline) {
-			const onWindowChangeHandler = (event: Event) => {
-				if (event instanceof CustomEvent) {
-					const detail = event.detail;
-
-					if (detail instanceof WindowChangeEventDetail) {
-						onTimeChange?.(
-							timeline.hWindowMin,
-							timeline.hWindowMax,
-							(start: number, end: number) => {
-								timeline.setHWindow(start, end);
-							},
-						);
-					}
-				}
-			};
-
-			const controller = new AbortController();
-			timeline.addEventListener("windowChange", onWindowChangeHandler, {
-				passive: true,
-				signal: controller.signal,
-			});
-
-			return () => {
-				controller.abort();
-			};
-		}
-
-		return;
-	}, [onTimeChange]);
-
-	const [, render] = useReducer((x) => (x + UNIT) & RENDER_WRAP_BITMASK, ZERO);
+	const [renderIndicator, render] = useRender();
 
 	useEffect(() => {
 		const timeline = timelineRef.current;
@@ -269,7 +258,55 @@ export const Timeline = <
 		}
 
 		return;
-	}, []);
+	}, [render]);
+
+	return (
+		<MemoedRenderedTimeline<TItem, TGroup, TRowData>
+			{...properties}
+			renderIndicator={renderIndicator}
+			timelineRef={timelineRef}
+		/>
+	);
+};
+
+function RenderedTimeline<
+	TItem extends BaseItem,
+	TGroup extends BaseGroup,
+	TRowData,
+>({
+	canMove = true,
+	canResize = "right",
+	className,
+	groupRenderer,
+	id,
+	itemHeightRatio = 0.65,
+	itemRenderer,
+	lineHeight = 30,
+	onItemContextMenu,
+	onItemDeselect,
+	onItemDoubleClick,
+	onItemMove,
+	onItemResize,
+	onItemSelect,
+	onTimeChange,
+	rowData,
+	rowRenderer,
+	sidebarWidth = 150,
+	timelineRef,
+	visibleTimeEnd,
+	visibleTimeStart,
+}: Omit<TimelineProps<TItem, TGroup, TRowData>, "items" | "groups"> & {
+	renderIndicator: number;
+	timelineRef: RefObject<InstanceType<
+		typeof HTMLTimeline<number, TGroup, number, RctToCoreItem<TItem>>
+	> | null>;
+}) {
+	const [selectedItemIds, _setSelectedItemIds] = useState<Set<number>>(
+		new Set(),
+	);
+
+	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
+	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
 
 	useEffect(() => {
 		const itemDragState = itemDragStateRef.current;
@@ -324,7 +361,7 @@ export const Timeline = <
 		}
 
 		return undefined;
-	}, [onItemMove]);
+	}, [onItemMove, timelineRef]);
 
 	useEffect(() => {
 		const itemResizeState = itemResizeStateRef.current;
@@ -383,7 +420,44 @@ export const Timeline = <
 		}
 
 		return undefined;
-	}, [onItemResize]);
+	}, [onItemResize, timelineRef]);
+
+	useLayoutEffect(() => {
+		const timeline = timelineRef.current;
+
+		if (timeline) {
+			const onWindowChangeHandler = (event: Event) => {
+				if (event instanceof CustomEvent) {
+					const detail = event.detail;
+
+					if (detail instanceof WindowChangeEventDetail) {
+						onTimeChange?.(
+							timeline.hWindowMin,
+							timeline.hWindowMax,
+							function updateScrollCanvas(start, end) {
+								timeline.setHWindow(start, end);
+							},
+						);
+					}
+				}
+			};
+
+			const controller = new AbortController();
+			timeline.addEventListener("windowChange", onWindowChangeHandler, {
+				passive: true,
+				signal: controller.signal,
+			});
+
+			return () => {
+				controller.abort();
+			};
+		}
+
+		return;
+	}, [onTimeChange, timelineRef]);
+
+	const canResizeLeft = canResize === "left" || canResize === "both";
+	const canResizeRight = canResize === "right" || canResize === "both";
 
 	const renderedGroups: ReactNode[] = [];
 	const renderedItems: ReactNode[] = [];
@@ -450,7 +524,7 @@ export const Timeline = <
 						},
 						group,
 						// TODO: Fix this to filter if items are being modified
-						itemsWithInteractions: items,
+						itemsWithInteractions: [],
 						key: `group-${groupId}-${lineIndex}`,
 						rowData,
 					}),
@@ -467,9 +541,9 @@ export const Timeline = <
 					const endTime = item.endTime;
 					const itemId = item.id;
 
-					const itemCanMove = true;
-					const itemCanResizeLeft = true;
-					const itemCanResizeRight = true;
+					const itemCanMove = item.isDraggable ?? canMove;
+					const itemCanResizeLeft = item.isStartResizable ?? canResizeLeft;
+					const itemCanResizeRight = item.isEndResizable ?? canResizeRight;
 					const itemIsDragging = false;
 					const itemIsSelected = selectedItemIds.has(item.id);
 					const itemIsSelectable = true;
@@ -487,7 +561,6 @@ export const Timeline = <
 								return {
 									className: "rct-item",
 									onClick: composeEvents(
-										params.onClick,
 										function onClick(event) {
 											const nativeEvent = event.nativeEvent;
 
@@ -507,9 +580,15 @@ export const Timeline = <
 												}
 											}
 										},
+
+										params.onClick,
 									),
 									onMouseDown: params.onMouseDown,
 									onPointerDownCapture(event) {
+										if (!itemCanMove) {
+											return;
+										}
+
 										// Because the events need to be captured, not to intefere
 										// with the library's native event handling, we need to
 										// check for nested event handlers that would have
@@ -517,12 +596,14 @@ export const Timeline = <
 										for (const element of event.nativeEvent.composedPath()) {
 											if (
 												element instanceof HTMLElement &&
-												(element.classList.contains(
-													"rct-item-handler-resize-left",
-												) ||
+												((itemCanResizeLeft &&
 													element.classList.contains(
-														"rct-item-handler-resize-right",
-													))
+														"rct-item-handler-resize-left",
+													)) ||
+													(itemCanResizeRight &&
+														element.classList.contains(
+															"rct-item-handler-resize-right",
+														)))
 											) {
 												return;
 											}
@@ -537,8 +618,44 @@ export const Timeline = <
 									onMouseUp: params.onMouseUp,
 									onTouchStart: params.onTouchStart,
 									onTouchEnd: params.onTouchEnd,
-									onDoubleClick: params.onDoubleClick,
-									onContextMenu: params.onContextMenu,
+									onDoubleClick: composeEvents(
+										function onDoubleClick(event) {
+											const nativeEvent = event.nativeEvent;
+
+											if (nativeEvent instanceof PointerEvent) {
+												event.stopPropagation();
+
+												onItemDoubleClick?.(
+													itemId,
+													event,
+													timeline.getHValue(nativeEvent.clientX),
+												);
+											}
+										},
+
+										params.onDoubleClick,
+									),
+									onContextMenu: composeEvents(
+										function onContextMenu(event) {
+											const nativeEvent = event.nativeEvent;
+
+											if (nativeEvent instanceof PointerEvent) {
+												event.stopPropagation();
+
+												if (onItemContextMenu) {
+													event.preventDefault();
+
+													onItemContextMenu(
+														itemId,
+														event,
+														timeline.getHValue(nativeEvent.clientX),
+													);
+												}
+											}
+										},
+
+										params.onContextMenu,
+									),
 									slot: "center",
 									style: {
 										...params.style,
@@ -583,6 +700,10 @@ export const Timeline = <
 											leftClassName,
 										),
 										onPointerDownCapture(event) {
+											if (!itemCanResizeLeft) {
+												return;
+											}
+
 											event.stopPropagation();
 
 											itemDragStateRef.current.reset();
@@ -597,6 +718,10 @@ export const Timeline = <
 											rightClassName,
 										),
 										onPointerDownCapture(event) {
+											if (!itemCanResizeRight) {
+												return;
+											}
+
 											event.stopPropagation();
 
 											itemDragStateRef.current.reset();
@@ -607,7 +732,7 @@ export const Timeline = <
 									},
 								};
 							},
-							item,
+							item: item.originalItem,
 							itemContext: {
 								canMove: itemCanMove,
 								canResizeLeft: itemCanResizeLeft,
@@ -648,7 +773,11 @@ export const Timeline = <
 			h-start-extrema={[sidebarWidth, sidebarWidth]}
 			h-start-size={sidebarWidth}
 			h-window={[visibleTimeStart, visibleTimeEnd]}
+			h-extrema={[TIME_MIN, TIME_MAX]}
 			id={id}
+			items-draggable={canMove}
+			items-end-resizable={canResize === "right" || canResize === "both"}
+			items-start-resizable={canResize === "left" || canResize === "both"}
 			line-size={lineHeight}
 			ref={timelineRef}
 		>
@@ -656,4 +785,8 @@ export const Timeline = <
 			{renderedItems}
 		</cg-timeline>
 	);
-};
+}
+
+const MemoedRenderedTimeline = memo(
+	RenderedTimeline,
+) as typeof RenderedTimeline;

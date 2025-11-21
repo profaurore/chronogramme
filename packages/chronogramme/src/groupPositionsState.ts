@@ -58,6 +58,12 @@ export class GroupPositionsState<
 
 	#items: readonly Readonly<TItem>[];
 
+	#itemsDraggable: boolean;
+
+	#itemsEndResizable: boolean;
+
+	#itemsStartResizable: boolean;
+
 	#itemWindowMax: number;
 
 	#itemWindowMin: number;
@@ -82,6 +88,9 @@ export class GroupPositionsState<
 		this.#groupWindowMin = ZERO;
 		this.#itemGroups = [];
 		this.#items = [];
+		this.#itemsDraggable = true;
+		this.#itemsEndResizable = true;
+		this.#itemsStartResizable = true;
 		this.#itemWindowMax = ZERO;
 		this.#itemWindowMin = ZERO;
 	}
@@ -304,6 +313,20 @@ export class GroupPositionsState<
 		void this.prepareItemGroups();
 	}
 
+	public setItemsDraggable(itemsDraggable: boolean | undefined): void {
+		this.#itemsDraggable = itemsDraggable ?? true;
+	}
+
+	public setItemsEndResizable(itemsEndResizable: boolean | undefined): void {
+		this.#itemsEndResizable = itemsEndResizable ?? true;
+	}
+
+	public setItemsStartResizable(
+		itemsStartResizable: boolean | undefined,
+	): void {
+		this.#itemsStartResizable = itemsStartResizable ?? true;
+	}
+
 	public setLineSize(lineSize: number | undefined): void {
 		this.#lineSize = lineSize ?? GROUP_LINE_SIZE_DEFAULT;
 
@@ -414,7 +437,7 @@ export class GroupPositionsState<
 	public itemDragStart(id: TItemId, dragTime: number): void {
 		const draggedItem = this.getItemById(id);
 
-		if (draggedItem !== undefined) {
+		if (draggedItem && (draggedItem.isDraggable ?? this.#itemsDraggable)) {
 			this.#itemChangeState = {
 				changeType: ITEM_CHANGE_TYPE.drag,
 				triggerTime: dragTime,
@@ -427,7 +450,10 @@ export class GroupPositionsState<
 	public itemEndResizeStart(id: TItemId, resizeTime: number): void {
 		const resizedItem = this.getItemById(id);
 
-		if (resizedItem !== undefined) {
+		if (
+			resizedItem &&
+			(resizedItem.isEndResizable ?? this.#itemsEndResizable)
+		) {
 			this.#itemChangeState = {
 				changeType: ITEM_CHANGE_TYPE.resizeEnd,
 				triggerTime: resizeTime,
@@ -440,7 +466,10 @@ export class GroupPositionsState<
 	public itemStartResizeStart(id: TItemId, resizeTime: number): void {
 		const resizedItem = this.getItemById(id);
 
-		if (resizedItem !== undefined) {
+		if (
+			resizedItem !== undefined &&
+			(resizedItem.isStartResizable ?? this.#itemsStartResizable)
+		) {
 			this.#itemChangeState = {
 				changeType: ITEM_CHANGE_TYPE.resizeStart,
 				triggerTime: resizeTime,

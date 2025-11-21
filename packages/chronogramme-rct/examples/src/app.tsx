@@ -7,40 +7,17 @@ import {
 	useEffect,
 	useId,
 	useMemo,
-	useRef,
 	useState,
 } from "react";
 import "./styles.css";
-import {
-	type BaseGroup,
-	type BaseItem,
-	type Scroller,
-	TIME_MAX,
-	TIME_MIN,
-	type Timeline,
-	WindowChangeEventDetail,
-} from "@chronogramme/chronogramme";
+import { type BaseGroup, TIME_MAX, TIME_MIN } from "@chronogramme/chronogramme";
 import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
+import type { BaseItem } from "../../src/timeline";
 
 const timelineClass = css`
 	flex: none;
 	height: 400px;
 	margin-bottom: 1em;
-`;
-
-const scrollerClass = css`
-	flex: none;
-	height: 400px;
-	margin-bottom: 1em;
-	max-height: 80vh;
-	outline: 1px solid #f00;
-
-	::part(divider-top),
-	::part(divider-left),
-	::part(divider-right),
-	::part(divider-bottom) {
-		display: block;
-	}
 `;
 
 const buttonsClass = css`
@@ -61,8 +38,13 @@ const formatter = new Intl.DateTimeFormat("en-CA", {
 	second: "2-digit",
 	era: "short",
 });
+
 function formatDate(time: number): string {
-	return formatter.format(time);
+	try {
+		return formatter.format(time);
+	} catch {
+		return "N/A";
+	}
 }
 
 function formatDateRange(start: number, end: number): string {
@@ -79,9 +61,6 @@ function datesFromStartDate(start: number): [number, number] {
 const GROUP_COUNT = 1000;
 
 export function App(): ReactNode {
-	const timelineRef = useRef<Timeline>(null);
-	const scrollerRef = useRef<Scroller>(null);
-
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
 	);
@@ -103,23 +82,16 @@ export function App(): ReactNode {
 	}, [extremaEnd, extremaStart]);
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
-		scrollerRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
-		timelineRef.current?.setHWindow(...datesFromStartDate(TIME_MIN));
+		setWindow(datesFromStartDate(TIME_MIN));
 	};
 
 	const onNowClickHandler: MouseEventHandler = () => {
-		scrollerRef.current?.setHWindow(...datesFromStartDate(Date.now()));
-		timelineRef.current?.setHWindow(...datesFromStartDate(Date.now()));
+		setWindow(datesFromStartDate(Date.now()));
 	};
 
 	const onEndOfTimeClickHandler: MouseEventHandler = () => {
-		scrollerRef.current?.setHWindow(
-			...datesFromStartDate(
-				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
-			),
-		);
-		timelineRef.current?.setHWindow(
-			...datesFromStartDate(
+		setWindow(
+			datesFromStartDate(
 				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
 			),
 		);
@@ -144,47 +116,21 @@ export function App(): ReactNode {
 							now + Math.random() * indexOffsetFactor + j * indexOffsetFactor;
 
 						newItems.push({
-							endTime: startTime + 10_000_000 + Math.random() * 50_000_000,
-							groupId: i,
+							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+							end_time: startTime + 10_000_000 + Math.random() * 50_000_000,
+							group: i,
 							id: prevCount,
-							startTime,
+							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+							start_time: startTime,
 						});
 
 						prevCount++;
 					}
 				}
 
-				timelineRef.current?.setItems(newItems);
-
 				return newItems;
 			});
 		};
-
-	useEffect(() => {
-		const scroller = scrollerRef.current;
-		const timeline = timelineRef.current;
-		if (scroller && timeline) {
-			const windowChangeHandler: EventListener = (e) => {
-				if (
-					e instanceof CustomEvent &&
-					e.detail instanceof WindowChangeEventDetail
-				) {
-					setWindow([e.detail.hWindowMin, e.detail.hWindowMax]);
-				}
-			};
-
-			const controller = new AbortController();
-			const options = { passive: true, signal: controller.signal };
-			scroller.addEventListener("windowChange", windowChangeHandler, options);
-			timeline.addEventListener("windowChange", windowChangeHandler, options);
-
-			return () => {
-				controller.abort();
-			};
-		}
-
-		return undefined;
-	}, []);
 
 	useEffect(() => {
 		const newGroups: { id: number; lineSize: number }[] = [];
@@ -196,7 +142,6 @@ export function App(): ReactNode {
 			});
 		}
 
-		timelineRef.current?.setGroups(newGroups);
 		setGroups(newGroups);
 	}, []);
 
@@ -207,9 +152,9 @@ export function App(): ReactNode {
 			return prev.map((item) => {
 				if (item.id === itemId) {
 					const newItem = { ...item };
-					newItem.startTime = dragTime;
-					newItem.endTime = dragTime + (item.endTime - item.startTime);
-					newItem.groupId = newGroupOrder;
+					newItem.start_time = dragTime;
+					newItem.end_time = dragTime + (item.end_time - item.start_time);
+					newItem.group = newGroupOrder;
 
 					return newItem;
 				}
@@ -227,9 +172,9 @@ export function App(): ReactNode {
 				if (item.id === itemId) {
 					const newItem = { ...item };
 					if (edge === "left") {
-						newItem.startTime = endTimeOrStartTime;
+						newItem.start_time = endTimeOrStartTime;
 					} else {
-						newItem.endTime = endTimeOrStartTime;
+						newItem.end_time = endTimeOrStartTime;
 					}
 
 					return newItem;
@@ -240,9 +185,53 @@ export function App(): ReactNode {
 		});
 	}, []);
 
+	const onTimeChangeHandler = useCallback<
+		Exclude<ComponentProps<typeof RCTimeline>["onTimeChange"], undefined>
+	>((newVisibleTimeStart, newVisibleTimeEnd) => {
+		setWindow([newVisibleTimeStart, newVisibleTimeEnd]);
+	}, []);
+
+	const groupRenderer = useCallback<
+		ComponentProps<typeof RCTimeline>["groupRenderer"]
+	>(({ group }) => <div>{`group-${group.id}`}</div>, []);
+
+	const rowRenderer = useCallback<
+		ComponentProps<typeof RCTimeline>["rowRenderer"]
+	>(({ getLayerRootProps, group, key }) => {
+		const props = getLayerRootProps();
+
+		return (
+			<div
+				{...props}
+				key={key}
+				style={{
+					...props.style,
+					backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+				}}
+			>
+				{key}
+			</div>
+		);
+	}, []);
+
+	const itemRenderer = useCallback<
+		ComponentProps<typeof RCTimeline>["itemRenderer"]
+	>(({ getItemProps, getResizeProps, item, key }) => {
+		const { left: leftProps, right: rightProps } = getResizeProps();
+
+		leftProps.style.background = "#f00";
+		rightProps.style.background = "#f00";
+
+		return (
+			<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
+				<div key="left" {...leftProps} />
+				{item.group}-{item.id}
+				<div key="right" {...rightProps} />
+			</div>
+		);
+	}, []);
+
 	const rctId = useId();
-	const timelineId = useId();
-	const scrollerId = useId();
 
 	return (
 		<>
@@ -269,73 +258,19 @@ export function App(): ReactNode {
 			<div>Window: {windowString}</div>
 			<RCTimeline
 				id={rctId}
+				canResize="both"
 				className={timelineClass}
-				groupRenderer={({ group }) => <div>{`group-${group.id}`}</div>}
+				groupRenderer={groupRenderer}
 				groups={groups}
-				itemRenderer={({ getItemProps, getResizeProps, item, key }) => {
-					const { left: leftProps, right: rightProps } = getResizeProps();
-
-					leftProps.style.background = "#f00";
-					rightProps.style.background = "#f00";
-
-					return (
-						<div
-							{...getItemProps({ style: { whiteSpace: "nowrap" } })}
-							key={key}
-						>
-							<div {...leftProps} />
-							{item.groupId}-{item.id}
-							<div {...rightProps} />
-						</div>
-					);
-				}}
+				itemRenderer={itemRenderer}
 				items={items}
 				onItemMove={onItemMoveHandler}
 				onItemResize={onItemResizeHandler}
+				onTimeChange={onTimeChangeHandler}
 				rowData={null}
-				rowRenderer={({ getLayerRootProps, group, key }) => {
-					const props = getLayerRootProps();
-
-					return (
-						<div
-							{...props}
-							key={key}
-							style={{
-								...props.style,
-								backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
-							}}
-						>
-							{key}
-						</div>
-					);
-				}}
+				rowRenderer={rowRenderer}
 				visibleTimeEnd={windowEnd}
 				visibleTimeStart={windowStart}
-			/>
-			<cg-timeline
-				class={timelineClass}
-				h-extrema={[extremaStart, extremaEnd]}
-				h-window={[windowStart, windowEnd]}
-				id={timelineId}
-				ref={timelineRef}
-			/>
-			<cg-scroller
-				class={scrollerClass}
-				default-resize-handles={true}
-				h-end-extrema={[50, 150]}
-				h-end-size={100}
-				h-window={[windowStart, windowEnd]}
-				h-extrema={[extremaStart, extremaEnd]}
-				h-start-extrema={[50, 150]}
-				h-start-size={100}
-				id={scrollerId}
-				ref={scrollerRef}
-				v-end-extrema={[50, 150]}
-				v-end-size={100}
-				v-extrema={[0, 1000]}
-				v-start-extrema={[50, 150]}
-				v-start-size={100}
-				v-window={[0, 100]}
 			/>
 		</>
 	);

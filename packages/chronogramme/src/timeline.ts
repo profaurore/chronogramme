@@ -1,3 +1,4 @@
+import { parseBooleanAttribute } from "./boolean";
 import { GroupPositionsState } from "./groupPositionsState";
 import { parseFloatAttribute, ZERO } from "./math";
 import "./scroller";
@@ -8,6 +9,9 @@ export interface BaseItem<TItemId = number, TGroupId = number> {
 	endTime: EpochTimeStamp;
 	groupId: TGroupId;
 	id: TItemId;
+	isDraggable?: boolean | undefined;
+	isEndResizable?: boolean | undefined;
+	isStartResizable?: boolean | undefined;
 	startTime: EpochTimeStamp;
 }
 
@@ -18,6 +22,9 @@ export interface BaseGroup<TGroupId = number> {
 
 const TIMELINE_OBSERVED_ATTRIBUTES = [
 	...SCROLLER_OBSERVED_ATTRIBUTES,
+	"items-draggable",
+	"items-end-resizable",
+	"items-start-resizable",
 	"line-size",
 ] as const;
 
@@ -187,6 +194,20 @@ export class Timeline<
 		this.#groupPositionsState.setItems(items);
 	}
 
+	public setItemsDraggable(itemsDraggable: boolean | undefined): void {
+		this.#groupPositionsState.setItemsDraggable(itemsDraggable);
+	}
+
+	public setItemsEndResizable(itemsEndResizable: boolean | undefined): void {
+		this.#groupPositionsState.setItemsEndResizable(itemsEndResizable);
+	}
+
+	public setItemsStartResizable(
+		itemsStartResizable: boolean | undefined,
+	): void {
+		this.#groupPositionsState.setItemsStartResizable(itemsStartResizable);
+	}
+
 	public setLineSize(lineSize: number | undefined): void {
 		this.#groupPositionsState.setLineSize(lineSize);
 	}
@@ -205,6 +226,21 @@ export class Timeline<
 		switch (name) {
 			case "line-size": {
 				this.setLineSize(parseFloatAttribute(newValue));
+				break;
+			}
+
+			case "items-draggable": {
+				this.setItemsDraggable(parseBooleanAttribute(newValue));
+				break;
+			}
+
+			case "items-end-resizable": {
+				this.setItemsEndResizable(parseBooleanAttribute(newValue));
+				break;
+			}
+
+			case "items-start-resizable": {
+				this.setItemsStartResizable(parseBooleanAttribute(newValue));
 				break;
 			}
 
