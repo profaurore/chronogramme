@@ -17,7 +17,7 @@ export interface BaseItem<TItemId = number, TGroupId = number> {
 
 export interface BaseGroup<TGroupId = number> {
 	id: TGroupId;
-	lineSize?: number;
+	lineSize?: number | undefined;
 }
 
 const TIMELINE_OBSERVED_ATTRIBUTES = [

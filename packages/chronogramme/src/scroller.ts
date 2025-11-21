@@ -14,10 +14,11 @@ import {
 import { parseBooleanAttribute } from "./boolean";
 import { DragState } from "./dragState";
 import {
-	type ConnectedEventDetail,
-	type DisconnectedEventDetail,
+	ConnectedEventDetail,
+	DisconnectedEventDetail,
 	DragMoveEventDetail,
 	DragStartEventDetail,
+	ScrollBoundsChangeEventDetail,
 	ScrollPosChangeEventDetail,
 	ScrollSizeChangeEventDetail,
 	WindowChangeEventDetail,
@@ -471,15 +472,13 @@ export class Scroller extends HTMLElement {
 	): void {
 		const strategyFn = getBarResizeStrategy(strategy);
 
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setResizeStrategy(strategyFn);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
@@ -494,74 +493,62 @@ export class Scroller extends HTMLElement {
 		min: number | undefined,
 		max: number | undefined,
 	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setEndExtrema(min, max);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setHEndSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setEndSize(size);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setHExtrema(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindow = this.setupUpdateWindow();
 
 		this.#hScrollState.setExtrema(min, max);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindow();
 	}
 
 	public setHMaxElementSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 
 		this.#hScrollState.setMaxElementSize(size);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 	}
 
 	public setHMiddleMin(min: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setMiddleMin(min);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setHResyncThresholdSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 
 		this.#hScrollState.setResyncThresholdSize(size);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 	}
 
 	public setHScrollResizeStrategy(
@@ -574,40 +561,34 @@ export class Scroller extends HTMLElement {
 		min: number | undefined,
 		max: number | undefined,
 	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setEndExtrema(min, max);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setHStartSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#hBarState.setStartSize(size);
 		this.updateHBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setHWindow(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindow = this.setupUpdateWindow();
 
 		this.#hScrollState.setWindowExtrema(min, max);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindow();
 	}
 
@@ -616,15 +597,13 @@ export class Scroller extends HTMLElement {
 	): void {
 		const strategyFn = getBarResizeStrategy(strategy);
 
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setResizeStrategy(strategyFn);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
@@ -639,74 +618,62 @@ export class Scroller extends HTMLElement {
 		min: number | undefined,
 		max: number | undefined,
 	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setEndExtrema(min, max);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setVEndSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setEndSize(size);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setVExtrema(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindow = this.setupUpdateWindow();
 
 		this.#vScrollState.setExtrema(min, max);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindow();
 	}
 
 	public setVMaxElementSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 
 		this.#vScrollState.setMaxElementSize(size);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 	}
 
 	public setVMiddleMin(min: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setMiddleMin(min);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setVResyncThresholdSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 
 		this.#vScrollState.setResyncThresholdSize(size);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 	}
 
 	public setVScrollResizeStrategy(
@@ -719,40 +686,34 @@ export class Scroller extends HTMLElement {
 		min: number | undefined,
 		max: number | undefined,
 	): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setEndExtrema(min, max);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setVStartSize(size: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		this.#vBarState.setStartSize(size);
 		this.updateVBarDimensions();
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
 	public setVWindow(min: number | undefined, max: number | undefined): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindow = this.setupUpdateWindow();
 
 		this.#vScrollState.setWindowExtrema(min, max);
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindow();
 	}
 
@@ -1052,9 +1013,10 @@ export class Scroller extends HTMLElement {
 		this.#scrollSkip = true;
 
 		this.dispatchEvent(
-			new CustomEvent<ConnectedEventDetail>("connected", {
+			new CustomEvent("connected", {
 				bubbles: true,
 				composed: true,
+				detail: new ConnectedEventDetail(),
 			}),
 		);
 	}
@@ -1070,9 +1032,10 @@ export class Scroller extends HTMLElement {
 		scrollerStylesheet.unsubscribe();
 
 		this.dispatchEvent(
-			new CustomEvent<DisconnectedEventDetail>("disconnected", {
+			new CustomEvent("disconnected", {
 				bubbles: true,
 				composed: true,
+				detail: new DisconnectedEventDetail(),
 			}),
 		);
 	}
@@ -1161,8 +1124,7 @@ export class Scroller extends HTMLElement {
 		const hBarState = this.#hBarState;
 		const vBarState = this.#vBarState;
 
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
 		if (hSize !== hBarState.size) {
@@ -1175,8 +1137,7 @@ export class Scroller extends HTMLElement {
 			this.updateVBarDimensions();
 		}
 
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 		updateWindowSize();
 	}
 
@@ -1204,22 +1165,35 @@ export class Scroller extends HTMLElement {
 		this.setScrollPos(contentElement.scrollLeft, contentElement.scrollTop);
 	}
 
-	private setupUpdateScrollPos(): () => void {
+	private setupUpdateScrollState(): () => void {
 		const hScrollState = this.#hScrollState;
 		const hScrollPosPrev = hScrollState.scrollPos;
+		const hScrollSizePrev = hScrollState.scrollSize;
+		const hValueStartPrev = this.getHValue(ZERO);
+		const hValueEndPrev = this.getHValue(this.scrollWidth);
 
 		const vScrollState = this.#vScrollState;
 		const vScrollPosPrev = vScrollState.scrollPos;
+		const vScrollSizePrev = vScrollState.scrollSize;
+		const vValueStartPrev = this.getVValue(ZERO);
+		const vValueEndPrev = this.getVValue(this.scrollHeight);
 
 		return () => {
 			const hScrollPos = hScrollState.scrollPos;
+			const hScrollSize = hScrollState.scrollSize;
+			const hValueStart = this.getHValue(ZERO);
+			const hValueEnd = this.getHValue(this.scrollWidth);
+
 			const vScrollPos = vScrollState.scrollPos;
+			const vScrollSize = vScrollState.scrollSize;
+			const vValueStart = this.getVValue(ZERO);
+			const vValueEnd = this.getVValue(this.scrollHeight);
 
 			if (hScrollPos !== hScrollPosPrev || vScrollPos !== vScrollPosPrev) {
 				this.#contentElement.scrollTo({ left: hScrollPos, top: vScrollPos });
 
 				this.dispatchEvent(
-					new CustomEvent<ScrollPosChangeEventDetail>("scrollPosChange", {
+					new CustomEvent("scrollPosChange", {
 						bubbles: true,
 						composed: true,
 						detail: new ScrollPosChangeEventDetail(
@@ -1231,19 +1205,6 @@ export class Scroller extends HTMLElement {
 					}),
 				);
 			}
-		};
-	}
-
-	private setupUpdateScrollSize(): () => void {
-		const hScrollState = this.#hScrollState;
-		const hScrollSizePrev = hScrollState.scrollSize;
-
-		const vScrollState = this.#vScrollState;
-		const vScrollSizePrev = vScrollState.scrollSize;
-
-		return () => {
-			const hScrollSize = hScrollState.scrollSize;
-			const vScrollSize = vScrollState.scrollSize;
 
 			if (hScrollSize !== hScrollSizePrev || vScrollSize !== vScrollSizePrev) {
 				const styles = this.#containerElement.style;
@@ -1251,7 +1212,7 @@ export class Scroller extends HTMLElement {
 				styles.setProperty("--v-size", `${vScrollSize}px`);
 
 				this.dispatchEvent(
-					new CustomEvent<ScrollSizeChangeEventDetail>("scrollSizeChange", {
+					new CustomEvent("scrollSizeChange", {
 						bubbles: true,
 						composed: true,
 						detail: new ScrollSizeChangeEventDetail(
@@ -1259,6 +1220,30 @@ export class Scroller extends HTMLElement {
 							vScrollSizePrev,
 							hScrollSize,
 							vScrollSize,
+						),
+					}),
+				);
+			}
+
+			if (
+				hValueStart !== hValueStartPrev ||
+				hValueEnd !== hValueEndPrev ||
+				vValueStart !== vValueStartPrev ||
+				vValueEnd !== vValueEndPrev
+			) {
+				this.dispatchEvent(
+					new CustomEvent("scrollBoundsChange", {
+						bubbles: true,
+						composed: true,
+						detail: new ScrollBoundsChangeEventDetail(
+							hValueStartPrev,
+							hValueEndPrev,
+							vValueStartPrev,
+							vValueEndPrev,
+							hValueStart,
+							hValueEnd,
+							vValueStart,
+							vValueEnd,
 						),
 					}),
 				);
@@ -1289,7 +1274,7 @@ export class Scroller extends HTMLElement {
 				vWindowMax !== vWindowMaxPrev
 			) {
 				this.dispatchEvent(
-					new CustomEvent<WindowChangeEventDetail>("windowChange", {
+					new CustomEvent("windowChange", {
 						bubbles: true,
 						composed: true,
 						detail: new WindowChangeEventDetail(
@@ -1321,7 +1306,7 @@ export class Scroller extends HTMLElement {
 
 			if (hWindowSize !== hWindowSizePrev || vWindowSize !== vWindowSizePrev) {
 				this.dispatchEvent(
-					new CustomEvent<WindowSizeChangeEventDetail>("windowSizeChange", {
+					new CustomEvent("windowSizeChange", {
 						bubbles: true,
 						composed: true,
 						detail: new WindowSizeChangeEventDetail(
@@ -1337,16 +1322,14 @@ export class Scroller extends HTMLElement {
 	}
 
 	private setScrollPos(hScrollPos: number, vScrollPos: number): void {
-		const updateScrollPos = this.setupUpdateScrollPos();
-		const updateScrollSize = this.setupUpdateScrollSize();
+		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindow = this.setupUpdateWindow();
 
 		this.#hScrollState.setScrollPos(hScrollPos);
 		this.#vScrollState.setScrollPos(vScrollPos);
 
 		updateWindow();
-		updateScrollPos();
-		updateScrollSize();
+		updateScrollState();
 	}
 
 	private updateHBarDimensions(): void {

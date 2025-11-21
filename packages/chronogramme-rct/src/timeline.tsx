@@ -1,5 +1,5 @@
 import {
-	type BaseGroup,
+	type BaseGroup as CoreBaseGroup,
 	type BaseItem as CoreBaseItem,
 	DragState,
 	HALF,
@@ -7,7 +7,6 @@ import {
 	TIME_MAX,
 	TIME_MIN,
 	UNIT,
-	WindowChangeEventDetail,
 	ZERO,
 } from "@chronogramme/chronogramme";
 import {
@@ -23,7 +22,11 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { DragMoveEventDetail } from "../../chronogramme/src/events";
+import {
+	DragMoveEventDetail,
+	ScrollBoundsChangeEventDetail,
+	WindowChangeEventDetail,
+} from "../../chronogramme/src/events";
 import {
 	leftResizeStyle,
 	overridableStyles,
@@ -44,6 +47,10 @@ interface RctToCoreItem<TItem> extends CoreBaseItem {
 	originalItem: TItem;
 }
 
+interface RctToCoreGroup<TGroup> extends CoreBaseGroup {
+	originalGroup: TGroup;
+}
+
 function addClass(current: string, optional?: string): string {
 	return optional ? current + optional : current;
 }
@@ -57,6 +64,11 @@ export interface BaseItem<TItemId = number, TGroupId = number> {
 	id: TItemId;
 	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
 	start_time: EpochTimeStamp;
+}
+
+export interface BaseGroup<TGroupId = number> {
+	id: TGroupId;
+	lineHeight?: number;
 }
 
 interface TimelineProps<
@@ -161,6 +173,7 @@ interface TimelineProps<
 	}) => ReactNode;
 	items: TItem[];
 	lineHeight?: number;
+	onBoundsChange?: (canvasTimeStart: number, canvasTimeEnd: number) => void;
 	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
 	onItemDoubleClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
@@ -205,7 +218,12 @@ export const Timeline = <
 	const timelineRef =
 		useRef<
 			InstanceType<
-				typeof HTMLTimeline<number, TGroup, number, RctToCoreItem<TItem>>
+				typeof HTMLTimeline<
+					number,
+					RctToCoreGroup<TGroup>,
+					number,
+					RctToCoreItem<TItem>
+				>
 			>
 		>(null);
 
@@ -213,7 +231,13 @@ export const Timeline = <
 		const timeline = timelineRef.current;
 
 		if (timeline) {
-			timeline.setGroups(groups);
+			timeline.setGroups(
+				groups.map((group) => ({
+					id: group.id,
+					lineSize: group.lineHeight,
+					originalGroup: group,
+				})),
+			);
 		}
 	}, [groups]);
 
@@ -282,6 +306,7 @@ function RenderedTimeline<
 	itemHeightRatio = 0.65,
 	itemRenderer,
 	lineHeight = 30,
+	onBoundsChange,
 	onItemContextMenu,
 	onItemDeselect,
 	onItemDoubleClick,
@@ -298,7 +323,12 @@ function RenderedTimeline<
 }: Omit<TimelineProps<TItem, TGroup, TRowData>, "items" | "groups"> & {
 	renderIndicator: number;
 	timelineRef: RefObject<InstanceType<
-		typeof HTMLTimeline<number, TGroup, number, RctToCoreItem<TItem>>
+		typeof HTMLTimeline<
+			number,
+			RctToCoreGroup<TGroup>,
+			number,
+			RctToCoreItem<TItem>
+		>
 	> | null>;
 }) {
 	const [selectedItemIds, _setSelectedItemIds] = useState<Set<number>>(
@@ -426,14 +456,47 @@ function RenderedTimeline<
 		const timeline = timelineRef.current;
 
 		if (timeline) {
+			const onScrollBoundsChangeHandler = (event: Event) => {
+				if (event instanceof CustomEvent) {
+					const detail = event.detail;
+
+					if (detail instanceof ScrollBoundsChangeEventDetail) {
+						onBoundsChange?.(detail.hValueStart, detail.hValueEnd);
+					}
+				}
+			};
+
+			const controller = new AbortController();
+			// TODO: Implement this event.
+			timeline.addEventListener(
+				"scrollBoundsChange",
+				onScrollBoundsChangeHandler,
+				{
+					passive: true,
+					signal: controller.signal,
+				},
+			);
+
+			return () => {
+				controller.abort();
+			};
+		}
+
+		return;
+	}, [onBoundsChange, timelineRef]);
+
+	useLayoutEffect(() => {
+		const timeline = timelineRef.current;
+
+		if (timeline) {
 			const onWindowChangeHandler = (event: Event) => {
 				if (event instanceof CustomEvent) {
 					const detail = event.detail;
 
 					if (detail instanceof WindowChangeEventDetail) {
 						onTimeChange?.(
-							timeline.hWindowMin,
-							timeline.hWindowMax,
+							detail.hWindowMin,
+							detail.hWindowMax,
 							function updateScrollCanvas(start, end) {
 								timeline.setHWindow(start, end);
 							},
@@ -493,7 +556,7 @@ function RenderedTimeline<
 
 			renderedGroups.push(
 				groupRenderer({
-					group,
+					group: group.originalGroup,
 					isRightSidebar: false,
 				}),
 			);
@@ -522,7 +585,7 @@ function RenderedTimeline<
 								},
 							};
 						},
-						group,
+						group: group.originalGroup,
 						// TODO: Fix this to filter if items are being modified
 						itemsWithInteractions: [],
 						key: `group-${groupId}-${lineIndex}`,

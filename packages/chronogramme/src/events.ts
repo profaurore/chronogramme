@@ -1,6 +1,6 @@
-export type ConnectedEventDetail = undefined;
+export class ConnectedEventDetail {}
 
-export type DisconnectedEventDetail = undefined;
+export class DisconnectedEventDetail {}
 
 export class DragCancelEventDetail {
 	public target: HTMLElement;
@@ -63,6 +63,44 @@ export class DragStartEventDetail {
 		this.target = target;
 		this.clientX = clientX;
 		this.clientY = clientY;
+	}
+}
+
+export class ScrollBoundsChangeEventDetail {
+	public hValueStartPrev: number;
+
+	public hValueEndPrev: number;
+
+	public vValueStartPrev: number;
+
+	public vValueEndPrev: number;
+
+	public hValueStart: number;
+
+	public hValueEnd: number;
+
+	public vValueStart: number;
+
+	public vValueEnd: number;
+
+	public constructor(
+		hValueStartPrev: number,
+		hValueEndPrev: number,
+		vValueStartPrev: number,
+		vValueEndPrev: number,
+		hValueStart: number,
+		hValueEnd: number,
+		vValueStart: number,
+		vValueEnd: number,
+	) {
+		this.hValueStartPrev = hValueStartPrev;
+		this.hValueEndPrev = hValueEndPrev;
+		this.vValueStartPrev = vValueStartPrev;
+		this.vValueEndPrev = vValueEndPrev;
+		this.hValueStart = hValueStart;
+		this.hValueEnd = hValueEnd;
+		this.vValueStart = vValueStart;
+		this.vValueEnd = vValueEnd;
 	}
 }
 

@@ -96,13 +96,13 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 			if (event) {
 				this.dispatchEvent(
-					new CustomEvent<DragEndEventDetail>("end", {
+					new CustomEvent("end", {
 						detail: new DragEndEventDetail(target),
 					}),
 				);
 			} else {
 				this.dispatchEvent(
-					new CustomEvent<DragCancelEventDetail>("cancel", {
+					new CustomEvent("cancel", {
 						detail: new DragCancelEventDetail(target),
 					}),
 				);
@@ -124,7 +124,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 			const y = event.clientY;
 
 			this.dispatchEvent(
-				new CustomEvent<DragMoveEventDetail>("move", {
+				new CustomEvent("move", {
 					detail: new DragMoveEventDetail(
 						activeState.target,
 						activeState.xPrevious,
@@ -216,7 +216,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 				window.addEventListener("blur", onCancel, onceOptions);
 
 				this.dispatchEvent(
-					new CustomEvent<DragStartEventDetail>("start", {
+					new CustomEvent("start", {
 						detail: new DragStartEventDetail(target, x, y),
 					}),
 				);

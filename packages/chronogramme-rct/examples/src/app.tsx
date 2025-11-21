@@ -10,9 +10,9 @@ import {
 	useState,
 } from "react";
 import "./styles.css";
-import { type BaseGroup, TIME_MAX, TIME_MIN } from "@chronogramme/chronogramme";
+import { TIME_MAX, TIME_MIN } from "@chronogramme/chronogramme";
 import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
-import type { BaseItem } from "../../src/timeline";
+import type { BaseGroup, BaseItem } from "../../src/timeline";
 
 const timelineClass = css`
 	flex: none;
@@ -133,12 +133,12 @@ export function App(): ReactNode {
 		};
 
 	useEffect(() => {
-		const newGroups: { id: number; lineSize: number }[] = [];
+		const newGroups: BaseGroup<number>[] = [];
 
 		for (let i = 0; i < GROUP_COUNT; i++) {
 			newGroups.push({
 				id: i,
-				lineSize: i % 2 ? 10 : 20,
+				lineHeight: i % 2 ? 10 : 20,
 			});
 		}
 
