@@ -1,5 +1,9 @@
 import { parseBooleanAttribute } from "./boolean";
-import { GroupPositionsState } from "./groupPositionsState";
+import {
+	GroupPositionsState,
+	type ItemDragValidator,
+	type ItemResizeValidator,
+} from "./groupPositionsState";
 import { parseFloatAttribute, ZERO } from "./math";
 import "./scroller";
 import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./scroller";
@@ -112,11 +116,17 @@ export class Timeline<
 		);
 	}
 
-	public itemDrag(clientX: number, clientY: number): void {
+	public itemDrag(
+		clientX: number,
+		clientY: number,
+	):
+		| { endTime: number; groupId: TGroupId; id: TItemId; startTime: number }
+		| undefined {
 		const rect = this.getBoundingClientRect();
 
-		this.#groupPositionsState.itemDrag(
+		return this.#groupPositionsState.itemDrag(
 			this.getHValue(clientX - rect.left),
+
 			this.vScrollPos + clientY - rect.top,
 		);
 	}
@@ -145,10 +155,19 @@ export class Timeline<
 		);
 	}
 
-	public itemResize(clientX: number): void {
+	public itemResize(clientX: number):
+		| {
+				endTime: number;
+				id: TItemId;
+				isStart: boolean;
+				startTime: number;
+		  }
+		| undefined {
 		const rect = this.getBoundingClientRect();
 
-		this.#groupPositionsState.itemResize(this.getHValue(clientX - rect.left));
+		return this.#groupPositionsState.itemResize(
+			this.getHValue(clientX - rect.left),
+		);
 	}
 
 	public itemResizeCancel(): void {
@@ -159,9 +178,7 @@ export class Timeline<
 		| {
 				endTime: number;
 				id: TItemId;
-		  }
-		| {
-				id: TItemId;
+				isStart: boolean;
 				startTime: number;
 		  }
 		| undefined {
@@ -188,6 +205,18 @@ export class Timeline<
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
 		this.#groupPositionsState.setGroups(groups);
+	}
+
+	public setItemDragValidator(
+		itemDragValidator: ItemDragValidator<TItem> | undefined,
+	): void {
+		this.#groupPositionsState.setItemDragValidator(itemDragValidator);
+	}
+
+	public setItemResizeValidator(
+		itemResizeValidator: ItemResizeValidator<TItem> | undefined,
+	): void {
+		this.#groupPositionsState.setItemResizeValidator(itemResizeValidator);
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {

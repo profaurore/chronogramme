@@ -173,10 +173,27 @@ interface TimelineProps<
 	}) => ReactNode;
 	items: TItem[];
 	lineHeight?: number;
+	moveResizeValidator?(action: "move", itemId: number, time: number): number;
+	moveResizeValidator?(
+		action: "resize",
+		itemId: number,
+		time: number,
+		resizeEdge: "left" | "right",
+	): number;
 	onBoundsChange?: (canvasTimeStart: number, canvasTimeEnd: number) => void;
 	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
 	onItemDoubleClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
+	onItemDrag?: (
+		itemDragObject:
+			| { eventType: "move"; itemId: number; time: number; newGroupId: number }
+			| {
+					eventType: "resize";
+					itemId: number;
+					time: number;
+					edge: "left" | "right";
+			  },
+	) => void;
 	onItemMove?: (
 		itemId: number,
 		dragTime: number,
@@ -306,10 +323,12 @@ function RenderedTimeline<
 	itemHeightRatio = 0.65,
 	itemRenderer,
 	lineHeight = 30,
+	moveResizeValidator,
 	onBoundsChange,
 	onItemContextMenu,
 	onItemDeselect,
 	onItemDoubleClick,
+	onItemDrag,
 	onItemMove,
 	onItemResize,
 	onItemSelect,
@@ -339,6 +358,55 @@ function RenderedTimeline<
 	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
 
 	useEffect(() => {
+		const timeline = timelineRef.current;
+
+		if (timeline) {
+			if (moveResizeValidator === undefined) {
+				timeline.setItemDragValidator(undefined);
+				timeline.setItemResizeValidator(undefined);
+			} else {
+				timeline.setItemDragValidator(
+					function itemDragValidator(item, startTime) {
+						const validatedStartTime = moveResizeValidator(
+							"move",
+							item.id,
+							startTime,
+						);
+
+						const delta = item.endTime - item.startTime;
+
+						return {
+							endTime: validatedStartTime + delta,
+							startTime: validatedStartTime,
+						};
+					},
+				);
+
+				timeline.setItemResizeValidator(
+					function itemResizeValidator(item, isStart, time) {
+						const validatedTime = moveResizeValidator(
+							"resize",
+							item.id,
+							time,
+							isStart ? "left" : "right",
+						);
+
+						return isStart
+							? {
+									endTime: item.endTime,
+									startTime: validatedTime,
+								}
+							: {
+									endTime: validatedTime,
+									startTime: item.startTime,
+								};
+					},
+				);
+			}
+		}
+	}, [moveResizeValidator, timelineRef]);
+
+	useEffect(() => {
 		const itemDragState = itemDragStateRef.current;
 		const timeline = timelineRef.current;
 
@@ -353,7 +421,16 @@ function RenderedTimeline<
 						const detail = event.detail;
 
 						if (detail instanceof DragMoveEventDetail) {
-							timeline.itemDrag(detail.x, detail.y);
+							const result = timeline.itemDrag(detail.x, detail.y);
+
+							if (result) {
+								onItemDrag?.({
+									eventType: "move",
+									itemId: result.id,
+									time: result.startTime,
+									newGroupId: result.groupId,
+								});
+							}
 						}
 					}
 				},
@@ -391,7 +468,7 @@ function RenderedTimeline<
 		}
 
 		return undefined;
-	}, [onItemMove, timelineRef]);
+	}, [onItemDrag, onItemMove, timelineRef]);
 
 	useEffect(() => {
 		const itemResizeState = itemResizeStateRef.current;
@@ -425,7 +502,7 @@ function RenderedTimeline<
 						const result = timeline.itemResizeEnd(skipRender);
 
 						if (result) {
-							if ("startTime" in result) {
+							if (result.isStart) {
 								onItemResize?.(result.id, result.startTime, "left");
 							} else {
 								onItemResize?.(result.id, result.endTime, "right");

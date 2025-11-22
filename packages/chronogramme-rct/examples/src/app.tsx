@@ -10,7 +10,7 @@ import {
 	useState,
 } from "react";
 import "./styles.css";
-import { TIME_MAX, TIME_MIN } from "@chronogramme/chronogramme";
+import { TIME_MAX, TIME_MIN, UNIT } from "@chronogramme/chronogramme";
 import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
 import type { BaseGroup, BaseItem } from "../../src/timeline";
 
@@ -26,7 +26,8 @@ const buttonsClass = css`
 	gap: 5px;
 `;
 
-const daysInWeek = 7;
+const DAYS_IN_WEEK = 7;
+const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const formatter = new Intl.DateTimeFormat("en-CA", {
 	year: "numeric",
@@ -54,7 +55,7 @@ function formatDateRange(start: number, end: number): string {
 function datesFromStartDate(start: number): [number, number] {
 	return [
 		start,
-		new Date(start).setDate(new Date(start).getDate() + daysInWeek),
+		new Date(start).setDate(new Date(start).getDate() + DAYS_IN_WEEK),
 	];
 }
 
@@ -92,7 +93,7 @@ export function App(): ReactNode {
 	const onEndOfTimeClickHandler: MouseEventHandler = () => {
 		setWindow(
 			datesFromStartDate(
-				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - daysInWeek),
+				new Date(TIME_MAX).setDate(new Date(TIME_MAX).getDate() - DAYS_IN_WEEK),
 			),
 		);
 	};
@@ -231,6 +232,38 @@ export function App(): ReactNode {
 		);
 	}, []);
 
+	const moveResizeValidator = useCallback<
+		Exclude<ComponentProps<typeof RCTimeline>["moveResizeValidator"], undefined>
+	>(
+		(action, itemId, time, resizeEdge?) => {
+			const item = items.find((i) => i.id === itemId);
+
+			if (!item) {
+				return time;
+			}
+
+			const dayAlignedTime =
+				Math.round(time / MILLISECONDS_PER_DAY) * MILLISECONDS_PER_DAY;
+
+			if (action === "move") {
+				return dayAlignedTime;
+			}
+
+			return resizeEdge === "right"
+				? Math.max(
+						dayAlignedTime,
+						(Math.floor(item.start_time / MILLISECONDS_PER_DAY) + UNIT) *
+							MILLISECONDS_PER_DAY,
+					)
+				: Math.min(
+						dayAlignedTime,
+						(Math.ceil(item.end_time / MILLISECONDS_PER_DAY) - UNIT) *
+							MILLISECONDS_PER_DAY,
+					);
+		},
+		[items],
+	);
+
 	const rctId = useId();
 
 	return (
@@ -264,6 +297,7 @@ export function App(): ReactNode {
 				groups={groups}
 				itemRenderer={itemRenderer}
 				items={items}
+				moveResizeValidator={moveResizeValidator}
 				onItemMove={onItemMoveHandler}
 				onItemResize={onItemResizeHandler}
 				onTimeChange={onTimeChangeHandler}

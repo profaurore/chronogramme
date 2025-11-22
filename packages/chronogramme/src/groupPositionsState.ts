@@ -1,5 +1,6 @@
 import { layoutGroupRows } from "./groupLayout";
-import { clampMinWins, UNIT, ZERO } from "./math";
+import { clampMinWins, UNIT, validateNumberInterval, ZERO } from "./math";
+import { validateObject } from "./object";
 import type { BaseGroup, BaseItem } from "./timeline";
 import { yieldToMain } from "./yieldToMain";
 
@@ -15,6 +16,18 @@ const GROUP_OVERDRAW_DEFAULT = 100;
 
 const ASYNC_PROCESSING_SIZE_DEFAULT = 1_000_000;
 
+export type ItemDragValidator<TItem> = (
+	item: TItem,
+	startTime: number,
+	endTime: number,
+) => { startTime: number; endTime: number };
+
+export type ItemResizeValidator<TItem> = (
+	item: TItem,
+	isStart: boolean,
+	time: number,
+) => { startTime: number; endTime: number };
+
 // interface ScrollReference<TGroupId = number> {
 // 	groupId: TGroupId;
 // 	groupIdx: number;
@@ -28,6 +41,8 @@ export class GroupPositionsState<
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > extends EventTarget {
 	readonly #asyncProcessingSize: number;
+
+	#itemDragValidator: ItemDragValidator<TItem> | undefined;
 
 	#groups: readonly Readonly<TGroup>[];
 
@@ -69,6 +84,8 @@ export class GroupPositionsState<
 	#itemWindowMin: number;
 
 	#lineSize: number;
+
+	#itemResizeValidator: ItemResizeValidator<TItem> | undefined;
 
 	// The reference is the distance from the bottom of the first group in the
 	// view.
@@ -281,6 +298,18 @@ export class GroupPositionsState<
 		void this.prepareItemGroups();
 	}
 
+	public setItemDragValidator(
+		itemDragValidator: ItemDragValidator<TItem> | undefined,
+	): void {
+		this.#itemDragValidator = itemDragValidator;
+	}
+
+	public setItemResizeValidator(
+		itemResizeValidator: ItemResizeValidator<TItem> | undefined,
+	): void {
+		this.#itemResizeValidator = itemResizeValidator;
+	}
+
 	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
 		this.#itemWindowMin = itemWindowMin;
 		this.#itemWindowMax = itemWindowMax;
@@ -334,7 +363,12 @@ export class GroupPositionsState<
 		this.#groupSizes.length = ZERO;
 	}
 
-	public itemDrag(dragTime: number, dragGroupPos: number): void {
+	public itemDrag(
+		dragTime: number,
+		dragGroupPos: number,
+	):
+		| { endTime: number; groupId: TGroupId; id: TItemId; startTime: number }
+		| undefined {
 		const itemChangeState = this.#itemChangeState;
 
 		if (
@@ -357,10 +391,10 @@ export class GroupPositionsState<
 			const newEndTime = newStartTime + (initEndTime - initStartTime);
 
 			const [dragGroupIndex] = this.getGroupByPosition(dragGroupPos);
-			const newGroupId = this.#groups[dragGroupIndex]?.id;
+			const newGroupId = this.#groups[dragGroupIndex]?.id ?? groupId;
 
 			const itemHMoved = newStartTime !== startTime || newEndTime !== endTime;
-			const itemVMoved = newGroupId !== undefined && newGroupId !== groupId;
+			const itemVMoved = newGroupId !== groupId;
 
 			if (itemVMoved) {
 				const newGroupIndex = this.getGroupIndex(newGroupId);
@@ -377,17 +411,36 @@ export class GroupPositionsState<
 					this.#groupPositions.splice(groupIndex);
 				}
 
-				const newItem = { ...initItem };
-				newItem.startTime = newStartTime;
-				newItem.endTime = newEndTime;
-				if (newGroupId !== undefined) {
-					newItem.groupId = newGroupId;
-				}
+				const validatedTimes = this.#itemDragValidator?.(
+					initItem,
+					newStartTime,
+					newEndTime,
+				);
+				this.validateItemChangeValidatorReturn<ItemDragValidator<TItem>>(
+					"itemDragValidator",
+					validatedTimes,
+				);
+
+				const newItem = {
+					...initItem,
+					startTime: validatedTimes?.startTime ?? newStartTime,
+					endTime: validatedTimes?.endTime ?? newEndTime,
+					groupId: newGroupId,
+				};
 				itemChangeState.newItem = newItem;
 
 				this.dispatchEvent(new CustomEvent("renderRequest"));
+
+				return {
+					endTime: newItem.endTime,
+					groupId: newItem.groupId,
+					id: newItem.id,
+					startTime: newItem.startTime,
+				};
 			}
 		}
+
+		return undefined;
 	}
 
 	public itemDragCancel(): void {
@@ -479,7 +532,14 @@ export class GroupPositionsState<
 		}
 	}
 
-	public itemResize(resizeTime: number): void {
+	public itemResize(resizeTime: number):
+		| {
+				endTime: number;
+				id: TItemId;
+				isStart: boolean;
+				startTime: number;
+		  }
+		| undefined {
 		const itemChangeState = this.#itemChangeState;
 
 		if (
@@ -509,19 +569,35 @@ export class GroupPositionsState<
 					this.#groupPositions.splice(groupIndex);
 				}
 
-				const newItem = { ...initItem };
+				const validatedTimes = this.#itemResizeValidator?.(
+					initItem,
+					isStart,
+					newTime,
+				);
+				this.validateItemChangeValidatorReturn<ItemResizeValidator<TItem>>(
+					"itemResizeValidator",
+					validatedTimes,
+				);
 
-				if (isStart) {
-					newItem.startTime = newTime;
-				} else {
-					newItem.endTime = newTime;
-				}
-
+				const newItem = {
+					...initItem,
+					startTime: validatedTimes.startTime,
+					endTime: validatedTimes.endTime,
+				};
 				itemChangeState.newItem = newItem;
 
 				this.dispatchEvent(new CustomEvent("renderRequest"));
+
+				return {
+					endTime: newItem.endTime,
+					id: newItem.id,
+					isStart,
+					startTime: newItem.startTime,
+				};
 			}
 		}
+
+		return undefined;
 	}
 
 	public itemResizeCancel(): void {
@@ -541,9 +617,7 @@ export class GroupPositionsState<
 		| {
 				endTime: number;
 				id: TItemId;
-		  }
-		| {
-				id: TItemId;
+				isStart: boolean;
 				startTime: number;
 		  }
 		| undefined {
@@ -559,15 +633,12 @@ export class GroupPositionsState<
 
 			const newItem = itemChangeState.newItem;
 
-			return itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
-				? {
-						id: newItem.id,
-						startTime: newItem.startTime,
-					}
-				: {
-						id: newItem.id,
-						endTime: newItem.endTime,
-					};
+			return {
+				endTime: newItem.endTime,
+				id: newItem.id,
+				isStart: itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart,
+				startTime: newItem.startTime,
+			};
 		}
 
 		return undefined;
@@ -883,6 +954,27 @@ export class GroupPositionsState<
 		this.clearItemCaches();
 
 		this.dispatchEvent(new CustomEvent("renderRequest"));
+	}
+
+	private validateItemChangeValidatorReturn<
+		// biome-ignore lint/suspicious/noExplicitAny: Generic type.
+		TValidator extends (...args: any[]) => unknown,
+	>(
+		validatorName: string,
+		value: unknown,
+	): asserts value is ReturnType<TValidator> {
+		if (value === undefined) {
+			return;
+		}
+
+		validateObject(`${validatorName}()`, value, ["endTime", "startTime"], []);
+
+		validateNumberInterval(
+			`${validatorName}().startTime`,
+			`${validatorName}().end`,
+			`${validatorName}()`,
+			[value.startTime, value.endTime],
+		);
 	}
 
 	// private updateVScrollPos() {

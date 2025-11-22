@@ -297,15 +297,6 @@ export function validatePosition(
 	}
 }
 
-/**
- * Clamps a value between two values.
- *
- * - If the value is less than `minimum`, `minimum` is returned.
- * - If the value is more than `maximum`, `maximum` is returned.
- *
- * @param valueName The name of the number value.
- * @param value The value to be clamped. Must be a finite or infinite number.
- */
 function validateNumber(
 	valueName: string,
 	value: unknown,
