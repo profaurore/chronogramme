@@ -130,6 +130,22 @@ export class GroupPositionsState<
 		this.#items = [];
 	}
 
+	public getDragOffset(): number | undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		return itemChangeState?.changeType === ITEM_CHANGE_TYPE.drag
+			? itemChangeState.item.startTime - itemChangeState.triggerTime
+			: undefined;
+	}
+
+	public getDraggedItem(): TItem | undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		return itemChangeState?.changeType === ITEM_CHANGE_TYPE.drag
+			? itemChangeState.newItem
+			: undefined;
+	}
+
 	public getGroup(index: number): Readonly<TGroup> | undefined {
 		const groups = this.#groups;
 
@@ -199,6 +215,39 @@ export class GroupPositionsState<
 		const lineHeight = this.getGroupLineSize(groupIndex);
 
 		return lineIndex * lineHeight;
+	}
+
+	public getResizeIsStart(): boolean | undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		return itemChangeState !== undefined &&
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			? itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
+			: undefined;
+	}
+
+	public getResizeOffset(): number | undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState === undefined ||
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			return undefined;
+		}
+
+		return itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
+			? itemChangeState.item.startTime - itemChangeState.triggerTime
+			: itemChangeState.item.endTime - itemChangeState.triggerTime;
+	}
+
+	public getResizedItem(): TItem | undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		return itemChangeState !== undefined &&
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			? itemChangeState.newItem
+			: undefined;
 	}
 
 	public *getVisibleGroupsIter(): Generator<number, void, undefined> {

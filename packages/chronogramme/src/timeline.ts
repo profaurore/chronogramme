@@ -72,6 +72,14 @@ export class Timeline<
 		super.setVScrollResizeStrategy("preserveUnitPerPixel");
 	}
 
+	public getDragOffset(): number | undefined {
+		return this.#groupPositionsState.getDragOffset();
+	}
+
+	public getDraggedItem(): TItem | undefined {
+		return this.#groupPositionsState.getDraggedItem();
+	}
+
 	public getGroup(groupIndex: number): Readonly<TGroup> | undefined {
 		return this.#groupPositionsState.getGroup(groupIndex);
 	}
@@ -94,6 +102,18 @@ export class Timeline<
 
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
 		return this.#groupPositionsState.getLinePosition(groupIndex, lineIndex);
+	}
+
+	public getResizedItem(): TItem | undefined {
+		return this.#groupPositionsState.getResizedItem();
+	}
+
+	public getResizeIsStart(): boolean | undefined {
+		return this.#groupPositionsState.getResizeIsStart();
+	}
+
+	public getResizeOffset(): number | undefined {
+		return this.#groupPositionsState.getResizeOffset();
 	}
 
 	public getVisibleGroupsIter(): Generator<number, void, undefined> {

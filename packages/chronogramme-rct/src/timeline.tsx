@@ -60,13 +60,14 @@ function addClass(current: string, optional?: string): string {
 
 export interface BaseItem<TItemId = number, TGroupId = number> {
 	canMove?: boolean | undefined;
-	canResize?: false | "left" | "right" | "both";
+	canResize?: false | "left" | "right" | "both" | undefined;
 	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
 	end_time: EpochTimeStamp;
 	group: TGroupId;
 	id: TItemId;
 	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
 	start_time: EpochTimeStamp;
+	title?: string | undefined;
 }
 
 export interface BaseGroup<TGroupId = number> {
@@ -81,6 +82,7 @@ interface TimelineProps<
 > {
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
+	canSelect?: boolean | undefined;
 	className?: string | undefined;
 	dragSnap?: number | undefined;
 	groupRenderer: (props: {
@@ -151,20 +153,21 @@ interface TimelineProps<
 				height: number;
 				left: number;
 				stack: boolean;
-				top: number | null;
+				top: number;
 				width: number;
 			};
 			dragging: boolean;
-			dragTime: number | null;
-			resizeEdge: "left" | "right" | null;
-			resizeStart: number | null;
-			resizeTime: number | null;
+			dragOffset: number | undefined;
+			dragTime: number | undefined;
+			newGroupId: number | undefined;
+			resizeEdge: "left" | "right" | undefined;
+			resizeOffset: number | undefined;
+			resizeTime: number | undefined;
 			resizing: boolean;
 			selected: boolean;
+			title: string | undefined;
 			useResizeHandle: boolean;
 			width: number;
-			dragOffset: number;
-			newGroupId: number;
 		};
 		key: string;
 		timelineContext: {
@@ -186,6 +189,7 @@ interface TimelineProps<
 		resizeEdge: "left" | "right",
 	): number;
 	onBoundsChange?: (canvasTimeStart: number, canvasTimeEnd: number) => void;
+	onItemClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
 	onItemDoubleClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
@@ -223,6 +227,7 @@ interface TimelineProps<
 		key: string;
 		rowData: TRowData;
 	}) => ReactNode;
+	selected?: number[] | undefined;
 	sidebarWidth?: number;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
@@ -322,6 +327,7 @@ function RenderedTimeline<
 >({
 	canMove = true,
 	canResize = "right",
+	canSelect = true,
 	className,
 	dragSnap = FIFTEEN_MINUTES,
 	groupRenderer,
@@ -332,8 +338,9 @@ function RenderedTimeline<
 	moveResizeValidator,
 	minResizeWidth = 20,
 	onBoundsChange,
+	onItemClick,
 	onItemContextMenu,
-	onItemDeselect,
+	// onItemDeselect, // TODO: For the row context provider
 	onItemDoubleClick,
 	onItemDrag,
 	onItemMove,
@@ -342,6 +349,7 @@ function RenderedTimeline<
 	onTimeChange,
 	rowData,
 	rowRenderer,
+	selected,
 	sidebarWidth = 150,
 	timelineRef,
 	visibleTimeEnd,
@@ -357,9 +365,7 @@ function RenderedTimeline<
 		>
 	> | null>;
 }) {
-	const [selectedItemIds, _setSelectedItemIds] = useState<Set<number>>(
-		new Set(),
-	);
+	const [selectedItemId, setSelectedItemId] = useState<number>();
 
 	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
 	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
@@ -613,6 +619,10 @@ function RenderedTimeline<
 	const timeline = timelineRef?.current;
 
 	if (timeline) {
+		const draggedItem = timeline.getDraggedItem();
+		const resizedItem = timeline.getResizedItem();
+		const isResizingStart = timeline.getResizeIsStart();
+
 		const timelineContext = {
 			canvasTimeEnd: timeline.getHValue(timeline.scrollWidth),
 			canvasTimeStart: timeline.getHValue(ZERO),
@@ -684,9 +694,10 @@ function RenderedTimeline<
 						continue;
 					}
 
-					const startTime = item.startTime;
 					const endTime = item.endTime;
 					const itemId = item.id;
+					const originalItem = item.originalItem;
+					const startTime = item.startTime;
 
 					const hStartPos = Math.max(timeline.getHPos(startTime), ZERO);
 					const hEndPos = Math.min(
@@ -700,9 +711,36 @@ function RenderedTimeline<
 						(item.isStartResizable ?? canResizeLeft) && hSize >= minResizeWidth;
 					const itemCanResizeRight =
 						(item.isEndResizable ?? canResizeRight) && hSize >= minResizeWidth;
-					const itemIsDragging = false;
-					const itemIsSelected = selectedItemIds.has(item.id);
-					const itemIsSelectable = true;
+					const itemIsDragging = itemId === draggedItem?.id;
+					const itemIsResizing = itemId === resizedItem?.id;
+					const itemIsSelected =
+						selectedItemId !== undefined
+							? itemId === selectedItemId
+							: (selected?.includes(itemId) ?? false);
+					const itemIsSelectable = canSelect;
+
+					let dragOffset: number | undefined;
+					let dragTime: number | undefined;
+					let resizeEdge: "left" | "right" | undefined;
+					let resizeOffset: number | undefined;
+					let resizeTime: number | undefined;
+
+					if (itemIsDragging) {
+						dragOffset = timeline.getDragOffset();
+						dragTime = draggedItem.startTime;
+					}
+
+					if (itemIsResizing) {
+						resizeOffset = timeline.getResizeOffset();
+
+						if (isResizingStart) {
+							resizeEdge = "left";
+							resizeTime = resizedItem.startTime;
+						} else {
+							resizeEdge = "right";
+							resizeTime = resizedItem.endTime;
+						}
+					}
 
 					renderedItems.push(
 						itemRenderer({
@@ -717,14 +755,13 @@ function RenderedTimeline<
 												event.stopPropagation();
 
 												if (itemIsSelectable) {
+													const time = timeline.getHValue(nativeEvent.clientX);
+
 													if (itemIsSelected) {
-														onItemDeselect?.(event);
+														onItemClick?.(itemId, event, time);
 													} else {
-														onItemSelect?.(
-															itemId,
-															event,
-															timeline.getHValue(nativeEvent.clientX),
-														);
+														setSelectedItemId(itemId);
+														onItemSelect?.(itemId, event, time);
 													}
 												}
 											}
@@ -881,7 +918,7 @@ function RenderedTimeline<
 									},
 								};
 							},
-							item: item.originalItem,
+							item: originalItem,
 							itemContext: {
 								canMove: itemCanMove,
 								canResizeLeft: itemCanResizeLeft,
@@ -895,17 +932,18 @@ function RenderedTimeline<
 									top: itemVStartPos,
 									width: hSize,
 								},
-								dragging: false,
-								dragTime: 0,
-								resizeEdge: null,
-								resizeStart: null,
-								resizeTime: null,
-								resizing: false,
+								dragging: itemIsDragging,
+								dragOffset,
+								dragTime,
+								newGroupId: draggedItem?.groupId,
+								resizeEdge,
+								resizeOffset,
+								resizeTime,
+								resizing: itemIsResizing,
 								selected: itemIsSelected,
-								useResizeHandle: false,
+								title: originalItem.title,
+								useResizeHandle: true,
 								width: hSize,
-								dragOffset: 0,
-								newGroupId: 0,
 							},
 							key: `item-${groupId}-${itemId}`,
 							timelineContext,
