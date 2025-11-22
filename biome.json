@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
 	"css": {
 		"formatter": {
 			"enabled": true
@@ -156,7 +156,7 @@
 				"noUnusedFunctionParameters": "error",
 				"noUnusedImports": "error",
 				"noUnusedLabels": "error",
-				"noUnusedPrivateClassMembers": "off",
+				"noUnusedPrivateClassMembers": "error",
 				"noUnusedVariables": "error",
 				"noVoidElementsWithChildren": "error",
 				"noVoidTypeReturn": "error",
