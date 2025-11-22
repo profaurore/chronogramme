@@ -64,6 +64,8 @@ export class GroupPositionsState<
 				triggerTime: number;
 				item: TItem;
 				newItem: TItem;
+				prevRawEndTime: number;
+				prevRawStartTime: number;
 		  }
 		| undefined;
 
@@ -375,7 +377,10 @@ export class GroupPositionsState<
 			itemChangeState &&
 			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
 		) {
+			const itemDragValidator = this.#itemDragValidator;
+
 			const triggerTime = itemChangeState.triggerTime;
+			const prevRawStartTime = itemChangeState.prevRawStartTime;
 
 			const initItem = itemChangeState.item;
 			const initStartTime = initItem.startTime;
@@ -387,8 +392,32 @@ export class GroupPositionsState<
 			const groupId = item.groupId;
 
 			const delta = dragTime - triggerTime;
-			const newStartTime = initStartTime + delta;
-			const newEndTime = newStartTime + (initEndTime - initStartTime);
+			const rawStartTime = initStartTime + delta;
+			const initDelta = initEndTime - initStartTime;
+			const rawEndTime = rawStartTime + initDelta;
+
+			const rawItemHMoved = rawStartTime !== prevRawStartTime;
+
+			let newStartTime: number;
+			let newEndTime: number;
+
+			if (rawItemHMoved && itemDragValidator) {
+				const validatedTimes = itemDragValidator(
+					initItem,
+					rawStartTime,
+					rawEndTime,
+				);
+				this.validateItemChangeValidatorReturn<ItemDragValidator<TItem>>(
+					"itemDragValidator",
+					validatedTimes,
+				);
+
+				newStartTime = validatedTimes.startTime;
+				newEndTime = validatedTimes.endTime;
+			} else {
+				newStartTime = rawStartTime;
+				newEndTime = rawEndTime;
+			}
 
 			const [dragGroupIndex] = this.getGroupByPosition(dragGroupPos);
 			const newGroupId = this.#groups[dragGroupIndex]?.id ?? groupId;
@@ -411,23 +440,15 @@ export class GroupPositionsState<
 					this.#groupPositions.splice(groupIndex);
 				}
 
-				const validatedTimes = this.#itemDragValidator?.(
-					initItem,
-					newStartTime,
-					newEndTime,
-				);
-				this.validateItemChangeValidatorReturn<ItemDragValidator<TItem>>(
-					"itemDragValidator",
-					validatedTimes,
-				);
-
 				const newItem = {
 					...initItem,
-					startTime: validatedTimes?.startTime ?? newStartTime,
-					endTime: validatedTimes?.endTime ?? newEndTime,
+					startTime: newStartTime,
+					endTime: newEndTime,
 					groupId: newGroupId,
 				};
 				itemChangeState.newItem = newItem;
+				itemChangeState.prevRawStartTime = rawStartTime;
+				itemChangeState.prevRawEndTime = rawEndTime;
 
 				this.dispatchEvent(new CustomEvent("renderRequest"));
 
@@ -496,6 +517,8 @@ export class GroupPositionsState<
 				triggerTime: dragTime,
 				item: draggedItem,
 				newItem: { ...draggedItem },
+				prevRawEndTime: draggedItem.endTime,
+				prevRawStartTime: draggedItem.startTime,
 			};
 		}
 	}
@@ -512,6 +535,8 @@ export class GroupPositionsState<
 				triggerTime: resizeTime,
 				item: resizedItem,
 				newItem: { ...resizedItem },
+				prevRawEndTime: resizedItem.endTime,
+				prevRawStartTime: resizedItem.startTime,
 			};
 		}
 	}
@@ -528,6 +553,8 @@ export class GroupPositionsState<
 				triggerTime: resizeTime,
 				item: resizedItem,
 				newItem: { ...resizedItem },
+				prevRawEndTime: resizedItem.endTime,
+				prevRawStartTime: resizedItem.startTime,
 			};
 		}
 	}
@@ -546,21 +573,59 @@ export class GroupPositionsState<
 			itemChangeState &&
 			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
 		) {
+			const itemResizeValidator = this.#itemResizeValidator;
+
 			const triggerTime = itemChangeState.triggerTime;
 			const isStart =
 				itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart;
 
 			const initItem = itemChangeState.item;
-			const initTime = isStart ? initItem.startTime : initItem.endTime;
+			const initStartTime = initItem.startTime;
+			const initEndTime = initItem.endTime;
 
 			const item = itemChangeState.newItem;
-			const time = isStart ? item.startTime : item.endTime;
+			const startTime = item.startTime;
+			const endTime = item.endTime;
 			const groupId = item.groupId;
 
 			const delta = resizeTime - triggerTime;
-			const newTime = initTime + delta;
+			let prevRawTime: number;
+			let rawTime: number;
+			let rawStartTime: number;
+			let rawEndTime: number;
 
-			const itemHMoved = newTime !== time;
+			if (isStart) {
+				prevRawTime = itemChangeState.prevRawStartTime;
+				rawTime = initStartTime + delta;
+				rawStartTime = rawTime;
+				rawEndTime = initEndTime;
+			} else {
+				prevRawTime = itemChangeState.prevRawEndTime;
+				rawTime = initEndTime + delta;
+				rawStartTime = initStartTime;
+				rawEndTime = rawTime;
+			}
+
+			const itemHRawMoved = rawTime !== prevRawTime;
+
+			let newStartTime: number;
+			let newEndTime: number;
+
+			if (itemHRawMoved && itemResizeValidator) {
+				const validatedTimes = itemResizeValidator(initItem, isStart, rawTime);
+				this.validateItemChangeValidatorReturn<ItemResizeValidator<TItem>>(
+					"itemResizeValidator",
+					validatedTimes,
+				);
+
+				newStartTime = validatedTimes.startTime;
+				newEndTime = validatedTimes.endTime;
+			} else {
+				newStartTime = rawStartTime;
+				newEndTime = rawEndTime;
+			}
+
+			const itemHMoved = newStartTime !== startTime || newEndTime !== endTime;
 
 			if (itemHMoved) {
 				const groupIndex = this.getGroupIndex(groupId);
@@ -569,22 +634,14 @@ export class GroupPositionsState<
 					this.#groupPositions.splice(groupIndex);
 				}
 
-				const validatedTimes = this.#itemResizeValidator?.(
-					initItem,
-					isStart,
-					newTime,
-				);
-				this.validateItemChangeValidatorReturn<ItemResizeValidator<TItem>>(
-					"itemResizeValidator",
-					validatedTimes,
-				);
-
 				const newItem = {
 					...initItem,
-					startTime: validatedTimes.startTime,
-					endTime: validatedTimes.endTime,
+					startTime: newStartTime,
+					endTime: newEndTime,
 				};
 				itemChangeState.newItem = newItem;
+				itemChangeState.prevRawStartTime = rawStartTime;
+				itemChangeState.prevRawEndTime = rawEndTime;
 
 				this.dispatchEvent(new CustomEvent("renderRequest"));
 
