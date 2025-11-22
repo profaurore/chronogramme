@@ -177,6 +177,7 @@ interface TimelineProps<
 	}) => ReactNode;
 	items: TItem[];
 	lineHeight?: number | undefined;
+	minResizeWidth?: number | undefined;
 	moveResizeValidator?(action: "move", itemId: number, time: number): number;
 	moveResizeValidator?(
 		action: "resize",
@@ -329,6 +330,7 @@ function RenderedTimeline<
 	itemRenderer,
 	lineHeight = 30,
 	moveResizeValidator,
+	minResizeWidth = 20,
 	onBoundsChange,
 	onItemContextMenu,
 	onItemDeselect,
@@ -686,19 +688,21 @@ function RenderedTimeline<
 					const endTime = item.endTime;
 					const itemId = item.id;
 
-					const itemCanMove = item.isDraggable ?? canMove;
-					const itemCanResizeLeft = item.isStartResizable ?? canResizeLeft;
-					const itemCanResizeRight = item.isEndResizable ?? canResizeRight;
-					const itemIsDragging = false;
-					const itemIsSelected = selectedItemIds.has(item.id);
-					const itemIsSelectable = true;
-
 					const hStartPos = Math.max(timeline.getHPos(startTime), ZERO);
 					const hEndPos = Math.min(
 						timeline.getHPos(endTime),
 						timeline.hScrollSize,
 					);
 					const hSize = hEndPos - hStartPos;
+
+					const itemCanMove = item.isDraggable ?? canMove;
+					const itemCanResizeLeft =
+						(item.isStartResizable ?? canResizeLeft) && hSize >= minResizeWidth;
+					const itemCanResizeRight =
+						(item.isEndResizable ?? canResizeRight) && hSize >= minResizeWidth;
+					const itemIsDragging = false;
+					const itemIsSelected = selectedItemIds.has(item.id);
+					const itemIsSelectable = true;
 
 					renderedItems.push(
 						itemRenderer({
