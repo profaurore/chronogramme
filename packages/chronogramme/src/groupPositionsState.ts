@@ -77,6 +77,10 @@ export class GroupPositionsState<
 
 	#itemsDraggable: boolean;
 
+	#itemTimeSnap: number | undefined;
+
+	#timezoneOffset: number | undefined;
+
 	#itemsEndResizable: boolean;
 
 	#itemsStartResizable: boolean;
@@ -312,6 +316,10 @@ export class GroupPositionsState<
 		this.#itemResizeValidator = itemResizeValidator;
 	}
 
+	public setItemTimeSnap(itemTimeSnap: number | undefined): void {
+		this.#itemTimeSnap = itemTimeSnap;
+	}
+
 	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
 		this.#itemWindowMin = itemWindowMin;
 		this.#itemWindowMax = itemWindowMax;
@@ -365,6 +373,10 @@ export class GroupPositionsState<
 		this.#groupSizes.length = ZERO;
 	}
 
+	public setTimezoneOffset(timezoneOffset: number | undefined): void {
+		this.#timezoneOffset = timezoneOffset;
+	}
+
 	public itemDrag(
 		dragTime: number,
 		dragGroupPos: number,
@@ -392,7 +404,7 @@ export class GroupPositionsState<
 			const groupId = item.groupId;
 
 			const delta = dragTime - triggerTime;
-			const rawStartTime = initStartTime + delta;
+			const rawStartTime = this.snapItemTime(initStartTime + delta);
 			const initDelta = initEndTime - initStartTime;
 			const rawEndTime = rawStartTime + initDelta;
 
@@ -589,21 +601,21 @@ export class GroupPositionsState<
 			const groupId = item.groupId;
 
 			const delta = resizeTime - triggerTime;
-			let prevRawTime: number;
-			let rawTime: number;
 			let rawStartTime: number;
 			let rawEndTime: number;
+			let prevRawTime: number;
+			let rawTime: number;
 
 			if (isStart) {
-				prevRawTime = itemChangeState.prevRawStartTime;
-				rawTime = initStartTime + delta;
-				rawStartTime = rawTime;
+				rawStartTime = this.snapItemTime(initStartTime + delta);
 				rawEndTime = initEndTime;
+				prevRawTime = itemChangeState.prevRawStartTime;
+				rawTime = rawStartTime;
 			} else {
-				prevRawTime = itemChangeState.prevRawEndTime;
-				rawTime = initEndTime + delta;
 				rawStartTime = initStartTime;
-				rawEndTime = rawTime;
+				rawEndTime = this.snapItemTime(initEndTime + delta);
+				prevRawTime = itemChangeState.prevRawEndTime;
+				rawTime = rawEndTime;
 			}
 
 			const itemHRawMoved = rawTime !== prevRawTime;
@@ -1011,6 +1023,21 @@ export class GroupPositionsState<
 		this.clearItemCaches();
 
 		this.dispatchEvent(new CustomEvent("renderRequest"));
+	}
+
+	private snapItemTime(time: number): number {
+		const itemTimeSnap = this.#itemTimeSnap;
+
+		if (itemTimeSnap === undefined) {
+			return time;
+		}
+
+		const timezoneOffset = this.#timezoneOffset ?? ZERO;
+
+		return (
+			Math.round(time / itemTimeSnap) * itemTimeSnap -
+			(timezoneOffset % itemTimeSnap)
+		);
 	}
 
 	private validateItemChangeValidatorReturn<

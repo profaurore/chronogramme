@@ -26,10 +26,12 @@ export interface BaseGroup<TGroupId = number> {
 
 const TIMELINE_OBSERVED_ATTRIBUTES = [
 	...SCROLLER_OBSERVED_ATTRIBUTES,
+	"item-time-snap",
 	"items-draggable",
 	"items-end-resizable",
 	"items-start-resizable",
 	"line-size",
+	"timezone-offset",
 ] as const;
 
 export class Timeline<
@@ -219,6 +221,10 @@ export class Timeline<
 		this.#groupPositionsState.setItemResizeValidator(itemResizeValidator);
 	}
 
+	public setItemTimeSnap(itemTimeSnap: number | undefined): void {
+		this.#groupPositionsState.setItemTimeSnap(itemTimeSnap);
+	}
+
 	public setItems(items: readonly Readonly<TItem>[]): void {
 		this.#groupPositionsState.setItems(items);
 	}
@@ -241,6 +247,10 @@ export class Timeline<
 		this.#groupPositionsState.setLineSize(lineSize);
 	}
 
+	public setTimezoneOffset(timezoneOffset: number | undefined): void {
+		this.#groupPositionsState.setTimezoneOffset(timezoneOffset);
+	}
+
 	protected override attributeChangedCallback(
 		name: string,
 		oldValue: string | null,
@@ -258,6 +268,11 @@ export class Timeline<
 				break;
 			}
 
+			case "item-time-snap": {
+				this.setItemTimeSnap(parseFloatAttribute(newValue));
+				break;
+			}
+
 			case "items-draggable": {
 				this.setItemsDraggable(parseBooleanAttribute(newValue));
 				break;
@@ -270,6 +285,11 @@ export class Timeline<
 
 			case "items-start-resizable": {
 				this.setItemsStartResizable(parseBooleanAttribute(newValue));
+				break;
+			}
+
+			case "timezone-offset": {
+				this.setTimezoneOffset(parseFloatAttribute(newValue));
 				break;
 			}
 

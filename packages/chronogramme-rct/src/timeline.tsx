@@ -41,6 +41,9 @@ import {
 import type { FullRequired } from "./typeUtils";
 import { composeEvents, useRender } from "./utils";
 
+const MINUTES_TO_MILLISECONDS = 60 * 1000;
+const FIFTEEN_MINUTES = 15 * MINUTES_TO_MILLISECONDS;
+
 type ResizeEdge = "left" | "right";
 
 interface RctToCoreItem<TItem> extends CoreBaseItem {
@@ -76,16 +79,17 @@ interface TimelineProps<
 	TGroup extends BaseGroup,
 	TRowData,
 > {
-	canMove?: boolean;
-	canResize?: false | "left" | "right" | "both";
-	className?: string;
+	canMove?: boolean | undefined;
+	canResize?: false | "left" | "right" | "both" | undefined;
+	className?: string | undefined;
+	dragSnap?: number | undefined;
 	groupRenderer: (props: {
 		group: TGroup;
 		isRightSidebar?: boolean | undefined;
 	}) => ReactNode;
 	groups: TGroup[];
-	id?: string;
-	itemHeightRatio?: number;
+	id?: string | undefined;
+	itemHeightRatio?: number | undefined;
 	itemRenderer: (props: {
 		getItemProps: (
 			params: Pick<
@@ -172,7 +176,7 @@ interface TimelineProps<
 		};
 	}) => ReactNode;
 	items: TItem[];
-	lineHeight?: number;
+	lineHeight?: number | undefined;
 	moveResizeValidator?(action: "move", itemId: number, time: number): number;
 	moveResizeValidator?(
 		action: "resize",
@@ -318,6 +322,7 @@ function RenderedTimeline<
 	canMove = true,
 	canResize = "right",
 	className,
+	dragSnap = FIFTEEN_MINUTES,
 	groupRenderer,
 	id,
 	itemHeightRatio = 0.65,
@@ -907,6 +912,10 @@ function RenderedTimeline<
 		}
 	}
 
+	const timezoneOffset = useMemo(() => {
+		return new Date().getTimezoneOffset() * MINUTES_TO_MILLISECONDS;
+	}, []);
+
 	return (
 		<cg-timeline
 			class={className}
@@ -915,10 +924,12 @@ function RenderedTimeline<
 			h-window={[visibleTimeStart, visibleTimeEnd]}
 			h-extrema={[TIME_MIN, TIME_MAX]}
 			id={id}
+			item-time-snap={dragSnap}
 			items-draggable={canMove}
 			items-end-resizable={canResize === "right" || canResize === "both"}
 			items-start-resizable={canResize === "left" || canResize === "both"}
 			line-size={lineHeight}
+			timezone-offset={timezoneOffset}
 			ref={timelineRef}
 		>
 			{renderedRows}
