@@ -28,6 +28,7 @@ import {
 	WindowChangeEventDetail,
 } from "../../chronogramme/src/events";
 import {
+	defaultKeys,
 	leftResizeStyle,
 	overridableStyles,
 	rightResizeStyle,
@@ -58,127 +59,295 @@ function addClass(current: string, optional?: string): string {
 	return optional ? current + optional : current;
 }
 
-export interface BaseItem<TItemId = number, TGroupId = number> {
+export type BaseItem<
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+> = {
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
-	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
-	end_time: EpochTimeStamp;
-	group: TGroupId;
-	id: TItemId;
-	// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
-	start_time: EpochTimeStamp;
-	title?: string | undefined;
-}
+} & {
+	[K in TItemIdKey]: number;
+} & {
+	[K in TItemTitleKey]?: string | undefined;
+} & {
+	[K in TItemDivTitleKey]?: string | undefined;
+} & {
+	[K in TItemGroupKey]: number;
+} & {
+	[K in TItemTimeStartKey]: EpochTimeStamp;
+} & {
+	[K in TItemTimeEndKey]: EpochTimeStamp;
+};
 
-export interface BaseGroup<TGroupId = number> {
-	id: TGroupId;
+export type BaseGroup<
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+> = {
 	lineHeight?: number;
+} & {
+	[K in TGroupIdKey]: number;
+} & {
+	[K in TGroupTitleKey]?: string | undefined;
+} & {
+	[K in TGroupRightTitleKey]?: string | undefined;
+};
+
+export type RowRenderer<
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+	TGroup extends BaseGroup<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TItem extends BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	> = BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	TRowData = undefined,
+> = (props: {
+	getLayerRootProps: () => { style: CSSProperties };
+	group: TGroup;
+	itemsWithInteractions: TItem[];
+	key: string;
+	rowData: TRowData;
+}) => ReactNode;
+
+export type GroupRenderer<
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+	TGroup extends BaseGroup<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+> = (props: {
+	group: TGroup;
+	isRightSidebar?: boolean | undefined;
+}) => ReactNode;
+
+export type ItemRenderer<
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+	TItem extends BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	> = BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> = (props: {
+	getItemProps: (
+		params: Pick<
+			HTMLAttributes<HTMLDivElement>,
+			| "className"
+			| "onClick"
+			| "onContextMenu"
+			| "onDoubleClick"
+			| "onMouseDown"
+			| "onMouseUp"
+			| "onPointerDownCapture"
+			| "onTouchEnd"
+			| "onTouchStart"
+			| "style"
+		>,
+	) => FullRequired<
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			"className" | "onPointerDownCapture" | "slot" | "style"
+		>
+	> &
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			| "onClick"
+			| "onMouseDown"
+			| "onMouseUp"
+			| "onTouchStart"
+			| "onTouchEnd"
+			| "onDoubleClick"
+			| "onContextMenu"
+		>;
+	getResizeProps: (params?: {
+		leftClassName?: string;
+		leftStyle?: CSSProperties;
+		rightClassName?: string;
+		rightStyle?: CSSProperties;
+	}) => {
+		left: FullRequired<
+			Pick<
+				HTMLAttributes<HTMLDivElement>,
+				"className" | "onPointerDownCapture" | "style"
+			>
+		>;
+		right: FullRequired<
+			Pick<
+				HTMLAttributes<HTMLDivElement>,
+				"className" | "onPointerDownCapture" | "style"
+			>
+		>;
+	};
+	item: TItem;
+	itemContext: {
+		canMove: boolean;
+		canResizeLeft: boolean;
+		canResizeRight: boolean;
+		dimensions: {
+			collisionLeft: number;
+			collisionWidth: number;
+			height: number;
+			left: number;
+			stack: boolean;
+			top: number;
+			width: number;
+		};
+		dragging: boolean;
+		dragOffset: number | undefined;
+		dragTime: number | undefined;
+		newGroupId: number | undefined;
+		resizeEdge: "left" | "right" | undefined;
+		resizeOffset: number | undefined;
+		resizeTime: number | undefined;
+		resizing: boolean;
+		selected: boolean;
+		title: string | undefined;
+		useResizeHandle: boolean;
+		width: number;
+	};
+	key: string;
+	timelineContext: {
+		canvasTimeEnd: number;
+		canvasTimeStart: number;
+		timelineWidth: number;
+		visibleTimeEnd: number;
+		visibleTimeStart: number;
+	};
+}) => ReactNode;
+
+export interface TimelineKeys<
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+> {
+	groupIdKey: TGroupIdKey;
+	groupTitleKey: TGroupTitleKey;
+	groupRightTitleKey: TGroupRightTitleKey;
+	itemIdKey: TItemIdKey;
+	itemGroupKey: TItemGroupKey;
+	itemTitleKey: TItemTitleKey;
+	itemDivTitleKey: TItemDivTitleKey;
+	itemTimeStartKey: TItemTimeStartKey;
+	itemTimeEndKey: TItemTimeEndKey;
 }
 
 interface TimelineProps<
-	TItem extends BaseItem,
-	TGroup extends BaseGroup,
-	TRowData,
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+	TGroup extends BaseGroup<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TItem extends BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	> = BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	TRowData = undefined,
 > {
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
 	canSelect?: boolean | undefined;
 	className?: string | undefined;
 	dragSnap?: number | undefined;
-	groupRenderer: (props: {
-		group: TGroup;
-		isRightSidebar?: boolean | undefined;
-	}) => ReactNode;
+	groupRenderer: GroupRenderer<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup
+	>;
 	groups: TGroup[];
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
-	itemRenderer: (props: {
-		getItemProps: (
-			params: Pick<
-				HTMLAttributes<HTMLDivElement>,
-				| "className"
-				| "onClick"
-				| "onContextMenu"
-				| "onDoubleClick"
-				| "onMouseDown"
-				| "onMouseUp"
-				| "onPointerDownCapture"
-				| "onTouchEnd"
-				| "onTouchStart"
-				| "style"
-			>,
-		) => FullRequired<
-			Pick<
-				HTMLAttributes<HTMLDivElement>,
-				"className" | "onPointerDownCapture" | "slot" | "style"
-			>
-		> &
-			Pick<
-				HTMLAttributes<HTMLDivElement>,
-				| "onClick"
-				| "onMouseDown"
-				| "onMouseUp"
-				| "onTouchStart"
-				| "onTouchEnd"
-				| "onDoubleClick"
-				| "onContextMenu"
-			>;
-		getResizeProps: (params?: {
-			leftClassName?: string;
-			leftStyle?: CSSProperties;
-			rightClassName?: string;
-			rightStyle?: CSSProperties;
-		}) => {
-			left: FullRequired<
-				Pick<
-					HTMLAttributes<HTMLDivElement>,
-					"className" | "onPointerDownCapture" | "style"
-				>
-			>;
-			right: FullRequired<
-				Pick<
-					HTMLAttributes<HTMLDivElement>,
-					"className" | "onPointerDownCapture" | "style"
-				>
-			>;
-		};
-		item: TItem;
-		itemContext: {
-			canMove: boolean;
-			canResizeLeft: boolean;
-			canResizeRight: boolean;
-			dimensions: {
-				collisionLeft: number;
-				collisionWidth: number;
-				height: number;
-				left: number;
-				stack: boolean;
-				top: number;
-				width: number;
-			};
-			dragging: boolean;
-			dragOffset: number | undefined;
-			dragTime: number | undefined;
-			newGroupId: number | undefined;
-			resizeEdge: "left" | "right" | undefined;
-			resizeOffset: number | undefined;
-			resizeTime: number | undefined;
-			resizing: boolean;
-			selected: boolean;
-			title: string | undefined;
-			useResizeHandle: boolean;
-			width: number;
-		};
-		key: string;
-		timelineContext: {
-			canvasTimeEnd: number;
-			canvasTimeStart: number;
-			timelineWidth: number;
-			visibleTimeEnd: number;
-			visibleTimeStart: number;
-		};
-	}) => ReactNode;
+	itemRenderer: ItemRenderer<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem
+	>;
 	items: TItem[];
+	keys?: TimelineKeys<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>;
 	lineHeight?: number | undefined;
 	minResizeWidth?: number | undefined;
 	moveResizeValidator?(action: "move", itemId: number, time: number): number;
@@ -220,13 +389,20 @@ interface TimelineProps<
 		updateScrollCanvas: (start: number, end: number) => void,
 	) => void;
 	rowData: TRowData;
-	rowRenderer: (props: {
-		getLayerRootProps: () => { style: CSSProperties };
-		group: TGroup;
-		itemsWithInteractions: TItem[];
-		key: string;
-		rowData: TRowData;
-	}) => ReactNode;
+	rowRenderer: RowRenderer<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TGroup,
+		TItem,
+		TRowData
+	>;
 	selected?: number[] | undefined;
 	sidebarWidth?: number;
 	visibleTimeEnd: number;
@@ -234,14 +410,54 @@ interface TimelineProps<
 }
 
 export const Timeline = <
-	TItem extends BaseItem,
-	TGroup extends BaseGroup,
-	TRowData,
+	TGroupIdKey extends string = "id",
+	TGroupTitleKey extends string = "title",
+	TGroupRightTitleKey extends string = "rightTitle",
+	TItemIdKey extends string = "id",
+	TItemGroupKey extends string = "group",
+	TItemTitleKey extends string = "title",
+	TItemDivTitleKey extends string = "title",
+	TItemTimeStartKey extends string = "start_time",
+	TItemTimeEndKey extends string = "end_time",
+	TGroup extends BaseGroup<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TItem extends BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	> = BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	TRowData = undefined,
 >({
 	groups,
 	items,
 	...properties
-}: TimelineProps<TItem, TGroup, TRowData>): ReactNode => {
+}: TimelineProps<
+	TGroupIdKey,
+	TGroupTitleKey,
+	TGroupRightTitleKey,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TGroup,
+	TItem,
+	TRowData
+>): ReactNode => {
 	const timelineRef =
 		useRef<
 			InstanceType<
@@ -254,19 +470,31 @@ export const Timeline = <
 			>
 		>(null);
 
+	const resolvedKeys = (properties.keys ?? defaultKeys) as TimelineKeys<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>;
+
 	useEffect(() => {
 		const timeline = timelineRef.current;
 
 		if (timeline) {
 			timeline.setGroups(
 				groups.map((group) => ({
-					id: group.id,
+					id: group[resolvedKeys.groupIdKey],
 					lineSize: group.lineHeight,
 					originalGroup: group,
 				})),
 			);
 		}
-	}, [groups]);
+	}, [groups, resolvedKeys.groupIdKey]);
 
 	useMemo(() => {
 		const timeline = timelineRef.current;
@@ -274,9 +502,9 @@ export const Timeline = <
 		if (timeline) {
 			timeline.setItems(
 				items.map((item) => ({
-					endTime: item.end_time,
-					groupId: item.group,
-					id: item.id,
+					endTime: item[resolvedKeys.itemTimeEndKey],
+					groupId: item[resolvedKeys.itemGroupKey],
+					id: item[resolvedKeys.itemIdKey],
 					isDraggable: item.canMove,
 					isEndResizable:
 						item.canResize &&
@@ -285,11 +513,17 @@ export const Timeline = <
 						item.canResize &&
 						(item.canResize === "left" || item.canResize === "both"),
 					originalItem: item,
-					startTime: item.start_time,
+					startTime: item[resolvedKeys.itemTimeStartKey],
 				})),
 			);
 		}
-	}, [items]);
+	}, [
+		items,
+		resolvedKeys.itemGroupKey,
+		resolvedKeys.itemIdKey,
+		resolvedKeys.itemTimeEndKey,
+		resolvedKeys.itemTimeStartKey,
+	]);
 
 	const [renderIndicator, render] = useRender();
 
@@ -312,7 +546,7 @@ export const Timeline = <
 	}, [render]);
 
 	return (
-		<MemoedRenderedTimeline<TItem, TGroup, TRowData>
+		<MemoedRenderedTimeline
 			{...properties}
 			renderIndicator={renderIndicator}
 			timelineRef={timelineRef}
@@ -321,8 +555,24 @@ export const Timeline = <
 };
 
 function RenderedTimeline<
-	TItem extends BaseItem,
-	TGroup extends BaseGroup,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TItem extends BaseItem<
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
 	TRowData,
 >({
 	canMove = true,
@@ -334,6 +584,7 @@ function RenderedTimeline<
 	id,
 	itemHeightRatio = 0.65,
 	itemRenderer,
+	keys,
 	lineHeight = 30,
 	moveResizeValidator,
 	minResizeWidth = 20,
@@ -354,7 +605,23 @@ function RenderedTimeline<
 	timelineRef,
 	visibleTimeEnd,
 	visibleTimeStart,
-}: Omit<TimelineProps<TItem, TGroup, TRowData>, "items" | "groups"> & {
+}: Omit<
+	TimelineProps<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TGroup,
+		TItem,
+		TRowData
+	>,
+	"groups" | "items"
+> & {
 	renderIndicator: number;
 	timelineRef: RefObject<InstanceType<
 		typeof HTMLTimeline<
@@ -369,6 +636,18 @@ function RenderedTimeline<
 
 	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
 	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
+
+	const resolvedKeys = (keys ?? defaultKeys) as TimelineKeys<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>;
 
 	useEffect(() => {
 		const timeline = timelineRef.current;
@@ -941,7 +1220,7 @@ function RenderedTimeline<
 								resizeTime,
 								resizing: itemIsResizing,
 								selected: itemIsSelected,
-								title: originalItem.title,
+								title: originalItem[resolvedKeys.itemTitleKey],
 								useResizeHandle: true,
 								width: hSize,
 							},

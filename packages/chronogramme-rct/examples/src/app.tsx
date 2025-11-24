@@ -12,7 +12,13 @@ import {
 import "./styles.css";
 import { TIME_MAX, TIME_MIN, UNIT } from "@chronogramme/chronogramme";
 import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
-import type { BaseGroup, BaseItem } from "../../src/timeline";
+import type {
+	BaseGroup,
+	BaseItem,
+	GroupRenderer,
+	ItemRenderer,
+	RowRenderer,
+} from "../../src/timeline";
 
 const timelineClass = css`
 	flex: none;
@@ -134,7 +140,7 @@ export function App(): ReactNode {
 		};
 
 	useEffect(() => {
-		const newGroups: BaseGroup<number>[] = [];
+		const newGroups: BaseGroup[] = [];
 
 		for (let i = 0; i < GROUP_COUNT; i++) {
 			newGroups.push({
@@ -192,45 +198,48 @@ export function App(): ReactNode {
 		setWindow([newVisibleTimeStart, newVisibleTimeEnd]);
 	}, []);
 
-	const groupRenderer = useCallback<
-		ComponentProps<typeof RCTimeline>["groupRenderer"]
-	>(({ group }) => <div>{`group-${group.id}`}</div>, []);
+	const groupRenderer = useCallback<GroupRenderer>(
+		({ group }) => <div>{`group-${group.id}`}</div>,
+		[],
+	);
 
-	const rowRenderer = useCallback<
-		ComponentProps<typeof RCTimeline>["rowRenderer"]
-	>(({ getLayerRootProps, group, key }) => {
-		const props = getLayerRootProps();
+	const rowRenderer = useCallback<RowRenderer>(
+		({ getLayerRootProps, group, key }) => {
+			const props = getLayerRootProps();
 
-		return (
-			<div
-				{...props}
-				key={key}
-				style={{
-					...props.style,
-					backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
-				}}
-			>
-				{key}
-			</div>
-		);
-	}, []);
+			return (
+				<div
+					{...props}
+					key={key}
+					style={{
+						...props.style,
+						backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+					}}
+				>
+					{key}
+				</div>
+			);
+		},
+		[],
+	);
 
-	const itemRenderer = useCallback<
-		ComponentProps<typeof RCTimeline>["itemRenderer"]
-	>(({ getItemProps, getResizeProps, item, key }) => {
-		const { left: leftProps, right: rightProps } = getResizeProps();
+	const itemRenderer = useCallback<ItemRenderer>(
+		({ getItemProps, getResizeProps, item, key }) => {
+			const { left: leftProps, right: rightProps } = getResizeProps();
 
-		leftProps.style.background = "#f00";
-		rightProps.style.background = "#f00";
+			leftProps.style.background = "#f00";
+			rightProps.style.background = "#f00";
 
-		return (
-			<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
-				<div key="left" {...leftProps} />
-				{item.group}-{item.id}
-				<div key="right" {...rightProps} />
-			</div>
-		);
-	}, []);
+			return (
+				<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
+					<div key="left" {...leftProps} />
+					{item.group}-{item.id}
+					<div key="right" {...rightProps} />
+				</div>
+			);
+		},
+		[],
+	);
 
 	const moveResizeValidator = useCallback<
 		Exclude<ComponentProps<typeof RCTimeline>["moveResizeValidator"], undefined>
@@ -301,7 +310,7 @@ export function App(): ReactNode {
 				onItemMove={onItemMoveHandler}
 				onItemResize={onItemResizeHandler}
 				onTimeChange={onTimeChangeHandler}
-				rowData={null}
+				rowData={undefined}
 				rowRenderer={rowRenderer}
 				visibleTimeEnd={windowEnd}
 				visibleTimeStart={windowStart}

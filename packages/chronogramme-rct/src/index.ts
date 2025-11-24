@@ -1,1 +1,1 @@
-export { Timeline } from "./timeline";
+export { Timeline, type TimelineKeys } from "./timeline";

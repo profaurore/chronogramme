@@ -67,3 +67,15 @@ export const selectedStyle = {
 	borderColor: "#ff9800",
 	zIndex: 82,
 } as const;
+
+export const defaultKeys = {
+	groupIdKey: "id",
+	groupRightTitleKey: "rightTitle",
+	groupTitleKey: "title",
+	itemDivTitleKey: "title",
+	itemGroupKey: "group",
+	itemIdKey: "id",
+	itemTimeEndKey: "end_time",
+	itemTimeStartKey: "start_time",
+	itemTitleKey: "title",
+} as const;
