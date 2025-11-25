@@ -187,6 +187,39 @@ export class GroupPositionsState<
 		return groupPosition;
 	}
 
+	public getGroupSize(index: number): number {
+		const itemChangeState = this.#itemChangeState;
+
+		// If the dragged item is part of the initial or new item groups, then don't
+		// use the cache or cache the result, because the group and position of the
+		// dragged item could be changing quickly.
+		if (itemChangeState) {
+			const group = this.getGroup(index);
+
+			if (group) {
+				const groupId = group.id;
+
+				if (
+					itemChangeState.item?.groupId === groupId ||
+					itemChangeState.newItem?.groupId === groupId
+				) {
+					return this.buildGroupSize(index);
+				}
+			}
+		}
+
+		const groupSizes = this.#groupSizes;
+
+		let groupSize = groupSizes[index];
+
+		if (groupSize === undefined) {
+			groupSize = this.buildGroupSize(index);
+			groupSizes[index] = groupSize;
+		}
+
+		return groupSize;
+	}
+
 	public getHeight(): number {
 		const groups = this.#groups;
 		const groupSizes = this.#groupSizes;
@@ -928,39 +961,6 @@ export class GroupPositionsState<
 		}
 
 		return undefined;
-	}
-
-	private getGroupSize(index: number): number {
-		const itemChangeState = this.#itemChangeState;
-
-		// If the dragged item is part of the initial or new item groups, then don't
-		// use the cache or cache the result, because the group and position of the
-		// dragged item could be changing quickly.
-		if (itemChangeState) {
-			const group = this.getGroup(index);
-
-			if (group) {
-				const groupId = group.id;
-
-				if (
-					itemChangeState.item?.groupId === groupId ||
-					itemChangeState.newItem?.groupId === groupId
-				) {
-					return this.buildGroupSize(index);
-				}
-			}
-		}
-
-		const groupSizes = this.#groupSizes;
-
-		let groupSize = groupSizes[index];
-
-		if (groupSize === undefined) {
-			groupSize = this.buildGroupSize(index);
-			groupSizes[index] = groupSize;
-		}
-
-		return groupSize;
 	}
 
 	private getGroupLines(

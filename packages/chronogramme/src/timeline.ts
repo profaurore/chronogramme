@@ -92,6 +92,10 @@ export class Timeline<
 		return this.#groupPositionsState.getGroupPosition(groupIndex);
 	}
 
+	public getGroupSize(groupIndex: number): number {
+		return this.#groupPositionsState.getGroupSize(groupIndex);
+	}
+
 	public getItem(
 		groupIndex: number,
 		lineIndex: number,

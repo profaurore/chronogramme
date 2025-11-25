@@ -2,12 +2,9 @@ import {
 	type BaseGroup as CoreBaseGroup,
 	type BaseItem as CoreBaseItem,
 	DragState,
-	HALF,
 	type Timeline as HTMLTimeline,
 	TIME_MAX,
 	TIME_MIN,
-	UNIT,
-	ZERO,
 } from "@chronogramme/chronogramme";
 import {
 	type CSSProperties,
@@ -16,6 +13,7 @@ import {
 	type ReactNode,
 	type RefObject,
 	type SyntheticEvent,
+	useCallback,
 	useEffect,
 	useLayoutEffect,
 	useMemo,
@@ -27,36 +25,23 @@ import {
 	ScrollBoundsChangeEventDetail,
 	WindowChangeEventDetail,
 } from "../../chronogramme/src/events";
-import {
-	defaultKeys,
-	leftResizeStyle,
-	overridableStyles,
-	rightResizeStyle,
-	selectedAndCanMove,
-	selectedAndCanResizeLeft,
-	selectedAndCanResizeLeftAndDragLeft,
-	selectedAndCanResizeRight,
-	selectedAndCanResizeRightAndDragRight,
-	selectedStyle,
-} from "./constants";
+import { defaultKeys } from "./constants";
+import { Row } from "./Row";
+import { TimelineStateProvider } from "./timelineStateContext/TimelineStateProvider";
 import type { FullRequired } from "./typeUtils";
-import { composeEvents, useRender } from "./utils";
+import { useRender } from "./utils";
 
 const MINUTES_TO_MILLISECONDS = 60 * 1000;
 const FIFTEEN_MINUTES = 15 * MINUTES_TO_MILLISECONDS;
 
 type ResizeEdge = "left" | "right";
 
-interface RctToCoreItem<TItem> extends CoreBaseItem {
+export interface RctToCoreItem<TItem> extends CoreBaseItem {
 	originalItem: TItem;
 }
 
-interface RctToCoreGroup<TGroup> extends CoreBaseGroup {
+export interface RctToCoreGroup<TGroup> extends CoreBaseGroup {
 	originalGroup: TGroup;
-}
-
-function addClass(current: string, optional?: string): string {
-	return optional ? current + optional : current;
 }
 
 export type BaseItem<
@@ -101,38 +86,16 @@ export type RowRenderer<
 	TGroupIdKey extends string = "id",
 	TGroupTitleKey extends string = "title",
 	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
 	TGroup extends BaseGroup<
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey
 	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
-	TItem extends BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	> = BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
 	TRowData = undefined,
 > = (props: {
 	getLayerRootProps: () => { style: CSSProperties };
 	group: TGroup;
-	itemsWithInteractions: TItem[];
-	key: string;
+	// itemsWithInteractions: TItem[]; // TODO: Implement
 	rowData: TRowData;
 }) => ReactNode;
 
@@ -149,6 +112,57 @@ export type GroupRenderer<
 	group: TGroup;
 	isRightSidebar?: boolean | undefined;
 }) => ReactNode;
+
+export type GetItemProps = (
+	params: Pick<
+		HTMLAttributes<HTMLDivElement>,
+		| "className"
+		| "onClick"
+		| "onContextMenu"
+		| "onDoubleClick"
+		| "onMouseDown"
+		| "onMouseUp"
+		| "onPointerDownCapture"
+		| "onTouchEnd"
+		| "onTouchStart"
+		| "style"
+	>,
+) => FullRequired<
+	Pick<
+		HTMLAttributes<HTMLDivElement>,
+		"className" | "onPointerDownCapture" | "slot" | "style"
+	>
+> &
+	Pick<
+		HTMLAttributes<HTMLDivElement>,
+		| "onClick"
+		| "onMouseDown"
+		| "onMouseUp"
+		| "onTouchStart"
+		| "onTouchEnd"
+		| "onDoubleClick"
+		| "onContextMenu"
+	>;
+
+export type GetResizeProps = (params?: {
+	leftClassName?: string;
+	leftStyle?: CSSProperties;
+	rightClassName?: string;
+	rightStyle?: CSSProperties;
+}) => {
+	left: FullRequired<
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			"className" | "onPointerDownCapture" | "style"
+		>
+	>;
+	right: FullRequired<
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			"className" | "onPointerDownCapture" | "style"
+		>
+	>;
+};
 
 export type ItemRenderer<
 	TItemIdKey extends string = "id",
@@ -173,55 +187,8 @@ export type ItemRenderer<
 		TItemTimeEndKey
 	>,
 > = (props: {
-	getItemProps: (
-		params: Pick<
-			HTMLAttributes<HTMLDivElement>,
-			| "className"
-			| "onClick"
-			| "onContextMenu"
-			| "onDoubleClick"
-			| "onMouseDown"
-			| "onMouseUp"
-			| "onPointerDownCapture"
-			| "onTouchEnd"
-			| "onTouchStart"
-			| "style"
-		>,
-	) => FullRequired<
-		Pick<
-			HTMLAttributes<HTMLDivElement>,
-			"className" | "onPointerDownCapture" | "slot" | "style"
-		>
-	> &
-		Pick<
-			HTMLAttributes<HTMLDivElement>,
-			| "onClick"
-			| "onMouseDown"
-			| "onMouseUp"
-			| "onTouchStart"
-			| "onTouchEnd"
-			| "onDoubleClick"
-			| "onContextMenu"
-		>;
-	getResizeProps: (params?: {
-		leftClassName?: string;
-		leftStyle?: CSSProperties;
-		rightClassName?: string;
-		rightStyle?: CSSProperties;
-	}) => {
-		left: FullRequired<
-			Pick<
-				HTMLAttributes<HTMLDivElement>,
-				"className" | "onPointerDownCapture" | "style"
-			>
-		>;
-		right: FullRequired<
-			Pick<
-				HTMLAttributes<HTMLDivElement>,
-				"className" | "onPointerDownCapture" | "style"
-			>
-		>;
-	};
+	getItemProps: GetItemProps;
+	getResizeProps: GetResizeProps;
 	item: TItem;
 	itemContext: {
 		canMove: boolean;
@@ -325,6 +292,7 @@ interface TimelineProps<
 		TGroup
 	>;
 	groups: TGroup[];
+	horizontalLineClassNamesForGroup?: ((group: TGroup) => string[]) | undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
 	itemRenderer: ItemRenderer<
@@ -357,7 +325,18 @@ interface TimelineProps<
 		time: number,
 		resizeEdge: "left" | "right",
 	): number;
-	onBoundsChange?: (canvasTimeStart: number, canvasTimeEnd: number) => void;
+	onBoundsChange?:
+		| ((canvasTimeStart: number, canvasTimeEnd: number) => void)
+		| undefined;
+	onCanvasClick?:
+		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| undefined;
+	onCanvasContextMenu?:
+		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| undefined;
+	onCanvasDoubleClick:
+		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| undefined;
 	onItemClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
 	onItemDeselect?: (e: SyntheticEvent) => void;
@@ -393,14 +372,7 @@ interface TimelineProps<
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
 		TGroup,
-		TItem,
 		TRowData
 	>;
 	selected?: number[] | undefined;
@@ -581,6 +553,7 @@ function RenderedTimeline<
 	className,
 	dragSnap = FIFTEEN_MINUTES,
 	groupRenderer,
+	horizontalLineClassNamesForGroup,
 	id,
 	itemHeightRatio = 0.65,
 	itemRenderer,
@@ -589,6 +562,9 @@ function RenderedTimeline<
 	moveResizeValidator,
 	minResizeWidth = 20,
 	onBoundsChange,
+	onCanvasClick,
+	onCanvasContextMenu,
+	onCanvasDoubleClick,
 	onItemClick,
 	onItemContextMenu,
 	// onItemDeselect, // TODO: For the row context provider
@@ -836,7 +812,6 @@ function RenderedTimeline<
 			};
 
 			const controller = new AbortController();
-			// TODO: Implement this event.
 			timeline.addEventListener(
 				"scrollBoundsChange",
 				onScrollBoundsChangeHandler,
@@ -888,28 +863,27 @@ function RenderedTimeline<
 		return;
 	}, [onTimeChange, timelineRef]);
 
+	const onRowClickHandler: (
+		groupId: number,
+		time: number,
+		e: SyntheticEvent,
+	) => void = useCallback(
+		(groupId, time, e) => {
+			setSelectedItemId(undefined);
+			onCanvasClick?.(groupId, time, e);
+		},
+		[onCanvasClick],
+	);
+
 	const canResizeLeft = canResize === "left" || canResize === "both";
 	const canResizeRight = canResize === "right" || canResize === "both";
 
 	const renderedGroups: ReactNode[] = [];
-	const renderedItems: ReactNode[] = [];
-	const renderedRows: ReactNode[] = [];
+	const renderedGroupRows: ReactNode[] = [];
 
 	const timeline = timelineRef?.current;
 
 	if (timeline) {
-		const draggedItem = timeline.getDraggedItem();
-		const resizedItem = timeline.getResizedItem();
-		const isResizingStart = timeline.getResizeIsStart();
-
-		const timelineContext = {
-			canvasTimeEnd: timeline.getHValue(timeline.scrollWidth),
-			canvasTimeStart: timeline.getHValue(ZERO),
-			timelineWidth: timeline.hMiddleSize,
-			visibleTimeEnd: timeline.hWindowMax,
-			visibleTimeStart: timeline.hWindowMin,
-		};
-
 		const groupIndices = timeline.getVisibleGroupsIter();
 
 		for (const groupIndex of groupIndices) {
@@ -919,14 +893,6 @@ function RenderedTimeline<
 				continue;
 			}
 
-			const groupId = group.id;
-
-			const lineSize = timeline.getGroupLineSize(groupIndex);
-			const lineIndices = timeline.getVisibleGroupLinesIter(groupIndex);
-			const groupPosition = timeline.getGroupPosition(groupIndex);
-			const itemVOffset = HALF * (UNIT - itemHeightRatio) * lineSize;
-			const itemVSize = itemHeightRatio * lineSize;
-
 			renderedGroups.push(
 				groupRenderer({
 					group: group.originalGroup,
@@ -934,302 +900,34 @@ function RenderedTimeline<
 				}),
 			);
 
-			for (const lineIndex of lineIndices) {
-				const linePosition = timeline.getLinePosition(groupIndex, lineIndex);
-				const itemIndices = timeline.getVisibleLineItemsIter(
-					groupIndex,
-					lineIndex,
-				);
-
-				const itemVStartPos = groupPosition + linePosition + itemVOffset;
-
-				renderedRows.push(
-					rowRenderer({
-						getLayerRootProps: () => {
-							return {
-								slot: "center",
-								style: {
-									height: `${lineSize.toFixed(4)}px`,
-									// TODO: Remove this once rendered in the groups.
-									position: "absolute",
-									top: `${(groupPosition + linePosition).toFixed(4)}px`,
-									left: "0px",
-									right: "0px",
-								},
-							};
-						},
-						group: group.originalGroup,
-						// TODO: Fix this to filter if items are being modified
-						itemsWithInteractions: [],
-						key: `group-${groupId}-${lineIndex}`,
-						rowData,
-					}),
-				);
-
-				for (const itemIndex of itemIndices) {
-					const item = timeline.getItem(groupIndex, lineIndex, itemIndex);
-
-					if (!item) {
-						continue;
-					}
-
-					const endTime = item.endTime;
-					const itemId = item.id;
-					const originalItem = item.originalItem;
-					const startTime = item.startTime;
-
-					const hStartPos = Math.max(timeline.getHPos(startTime), ZERO);
-					const hEndPos = Math.min(
-						timeline.getHPos(endTime),
-						timeline.hScrollSize,
-					);
-					const hSize = hEndPos - hStartPos;
-
-					const itemCanMove = item.isDraggable ?? canMove;
-					const itemCanResizeLeft =
-						(item.isStartResizable ?? canResizeLeft) && hSize >= minResizeWidth;
-					const itemCanResizeRight =
-						(item.isEndResizable ?? canResizeRight) && hSize >= minResizeWidth;
-					const itemIsDragging = itemId === draggedItem?.id;
-					const itemIsResizing = itemId === resizedItem?.id;
-					const itemIsSelected =
-						selectedItemId !== undefined
-							? itemId === selectedItemId
-							: (selected?.includes(itemId) ?? false);
-					const itemIsSelectable = canSelect;
-
-					let dragOffset: number | undefined;
-					let dragTime: number | undefined;
-					let resizeEdge: "left" | "right" | undefined;
-					let resizeOffset: number | undefined;
-					let resizeTime: number | undefined;
-
-					if (itemIsDragging) {
-						dragOffset = timeline.getDragOffset();
-						dragTime = draggedItem.startTime;
-					}
-
-					if (itemIsResizing) {
-						resizeOffset = timeline.getResizeOffset();
-
-						if (isResizingStart) {
-							resizeEdge = "left";
-							resizeTime = resizedItem.startTime;
-						} else {
-							resizeEdge = "right";
-							resizeTime = resizedItem.endTime;
-						}
-					}
-
-					renderedItems.push(
-						itemRenderer({
-							getItemProps(params) {
-								return {
-									className: "rct-item",
-									onClick: composeEvents(
-										function onClick(event) {
-											const nativeEvent = event.nativeEvent;
-
-											if (nativeEvent instanceof MouseEvent) {
-												event.stopPropagation();
-
-												if (itemIsSelectable) {
-													const time = timeline.getHValue(nativeEvent.clientX);
-
-													if (itemIsSelected) {
-														onItemClick?.(itemId, event, time);
-													} else {
-														setSelectedItemId(itemId);
-														onItemSelect?.(itemId, event, time);
-													}
-												}
-											}
-										},
-
-										params.onClick,
-									),
-									onMouseDown: params.onMouseDown,
-									onPointerDownCapture(event) {
-										if (!itemCanMove) {
-											return;
-										}
-
-										// Because the events need to be captured, not to intefere
-										// with the library's native event handling, we need to
-										// check for nested event handlers that would have
-										// precedence.
-										for (const element of event.nativeEvent.composedPath()) {
-											if (
-												element instanceof HTMLElement &&
-												((itemCanResizeLeft &&
-													element.classList.contains(
-														"rct-item-handler-resize-left",
-													)) ||
-													(itemCanResizeRight &&
-														element.classList.contains(
-															"rct-item-handler-resize-right",
-														)))
-											) {
-												return;
-											}
-										}
-
-										event.stopPropagation();
-
-										itemResizeStateRef.current.reset();
-										itemDragStateRef.current.start(event);
-										timeline.itemDragStart(itemId, event.clientX);
-									},
-									onMouseUp: params.onMouseUp,
-									onTouchStart: params.onTouchStart,
-									onTouchEnd: params.onTouchEnd,
-									onDoubleClick: composeEvents(
-										function onDoubleClick(event) {
-											const nativeEvent = event.nativeEvent;
-
-											if (nativeEvent instanceof PointerEvent) {
-												event.stopPropagation();
-
-												onItemDoubleClick?.(
-													itemId,
-													event,
-													timeline.getHValue(nativeEvent.clientX),
-												);
-											}
-										},
-
-										params.onDoubleClick,
-									),
-									onContextMenu: composeEvents(
-										function onContextMenu(event) {
-											const nativeEvent = event.nativeEvent;
-
-											if (nativeEvent instanceof PointerEvent) {
-												event.stopPropagation();
-
-												if (onItemContextMenu) {
-													event.preventDefault();
-
-													onItemContextMenu(
-														itemId,
-														event,
-														timeline.getHValue(nativeEvent.clientX),
-													);
-												}
-											}
-										},
-
-										params.onContextMenu,
-									),
-									slot: "center",
-									style: {
-										...params.style,
-										...overridableStyles,
-										...(itemIsSelected ? selectedStyle : {}),
-										...(itemIsSelected && itemCanMove
-											? selectedAndCanMove
-											: {}),
-										...(itemIsSelected && itemCanResizeLeft
-											? selectedAndCanResizeLeft
-											: {}),
-										...(itemIsSelected && itemCanResizeLeft && itemIsDragging
-											? selectedAndCanResizeLeftAndDragLeft
-											: {}),
-										...(itemIsSelected && itemCanResizeRight
-											? selectedAndCanResizeRight
-											: {}),
-										...(itemIsSelected && itemCanResizeRight && itemIsDragging
-											? selectedAndCanResizeRightAndDragRight
-											: {}),
-										position: "absolute",
-										boxSizing: "border-box",
-										slot: "center",
-										left: `${hStartPos.toFixed(4)}px`,
-										top: `${itemVStartPos.toFixed(4)}px`,
-										width: `${hSize.toFixed(4)}px`,
-										height: `${itemVSize.toFixed(4)}px`,
-										lineHeight: `${itemVSize.toFixed(4)}px`,
-									},
-								};
-							},
-							getResizeProps: ({
-								leftClassName,
-								leftStyle,
-								rightClassName,
-								rightStyle,
-							} = {}) => {
-								return {
-									left: {
-										className: addClass(
-											"rct-item-handler rct-item-handler-left rct-item-handler-resize-left ",
-											leftClassName,
-										),
-										onPointerDownCapture(event) {
-											if (!itemCanResizeLeft) {
-												return;
-											}
-
-											event.stopPropagation();
-
-											itemDragStateRef.current.reset();
-											itemResizeStateRef.current.start(event);
-											timeline.itemStartResizeStart(itemId, event.clientX);
-										},
-										style: { ...leftResizeStyle, ...leftStyle },
-									},
-									right: {
-										className: addClass(
-											"rct-item-handler rct-item-handler-right rct-item-handler-resize-right",
-											rightClassName,
-										),
-										onPointerDownCapture(event) {
-											if (!itemCanResizeRight) {
-												return;
-											}
-
-											event.stopPropagation();
-
-											itemDragStateRef.current.reset();
-											itemResizeStateRef.current.start(event);
-											timeline.itemEndResizeStart(itemId, event.clientX);
-										},
-										style: { ...rightResizeStyle, ...rightStyle },
-									},
-								};
-							},
-							item: originalItem,
-							itemContext: {
-								canMove: itemCanMove,
-								canResizeLeft: itemCanResizeLeft,
-								canResizeRight: itemCanResizeRight,
-								dimensions: {
-									collisionLeft: startTime,
-									collisionWidth: endTime - startTime,
-									height: lineSize,
-									left: hStartPos,
-									stack: false,
-									top: itemVStartPos,
-									width: hSize,
-								},
-								dragging: itemIsDragging,
-								dragOffset,
-								dragTime,
-								newGroupId: draggedItem?.groupId,
-								resizeEdge,
-								resizeOffset,
-								resizeTime,
-								resizing: itemIsResizing,
-								selected: itemIsSelected,
-								title: originalItem[resolvedKeys.itemTitleKey],
-								useResizeHandle: true,
-								width: hSize,
-							},
-							key: `item-${groupId}-${itemId}`,
-							timelineContext,
-						}),
-					);
-				}
-			}
+			renderedGroupRows.push(
+				<Row<
+					TGroupIdKey,
+					TGroupTitleKey,
+					TGroupRightTitleKey,
+					TItemIdKey,
+					TItemGroupKey,
+					TItemTitleKey,
+					TItemDivTitleKey,
+					TItemTimeStartKey,
+					TItemTimeEndKey,
+					TGroup,
+					TItem,
+					TRowData
+				>
+					group={group}
+					groupIndex={groupIndex}
+					horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
+					itemHeightRatio={itemHeightRatio}
+					itemRenderer={itemRenderer}
+					onClick={onRowClickHandler}
+					onContextMenu={onCanvasContextMenu}
+					onDoubleClick={onCanvasDoubleClick}
+					rowData={rowData}
+					rowRenderer={rowRenderer}
+					timeline={timeline}
+				/>,
+			);
 		}
 	}
 
@@ -1238,24 +936,56 @@ function RenderedTimeline<
 	}, []);
 
 	return (
-		<cg-timeline
-			class={className}
-			h-start-extrema={[sidebarWidth, sidebarWidth]}
-			h-start-size={sidebarWidth}
-			h-window={[visibleTimeStart, visibleTimeEnd]}
-			h-extrema={[TIME_MIN, TIME_MAX]}
-			id={id}
-			item-time-snap={dragSnap}
-			items-draggable={canMove}
-			items-end-resizable={canResize === "right" || canResize === "both"}
-			items-start-resizable={canResize === "left" || canResize === "both"}
-			line-size={lineHeight}
-			timezone-offset={timezoneOffset}
-			ref={timelineRef}
+		<TimelineStateProvider<
+			TGroupIdKey,
+			TGroupTitleKey,
+			TGroupRightTitleKey,
+			TItemIdKey,
+			TItemGroupKey,
+			TItemTitleKey,
+			TItemDivTitleKey,
+			TItemTimeStartKey,
+			TItemTimeEndKey,
+			TGroup,
+			TItem
 		>
-			{renderedRows}
-			{renderedItems}
-		</cg-timeline>
+			canMove={canMove}
+			canResizeLeft={canResizeLeft}
+			canResizeRight={canResizeRight}
+			canSelect={canSelect}
+			itemDragStateRef={itemDragStateRef}
+			itemResizeStateRef={itemResizeStateRef}
+			keys={resolvedKeys}
+			minResizeWidth={minResizeWidth}
+			onItemClick={onItemClick}
+			onItemContextMenu={onItemContextMenu}
+			onItemDoubleClick={onItemDoubleClick}
+			onItemSelect={onItemSelect}
+			selected={selected}
+			selectedItemId={selectedItemId}
+			setSelectedItemId={setSelectedItemId}
+			timelineRef={timelineRef}
+		>
+			<cg-timeline
+				class={className}
+				h-start-extrema={[sidebarWidth, sidebarWidth]}
+				h-start-size={sidebarWidth}
+				h-window={[visibleTimeStart, visibleTimeEnd]}
+				h-extrema={[TIME_MIN, TIME_MAX]}
+				id={id}
+				item-time-snap={dragSnap}
+				items-draggable={canMove}
+				items-end-resizable={canResize === "right" || canResize === "both"}
+				items-start-resizable={canResize === "left" || canResize === "both"}
+				line-size={lineHeight}
+				timezone-offset={timezoneOffset}
+				ref={timelineRef}
+			>
+				<div className="rct-horizontal-lines" slot="center">
+					{renderedGroupRows}
+				</div>
+			</cg-timeline>
+		</TimelineStateProvider>
 	);
 }
 

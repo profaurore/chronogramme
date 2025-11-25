@@ -214,6 +214,14 @@ export class ScrollState {
 		return unitPerPixel * (pos - scrollPos) + windowMin;
 	}
 
+	public getCanvasValueMin(): number {
+		return this.getValue(ZERO);
+	}
+
+	public getCanvasValueMax(): number {
+		return this.getValue(this.#scrollSize);
+	}
+
 	/**
 	 * The value of these fields may change as a side effect of calling this
 	 * method.

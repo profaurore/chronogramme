@@ -100,6 +100,8 @@ export class Scroller extends HTMLElement {
 
 	readonly #barResizeState: DragState<BarResizeState>;
 
+	readonly #centerElement: HTMLDivElement;
+
 	readonly #containerElement: HTMLDivElement;
 
 	readonly #contentElement: HTMLDivElement;
@@ -123,6 +125,7 @@ export class Scroller extends HTMLElement {
 
 		// Center
 		const center = document.createElement("div");
+		this.#centerElement = center;
 		center.id = "center";
 
 		// Sides
@@ -437,6 +440,14 @@ export class Scroller extends HTMLElement {
 		return this.#vScrollState.windowSize;
 	}
 
+	public getHCanvasValueMax(): number {
+		return this.#hScrollState.getCanvasValueMax();
+	}
+
+	public getHCanvasValueMin(): number {
+		return this.#hScrollState.getCanvasValueMin();
+	}
+
 	public getHPos(value: number): number {
 		return this.#hScrollState.getPos(value);
 	}
@@ -445,11 +456,33 @@ export class Scroller extends HTMLElement {
 		return this.#hScrollState.getValue(pos);
 	}
 
+	public getHValueFromClient(clientPos: number): number {
+		const rect = this.#centerElement.getBoundingClientRect();
+		const hPos = clientPos - rect.left;
+
+		return this.#hScrollState.getValue(hPos);
+	}
+
+	public getVCanvasValueMax(): number {
+		return this.#vScrollState.getCanvasValueMax();
+	}
+
+	public getVCanvasValueMin(): number {
+		return this.#vScrollState.getCanvasValueMin();
+	}
+
 	public getVPos(value: number): number {
 		return this.#vScrollState.getPos(value);
 	}
 
 	public getVValue(pos: number): number {
+		return this.#vScrollState.getValue(pos);
+	}
+
+	public getVValueFromClient(clientPos: number): number {
+		const rect = this.#centerElement.getBoundingClientRect();
+		const pos = clientPos - rect.top;
+
 		return this.#vScrollState.getValue(pos);
 	}
 

@@ -12,6 +12,8 @@ import {
 import "./styles.css";
 import { TIME_MAX, TIME_MIN, UNIT } from "@chronogramme/chronogramme";
 import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
+import { GroupRow } from "../../src/GroupRow";
+import { RowItems } from "../../src/RowItems";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -203,38 +205,39 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const rowRenderer = useCallback<RowRenderer>(
-		({ getLayerRootProps, group, key }) => {
-			const props = getLayerRootProps();
-
-			return (
+	const rowRenderer = useCallback<RowRenderer>(({ group }) => {
+		return (
+			<GroupRow>
+				<RowItems />
 				<div
-					{...props}
-					key={key}
 					style={{
-						...props.style,
 						backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+						height: "100%",
+						width: "100%",
 					}}
 				>
-					{key}
+					{group.id}
 				</div>
-			);
-		},
-		[],
-	);
+			</GroupRow>
+		);
+	}, []);
 
 	const itemRenderer = useCallback<ItemRenderer>(
 		({ getItemProps, getResizeProps, item, key }) => {
-			const { left: leftProps, right: rightProps } = getResizeProps();
+			const { left: leftResizeProps, right: rightResizeProps } =
+				getResizeProps();
 
-			leftProps.style.background = "#f00";
-			rightProps.style.background = "#f00";
+			leftResizeProps.style.background = "#f00";
+			rightResizeProps.style.background = "#f00";
+
+			leftResizeProps.style.zIndex = -1;
+			rightResizeProps.style.zIndex = -1;
 
 			return (
 				<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
-					<div key="left" {...leftProps} />
+					<div key="left" {...leftResizeProps} />
 					{item.group}-{item.id}
-					<div key="right" {...rightProps} />
+					<div key="right" {...rightResizeProps} />
 				</div>
 			);
 		},
