@@ -5,6 +5,7 @@ import {
 	type Timeline as HTMLTimeline,
 	TIME_MAX,
 	TIME_MIN,
+	ZERO,
 } from "@chronogramme/chronogramme";
 import {
 	type CSSProperties,
@@ -26,6 +27,7 @@ import {
 	WindowChangeEventDetail,
 } from "../../chronogramme/src/events";
 import { defaultKeys } from "./constants";
+import { Group } from "./Group";
 import { Row } from "./Row";
 import { TimelineStateProvider } from "./timelineStateContext/TimelineStateProvider";
 import type { FullRequired } from "./typeUtils";
@@ -334,7 +336,7 @@ interface TimelineProps<
 	onCanvasContextMenu?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
-	onCanvasDoubleClick:
+	onCanvasDoubleClick?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onItemClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
@@ -367,6 +369,7 @@ interface TimelineProps<
 		newVisibleTimeEnd: number,
 		updateScrollCanvas: (start: number, end: number) => void,
 	) => void;
+	rightSidebarWidth?: number;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
 		TGroupIdKey,
@@ -574,6 +577,7 @@ function RenderedTimeline<
 	onItemResize,
 	onItemSelect,
 	onTimeChange,
+	rightSidebarWidth = 0,
 	rowData,
 	rowRenderer,
 	selected,
@@ -878,7 +882,10 @@ function RenderedTimeline<
 	const canResizeLeft = canResize === "left" || canResize === "both";
 	const canResizeRight = canResize === "right" || canResize === "both";
 
-	const renderedGroups: ReactNode[] = [];
+	const renderedLeftGroups: ReactNode[] | undefined =
+		sidebarWidth > ZERO ? [] : undefined;
+	const renderedRightGroups: ReactNode[] | undefined =
+		rightSidebarWidth > ZERO ? [] : undefined;
 	const renderedGroupRows: ReactNode[] = [];
 
 	const timeline = timelineRef?.current;
@@ -893,11 +900,47 @@ function RenderedTimeline<
 				continue;
 			}
 
-			renderedGroups.push(
-				groupRenderer({
-					group: group.originalGroup,
-					isRightSidebar: false,
-				}),
+			renderedLeftGroups?.push(
+				<Group<
+					TGroupIdKey,
+					TGroupTitleKey,
+					TGroupRightTitleKey,
+					TItemIdKey,
+					TItemGroupKey,
+					TItemTitleKey,
+					TItemDivTitleKey,
+					TItemTimeStartKey,
+					TItemTimeEndKey,
+					TGroup,
+					TItem
+				>
+					group={group}
+					groupIndex={groupIndex}
+					groupRenderer={groupRenderer}
+					timeline={timeline}
+				/>,
+			);
+
+			renderedRightGroups?.push(
+				<Group<
+					TGroupIdKey,
+					TGroupTitleKey,
+					TGroupRightTitleKey,
+					TItemIdKey,
+					TItemGroupKey,
+					TItemTitleKey,
+					TItemDivTitleKey,
+					TItemTimeStartKey,
+					TItemTimeEndKey,
+					TGroup,
+					TItem
+				>
+					group={group}
+					groupIndex={groupIndex}
+					groupRenderer={groupRenderer}
+					isRightSidebar={true}
+					timeline={timeline}
+				/>,
 			);
 
 			renderedGroupRows.push(
@@ -968,6 +1011,8 @@ function RenderedTimeline<
 		>
 			<cg-timeline
 				class={className}
+				h-end-extrema={[rightSidebarWidth, rightSidebarWidth]}
+				h-end-size={rightSidebarWidth}
 				h-start-extrema={[sidebarWidth, sidebarWidth]}
 				h-start-size={sidebarWidth}
 				h-window={[visibleTimeStart, visibleTimeEnd]}
@@ -981,9 +1026,27 @@ function RenderedTimeline<
 				timezone-offset={timezoneOffset}
 				ref={timelineRef}
 			>
+				{renderedLeftGroups ? (
+					<div
+						className="rct-sidebar"
+						slot="bar-h-start"
+						style={{ height: "100%", width: "100%" }}
+					>
+						<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+					</div>
+				) : undefined}
 				<div className="rct-horizontal-lines" slot="center">
 					{renderedGroupRows}
 				</div>
+				{renderedRightGroups ? (
+					<div
+						className="rct-sidebar rct-sidebar-right"
+						slot="bar-h-end"
+						style={{ height: "100%", width: "100%" }}
+					>
+						<div style={{ height: "100%" }}>{renderedRightGroups}</div>
+					</div>
+				) : undefined}
 			</cg-timeline>
 		</TimelineStateProvider>
 	);

@@ -201,7 +201,13 @@ export function App(): ReactNode {
 	}, []);
 
 	const groupRenderer = useCallback<GroupRenderer>(
-		({ group }) => <div>{`group-${group.id}`}</div>,
+		({ group }) => (
+			<div
+				style={{
+					backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+				}}
+			>{`group-${group.id}`}</div>
+		),
 		[],
 	);
 

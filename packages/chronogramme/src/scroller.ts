@@ -128,6 +128,10 @@ export class Scroller extends HTMLElement {
 		this.#centerElement = center;
 		center.id = "center";
 
+		const centerSlot = document.createElement("slot");
+		centerSlot.name = center.id;
+		center.appendChild(centerSlot);
+
 		// Sides
 		const bars: HTMLDivElement[] = [];
 
@@ -135,6 +139,10 @@ export class Scroller extends HTMLElement {
 		for (const location of ["v-start", "h-start", "h-end", "v-end"]) {
 			const bar = document.createElement("div");
 			bar.id = `bar-${location}`;
+
+			const barSlot = document.createElement("slot");
+			barSlot.name = bar.id;
+			bar.appendChild(barSlot);
 
 			bars.push(bar);
 		}
@@ -146,6 +154,10 @@ export class Scroller extends HTMLElement {
 			for (const vLocation of ["start", "end"]) {
 				const corner = document.createElement("div");
 				corner.id = `corner-h-${hLocation}-v-${vLocation}`;
+
+				const cornerSlot = document.createElement("slot");
+				cornerSlot.name = corner.id;
+				corner.appendChild(cornerSlot);
 
 				corners.push(corner);
 			}
@@ -174,11 +186,6 @@ export class Scroller extends HTMLElement {
 
 		const dividerVEnd = document.createElement("slot");
 		dividerVEnd.id = "divider-v-end";
-
-		// Slots
-		const centerSlot = document.createElement("slot");
-		centerSlot.name = "center";
-		center.appendChild(centerSlot);
 
 		// Container
 		const container = document.createElement("div");
