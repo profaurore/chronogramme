@@ -5,9 +5,11 @@ import {
 	type Timeline as HTMLTimeline,
 	TIME_MAX,
 	TIME_MIN,
+	UNIT,
 	ZERO,
 } from "@chronogramme/chronogramme";
 import {
+	Children,
 	type CSSProperties,
 	type HTMLAttributes,
 	memo,
@@ -26,12 +28,21 @@ import {
 	ScrollBoundsChangeEventDetail,
 	WindowChangeEventDetail,
 } from "../../chronogramme/src/events";
-import { defaultKeys } from "./constants";
+import {
+	defaultKeys,
+	defaultTimeSteps,
+	minCellWidth,
+	timeFactors,
+} from "./constants";
+import { DateHeader, type Unit } from "./DateHeader";
 import { Group } from "./Group";
+import { HeadersProvider } from "./headerContext/HeadersProvider";
 import { Row } from "./Row";
+import { TimelineHeaders } from "./TimelineHeaders";
+import type { ShowPeriod } from "./timelineStateContext/TimelineStateContext";
 import { TimelineStateProvider } from "./timelineStateContext/TimelineStateProvider";
 import type { FullRequired } from "./typeUtils";
-import { useRender } from "./utils";
+import { reactChildHasSecretKey, useRender } from "./utils";
 
 const MINUTES_TO_MILLISECONDS = 60 * 1000;
 const FIFTEEN_MINUTES = 15 * MINUTES_TO_MILLISECONDS;
@@ -44,6 +55,15 @@ export interface RctToCoreItem<TItem> extends CoreBaseItem {
 
 export interface RctToCoreGroup<TGroup> extends CoreBaseGroup {
 	originalGroup: TGroup;
+}
+
+export interface TimeSteps {
+	second: number;
+	minute: number;
+	hour: number;
+	day: number;
+	month: number;
+	year: number;
 }
 
 export type BaseItem<
@@ -218,7 +238,6 @@ export type ItemRenderer<
 		useResizeHandle: boolean;
 		width: number;
 	};
-	key: string;
 	timelineContext: {
 		canvasTimeEnd: number;
 		canvasTimeStart: number;
@@ -285,6 +304,7 @@ interface TimelineProps<
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
 	canSelect?: boolean | undefined;
+	children?: React.ReactNode | undefined;
 	className?: string | undefined;
 	dragSnap?: number | undefined;
 	groupRenderer: GroupRenderer<
@@ -294,6 +314,8 @@ interface TimelineProps<
 		TGroup
 	>;
 	groups: TGroup[];
+	headerHeight?: number;
+	hideHeaders?: boolean;
 	horizontalLineClassNamesForGroup?: ((group: TGroup) => string[]) | undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
@@ -380,6 +402,7 @@ interface TimelineProps<
 	>;
 	selected?: number[] | undefined;
 	sidebarWidth?: number;
+	timeSteps?: TimeSteps;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
 }
@@ -553,9 +576,12 @@ function RenderedTimeline<
 	canMove = true,
 	canResize = "right",
 	canSelect = true,
+	children,
 	className,
 	dragSnap = FIFTEEN_MINUTES,
 	groupRenderer,
+	headerHeight = 50,
+	hideHeaders,
 	horizontalLineClassNamesForGroup,
 	id,
 	itemHeightRatio = 0.65,
@@ -582,6 +608,7 @@ function RenderedTimeline<
 	rowRenderer,
 	selected,
 	sidebarWidth = 150,
+	timeSteps = defaultTimeSteps,
 	timelineRef,
 	visibleTimeEnd,
 	visibleTimeStart,
@@ -739,7 +766,7 @@ function RenderedTimeline<
 			};
 		}
 
-		return undefined;
+		return;
 	}, [onItemDrag, onItemMove, timelineRef]);
 
 	useEffect(() => {
@@ -798,7 +825,7 @@ function RenderedTimeline<
 			};
 		}
 
-		return undefined;
+		return;
 	}, [onItemResize, timelineRef]);
 
 	useLayoutEffect(() => {
@@ -879,6 +906,49 @@ function RenderedTimeline<
 		[onCanvasClick],
 	);
 
+	const timezoneOffset = useMemo(() => {
+		return new Date().getTimezoneOffset() * MINUTES_TO_MILLISECONDS;
+	}, []);
+
+	const showPeriod: ShowPeriod = useCallback(
+		(from, to) => {
+			const zoom = from - to;
+
+			// No closer than 1 hour.
+			if (zoom < 360_000) {
+				return;
+			}
+
+			onTimeChange?.(from, to, function updateScrollCanvas(start, end) {
+				timelineRef.current?.setHWindow(start, end);
+			});
+		},
+		[onTimeChange, timelineRef],
+	);
+
+	const timelineWidth = timelineRef.current?.hWindowSize ?? ZERO;
+	const timelineRange = timelineRef.current?.hWindowRange ?? ZERO;
+	const timelineUnit: Unit = useMemo(() => {
+		const maxCellsToRender = timelineWidth / minCellWidth;
+
+		let unitCount = timelineRange;
+
+		for (const [unit, factor] of Object.entries(timeFactors) as [
+			keyof TimeSteps,
+			number,
+		][]) {
+			unitCount /= factor;
+
+			const cellsToBeRendered = unitCount / timeSteps[unit];
+
+			if (cellsToBeRendered < maxCellsToRender) {
+				return unit;
+			}
+		}
+
+		return "second";
+	}, [timeSteps, timelineRange, timelineWidth]);
+
 	const canResizeLeft = canResize === "left" || canResize === "both";
 	const canResizeRight = canResize === "right" || canResize === "both";
 
@@ -917,6 +987,7 @@ function RenderedTimeline<
 					group={group}
 					groupIndex={groupIndex}
 					groupRenderer={groupRenderer}
+					key={`group-${group.id}-left`}
 					timeline={timeline}
 				/>,
 			);
@@ -939,6 +1010,7 @@ function RenderedTimeline<
 					groupIndex={groupIndex}
 					groupRenderer={groupRenderer}
 					isRightSidebar={true}
+					key={`group-${group.id}-right`}
 					timeline={timeline}
 				/>,
 			);
@@ -963,6 +1035,7 @@ function RenderedTimeline<
 					horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 					itemHeightRatio={itemHeightRatio}
 					itemRenderer={itemRenderer}
+					key={`group-${group.id}-row`}
 					onClick={onRowClickHandler}
 					onContextMenu={onCanvasContextMenu}
 					onDoubleClick={onCanvasDoubleClick}
@@ -974,81 +1047,118 @@ function RenderedTimeline<
 		}
 	}
 
-	const timezoneOffset = useMemo(() => {
-		return new Date().getTimezoneOffset() * MINUTES_TO_MILLISECONDS;
-	}, []);
+	let renderedHeader: ReactNode | undefined;
+
+	if (!hideHeaders) {
+		if (children) {
+			const headers: React.ReactNode[] = [];
+			Children.forEach(children, (child) => {
+				if (reactChildHasSecretKey(child, TimelineHeaders.secretKey)) {
+					headers.push(child);
+				}
+			});
+
+			if (headers.length > UNIT) {
+				throw new Error(
+					"more than one <TimelineHeaders /> child found under <Timeline />",
+				);
+			}
+
+			renderedHeader = headers[0];
+		}
+
+		renderedHeader ??= (
+			<TimelineHeaders>
+				<DateHeader unit="primaryHeader" />
+				<DateHeader />
+			</TimelineHeaders>
+		);
+	}
 
 	return (
-		<TimelineStateProvider<
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey,
-			TGroup,
-			TItem
+		<cg-timeline
+			class={className}
+			h-end-extrema={[rightSidebarWidth, rightSidebarWidth]}
+			h-end-size={rightSidebarWidth}
+			h-start-extrema={[sidebarWidth, sidebarWidth]}
+			h-start-size={sidebarWidth}
+			h-window={[visibleTimeStart, visibleTimeEnd]}
+			h-extrema={[TIME_MIN, TIME_MAX]}
+			v-start-extrema={[headerHeight, headerHeight]}
+			v-start-size={headerHeight}
+			id={id}
+			item-time-snap={dragSnap}
+			items-draggable={canMove}
+			items-end-resizable={canResize === "right" || canResize === "both"}
+			items-start-resizable={canResize === "left" || canResize === "both"}
+			line-size={lineHeight}
+			timezone-offset={timezoneOffset}
+			ref={timelineRef}
 		>
-			canMove={canMove}
-			canResizeLeft={canResizeLeft}
-			canResizeRight={canResizeRight}
-			canSelect={canSelect}
-			itemDragStateRef={itemDragStateRef}
-			itemResizeStateRef={itemResizeStateRef}
-			keys={resolvedKeys}
-			minResizeWidth={minResizeWidth}
-			onItemClick={onItemClick}
-			onItemContextMenu={onItemContextMenu}
-			onItemDoubleClick={onItemDoubleClick}
-			onItemSelect={onItemSelect}
-			selected={selected}
-			selectedItemId={selectedItemId}
-			setSelectedItemId={setSelectedItemId}
-			timelineRef={timelineRef}
-		>
-			<cg-timeline
-				class={className}
-				h-end-extrema={[rightSidebarWidth, rightSidebarWidth]}
-				h-end-size={rightSidebarWidth}
-				h-start-extrema={[sidebarWidth, sidebarWidth]}
-				h-start-size={sidebarWidth}
-				h-window={[visibleTimeStart, visibleTimeEnd]}
-				h-extrema={[TIME_MIN, TIME_MAX]}
-				id={id}
-				item-time-snap={dragSnap}
-				items-draggable={canMove}
-				items-end-resizable={canResize === "right" || canResize === "both"}
-				items-start-resizable={canResize === "left" || canResize === "both"}
-				line-size={lineHeight}
-				timezone-offset={timezoneOffset}
-				ref={timelineRef}
-			>
-				{renderedLeftGroups ? (
-					<div
-						className="rct-sidebar"
-						slot="bar-h-start"
-						style={{ height: "100%", width: "100%" }}
+			{timeline && (
+				<TimelineStateProvider<
+					TGroupIdKey,
+					TGroupTitleKey,
+					TGroupRightTitleKey,
+					TItemIdKey,
+					TItemGroupKey,
+					TItemTitleKey,
+					TItemDivTitleKey,
+					TItemTimeStartKey,
+					TItemTimeEndKey,
+					TGroup,
+					TItem
+				>
+					canMove={canMove}
+					canResizeLeft={canResizeLeft}
+					canResizeRight={canResizeRight}
+					canSelect={canSelect}
+					itemDragStateRef={itemDragStateRef}
+					itemResizeStateRef={itemResizeStateRef}
+					keys={resolvedKeys}
+					minResizeWidth={minResizeWidth}
+					onItemClick={onItemClick}
+					onItemContextMenu={onItemContextMenu}
+					onItemDoubleClick={onItemDoubleClick}
+					onItemSelect={onItemSelect}
+					selected={selected}
+					selectedItemId={selectedItemId}
+					setSelectedItemId={setSelectedItemId}
+					showPeriod={showPeriod}
+					timeline={timeline}
+					timelineUnit={timelineUnit}
+				>
+					<HeadersProvider
+						leftSidebarWidth={sidebarWidth}
+						rightSidebarWidth={rightSidebarWidth}
+						timeSteps={timeSteps}
 					>
-						<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+						{renderedHeader}
+					</HeadersProvider>
+					{renderedLeftGroups && (
+						<div
+							className="rct-sidebar"
+							slot="bar-h-start"
+							style={{ height: "100%", width: "100%" }}
+						>
+							<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+						</div>
+					)}
+					<div className="rct-horizontal-lines" slot="center">
+						{renderedGroupRows}
 					</div>
-				) : undefined}
-				<div className="rct-horizontal-lines" slot="center">
-					{renderedGroupRows}
-				</div>
-				{renderedRightGroups ? (
-					<div
-						className="rct-sidebar rct-sidebar-right"
-						slot="bar-h-end"
-						style={{ height: "100%", width: "100%" }}
-					>
-						<div style={{ height: "100%" }}>{renderedRightGroups}</div>
-					</div>
-				) : undefined}
-			</cg-timeline>
-		</TimelineStateProvider>
+					{renderedRightGroups && (
+						<div
+							className="rct-sidebar rct-sidebar-right"
+							slot="bar-h-end"
+							style={{ height: "100%", width: "100%" }}
+						>
+							<div style={{ height: "100%" }}>{renderedRightGroups}</div>
+						</div>
+					)}
+				</TimelineStateProvider>
+			)}
+		</cg-timeline>
 	);
 }
 

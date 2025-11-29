@@ -54,7 +54,7 @@ export function useTimelineState<
 
 	if (!context) {
 		throw new Error(
-			"useTimelineState must be used within a TimelineStateProvider",
+			"useTimelineState() must be used within a <TimelineStateProvider />",
 		);
 	}
 

@@ -22,7 +22,7 @@ export function useGroupRow<
 	>;
 
 	if (!context) {
-		throw new Error("useGroupRow must be used within a GroupRowProvider");
+		throw new Error("useGroupRow() must be used within a <GroupRowProvider />");
 	}
 
 	return context;

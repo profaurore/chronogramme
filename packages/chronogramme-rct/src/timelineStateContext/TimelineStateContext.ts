@@ -4,6 +4,7 @@ import type {
 } from "@chronogramme/chronogramme";
 
 import { createContext, type SyntheticEvent } from "react";
+import type { Unit } from "../DateHeader";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -11,6 +12,8 @@ import type {
 	RctToCoreItem,
 	TimelineKeys,
 } from "../timeline";
+
+export type ShowPeriod = (from: number, to: number) => void;
 
 export interface TimelineState<
 	TGroupIdKey extends string = "id",
@@ -76,16 +79,16 @@ export interface TimelineState<
 	selected?: number[] | undefined;
 	selectedItemId: number | undefined;
 	setSelectedItemId: (itemId: number) => void;
-	// showPeriod: (from: number, to: number) => void; // TODO: Implement
-	timelineRef: React.RefObject<InstanceType<
+	showPeriod: ShowPeriod;
+	timeline: InstanceType<
 		typeof HTMLTimeline<
 			number,
 			RctToCoreGroup<TGroup>,
 			number,
 			RctToCoreItem<TItem>
 		>
-	> | null>;
-	// timelineUnit: 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second'; // TODO: Implement
+	>;
+	timelineUnit: Unit;
 }
 
 export const TimelineStateContext = createContext<TimelineState | undefined>(

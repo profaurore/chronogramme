@@ -38,7 +38,7 @@ export function useRowItems<
 	>;
 
 	if (!context) {
-		throw new Error("useRowItems must be used within a RowItemsProvider");
+		throw new Error("useRowItems() must be used within a <RowItemsProvider />");
 	}
 
 	return context;

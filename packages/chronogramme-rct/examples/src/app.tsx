@@ -24,6 +24,7 @@ import type {
 
 const timelineClass = css`
 	flex: none;
+	font-size: 12px;
 	height: 400px;
 	margin-bottom: 1em;
 `;
@@ -229,7 +230,7 @@ export function App(): ReactNode {
 	}, []);
 
 	const itemRenderer = useCallback<ItemRenderer>(
-		({ getItemProps, getResizeProps, item, key }) => {
+		({ getItemProps, getResizeProps, item }) => {
 			const { left: leftResizeProps, right: rightResizeProps } =
 				getResizeProps();
 
@@ -240,9 +241,15 @@ export function App(): ReactNode {
 			rightResizeProps.style.zIndex = -1;
 
 			return (
-				<div {...getItemProps({ style: { whiteSpace: "nowrap" } })} key={key}>
+				<div
+					{...getItemProps({
+						style: { textAlign: "center", whiteSpace: "nowrap" },
+					})}
+				>
 					<div key="left" {...leftResizeProps} />
-					{item.group}-{item.id}
+					<span style={{ pointerEvents: "none" }}>
+						{item.group}-{item.id}
+					</span>
 					<div key="right" {...rightResizeProps} />
 				</div>
 			);

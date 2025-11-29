@@ -1,3 +1,7 @@
+import type { TimeSteps } from "./timeline";
+
+export const RIGHT_VARIANT = "right";
+
 export const leftResizeStyle = {
 	position: "absolute",
 	width: 24,
@@ -78,4 +82,34 @@ export const defaultKeys = {
 	itemTimeEndKey: "end_time",
 	itemTimeStartKey: "start_time",
 	itemTitleKey: "title",
+} as const;
+
+export const defaultTimeSteps = {
+	second: 1,
+	minute: 1,
+	hour: 1,
+	day: 1,
+	month: 1,
+	year: 1,
+} as const;
+
+export const minCellWidth = 17;
+
+export const timeFactors: Record<keyof TimeSteps, number> = {
+	second: 1000,
+	minute: 60,
+	hour: 60,
+	day: 24,
+	month: 30,
+	year: 12,
+} as const;
+
+export const nextTimeUnits = {
+	second: "minute",
+	minute: "hour",
+	hour: "day",
+	day: "week",
+	week: "month",
+	month: "year",
+	year: "year",
 } as const;

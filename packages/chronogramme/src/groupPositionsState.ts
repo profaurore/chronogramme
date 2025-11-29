@@ -34,6 +34,19 @@ export type ItemResizeValidator<TItem> = (
 // 	offset: number;
 // }
 
+interface ItemChangeState<
+	TGroupId = number,
+	TItemId = number,
+	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
+> {
+	changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
+	item: TItem;
+	newItem: TItem;
+	prevRawEndTime: number;
+	prevRawStartTime: number;
+	triggerTime: number;
+}
+
 export class GroupPositionsState<
 	TGroupId = number,
 	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
@@ -54,20 +67,13 @@ export class GroupPositionsState<
 
 	#groupSizes: number[];
 
-	#groupWindowMax: number;
+	#groupPosWindowMax: number;
 
-	#groupWindowMin: number;
+	#groupPosWindowMin: number;
 
-	#itemChangeState:
-		| {
-				changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
-				triggerTime: number;
-				item: TItem;
-				newItem: TItem;
-				prevRawEndTime: number;
-				prevRawStartTime: number;
-		  }
-		| undefined;
+	#size: number;
+
+	#itemChangeState: ItemChangeState<TGroupId, TItemId, TItem> | undefined;
 
 	#itemGroups: (readonly Readonly<TItem>[])[];
 
@@ -79,7 +85,7 @@ export class GroupPositionsState<
 
 	#itemTimeSnap: number | undefined;
 
-	#timezoneOffset: number | undefined;
+	#timezoneOffset: number;
 
 	#itemsEndResizable: boolean;
 
@@ -89,9 +95,13 @@ export class GroupPositionsState<
 
 	#itemWindowMin: number;
 
+	#itemResizeValidator: ItemResizeValidator<TItem> | undefined;
+
 	#lineSize: number;
 
-	#itemResizeValidator: ItemResizeValidator<TItem> | undefined;
+	#visibleGroupIndexMin: number;
+
+	#visibleGroupIndexMax: number;
 
 	// The reference is the distance from the bottom of the first group in the
 	// view.
@@ -107,8 +117,8 @@ export class GroupPositionsState<
 		this.#groupOverdraw = GROUP_OVERDRAW_DEFAULT;
 		this.#groupPositions = [];
 		this.#groupSizes = [];
-		this.#groupWindowMax = ZERO;
-		this.#groupWindowMin = ZERO;
+		this.#groupPosWindowMax = ZERO;
+		this.#groupPosWindowMin = ZERO;
 		this.#itemGroups = [];
 		this.#items = [];
 		this.#itemsDraggable = true;
@@ -116,6 +126,10 @@ export class GroupPositionsState<
 		this.#itemsStartResizable = true;
 		this.#itemWindowMax = ZERO;
 		this.#itemWindowMin = ZERO;
+		this.#size = ZERO;
+		this.#timezoneOffset = ZERO;
+		this.#visibleGroupIndexMax = ZERO;
+		this.#visibleGroupIndexMin = ZERO;
 	}
 
 	public clearGroupsAndItems(): void {
@@ -128,6 +142,10 @@ export class GroupPositionsState<
 		this.#groupSizes = [];
 		this.#itemGroups = [];
 		this.#items = [];
+	}
+
+	public get size(): number {
+		return this.#size;
 	}
 
 	public getDragOffset(): number | undefined {
@@ -188,50 +206,15 @@ export class GroupPositionsState<
 	}
 
 	public getGroupSize(index: number): number {
-		const itemChangeState = this.#itemChangeState;
-
-		// If the dragged item is part of the initial or new item groups, then don't
-		// use the cache or cache the result, because the group and position of the
-		// dragged item could be changing quickly.
-		if (itemChangeState) {
-			const group = this.getGroup(index);
-
-			if (group) {
-				const groupId = group.id;
-
-				if (
-					itemChangeState.item?.groupId === groupId ||
-					itemChangeState.newItem?.groupId === groupId
-				) {
-					return this.buildGroupSize(index);
-				}
-			}
-		}
-
 		const groupSizes = this.#groupSizes;
 
 		let groupSize = groupSizes[index];
 
 		if (groupSize === undefined) {
-			groupSize = this.buildGroupSize(index);
-			groupSizes[index] = groupSize;
+			groupSize = this.getGroupLineSize(index);
 		}
 
 		return groupSize;
-	}
-
-	public getHeight(): number {
-		const groups = this.#groups;
-		const groupSizes = this.#groupSizes;
-
-		const numGroups = groups.length;
-		let height = ZERO;
-
-		for (let index = ZERO; index < numGroups; index++) {
-			height += groupSizes[index] ?? this.getGroupLineSize(index);
-		}
-
-		return height;
 	}
 
 	public getItem(
@@ -266,7 +249,7 @@ export class GroupPositionsState<
 			itemChangeState === undefined ||
 			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
 		) {
-			return undefined;
+			return;
 		}
 
 		return itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
@@ -284,48 +267,14 @@ export class GroupPositionsState<
 	}
 
 	public *getVisibleGroupsIter(): Generator<number, void, undefined> {
-		const groups = this.#groups;
-
-		const groupDrawMin = this.getGroupDrawMin();
-		const groupDrawMax = this.getGroupDrawMax();
-
-		let [firstGroupIndex, firstGroupStartPos] = this.getGroupByPosition(
-			this.getGroupDrawMin(),
-		);
-		const numGroups = groups.length;
-
-		let currentPos = firstGroupStartPos;
-		let lastGroupIndex: number;
+		const visibleGroupIndexMax = this.#visibleGroupIndexMax;
+		const visibleGroupIndexMin = this.#visibleGroupIndexMin;
 
 		for (
-			lastGroupIndex = firstGroupIndex;
-			lastGroupIndex < numGroups && currentPos < groupDrawMax;
-			lastGroupIndex++
+			let index = visibleGroupIndexMin;
+			index < visibleGroupIndexMax;
+			index++
 		) {
-			currentPos += this.getGroupSize(lastGroupIndex);
-		}
-
-		const windowMinAdjusted = currentPos - (groupDrawMax - groupDrawMin);
-		currentPos = firstGroupStartPos;
-
-		// If the selected groups are shorter than the window range, snap them to
-		// the end of the range and add more groups to the start as long as there
-		// are some.
-		for (
-			;
-			firstGroupIndex > ZERO && currentPos > windowMinAdjusted;
-			firstGroupIndex--
-		) {
-			currentPos -= this.getGroupSize(firstGroupIndex);
-		}
-
-		// If the selected groups are still shorter than the window range, snap the
-		// first group to the start of the range.
-		if (currentPos > windowMinAdjusted) {
-			currentPos = ZERO;
-		}
-
-		for (let index = firstGroupIndex; index < lastGroupIndex; index++) {
 			yield index;
 		}
 	}
@@ -373,9 +322,28 @@ export class GroupPositionsState<
 		}
 	}
 
-	public setGroupWindow(groupWindowMin: number, groupWindowMax: number): void {
-		this.#groupWindowMin = groupWindowMin;
-		this.#groupWindowMax = groupWindowMax;
+	public setWindow(
+		groupPosWindowMin: number,
+		groupPosWindowMax: number,
+		itemWindowMin: number,
+		itemWindowMax: number,
+	): void {
+		const prevItemWindowMax = this.#itemWindowMax;
+		const prevItemWindowMin = this.#itemWindowMin;
+
+		this.#groupPosWindowMin = groupPosWindowMin;
+		this.#groupPosWindowMax = groupPosWindowMax;
+		this.#itemWindowMin = itemWindowMin;
+		this.#itemWindowMax = itemWindowMax;
+
+		if (
+			itemWindowMin !== prevItemWindowMin ||
+			itemWindowMax !== prevItemWindowMax
+		) {
+			this.clearItemCaches();
+		}
+
+		this.requestRender();
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
@@ -400,13 +368,6 @@ export class GroupPositionsState<
 
 	public setItemTimeSnap(itemTimeSnap: number | undefined): void {
 		this.#itemTimeSnap = itemTimeSnap;
-	}
-
-	public setItemWindow(itemWindowMin: number, itemWindowMax: number): void {
-		this.#itemWindowMin = itemWindowMin;
-		this.#itemWindowMax = itemWindowMax;
-
-		this.clearItemCaches();
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
@@ -456,7 +417,7 @@ export class GroupPositionsState<
 	}
 
 	public setTimezoneOffset(timezoneOffset: number | undefined): void {
-		this.#timezoneOffset = timezoneOffset;
+		this.#timezoneOffset = timezoneOffset ?? ZERO;
 	}
 
 	public itemDrag(
@@ -513,25 +474,24 @@ export class GroupPositionsState<
 				newEndTime = rawEndTime;
 			}
 
-			const [dragGroupIndex] = this.getGroupByPosition(dragGroupPos);
-			const newGroupId = this.#groups[dragGroupIndex]?.id ?? groupId;
+			// TODO: Fix issue when dragging from a lower-index group to a
+			// higher-index group reduces the height of the lower-index group and
+			// causes the resulting group index to be incorrect.
+			const [newGroupIndex] = this.getGroupByPosition(dragGroupPos);
+			const newGroupId = this.#groups[newGroupIndex]?.id ?? groupId;
 
 			const itemHMoved = newStartTime !== startTime || newEndTime !== endTime;
 			const itemVMoved = newGroupId !== groupId;
 
-			if (itemVMoved) {
-				const newGroupIndex = this.getGroupIndex(newGroupId);
-
-				if (newGroupIndex !== undefined) {
-					this.#groupPositions.splice(newGroupIndex);
-				}
+			if (itemVMoved && newGroupIndex !== undefined) {
+				this.clearGroupCaches(newGroupIndex);
 			}
 
 			if (itemHMoved || itemVMoved) {
 				const groupIndex = this.getGroupIndex(groupId);
 
 				if (groupIndex !== undefined) {
-					this.#groupPositions.splice(groupIndex);
+					this.clearGroupCaches(groupIndex);
 				}
 
 				const newItem = {
@@ -544,7 +504,7 @@ export class GroupPositionsState<
 				itemChangeState.prevRawStartTime = rawStartTime;
 				itemChangeState.prevRawEndTime = rawEndTime;
 
-				this.dispatchEvent(new CustomEvent("renderRequest"));
+				this.requestRender();
 
 				return {
 					endTime: newItem.endTime,
@@ -555,7 +515,7 @@ export class GroupPositionsState<
 			}
 		}
 
-		return undefined;
+		return;
 	}
 
 	public itemDragCancel(): void {
@@ -567,7 +527,7 @@ export class GroupPositionsState<
 		) {
 			this.#itemChangeState = undefined;
 
-			this.clearGroupPositions(itemChangeState);
+			this.clearChangedItemGroupCaches(itemChangeState);
 		}
 	}
 
@@ -587,7 +547,7 @@ export class GroupPositionsState<
 		) {
 			this.#itemChangeState = undefined;
 
-			this.clearGroupPositions(itemChangeState, skipRender);
+			this.clearChangedItemGroupCaches(itemChangeState, skipRender);
 
 			const newItem = itemChangeState.newItem;
 
@@ -599,7 +559,7 @@ export class GroupPositionsState<
 			};
 		}
 
-		return undefined;
+		return;
 	}
 
 	public itemDragStart(id: TItemId, dragTime: number): void {
@@ -725,7 +685,7 @@ export class GroupPositionsState<
 				const groupIndex = this.getGroupIndex(groupId);
 
 				if (groupIndex !== undefined) {
-					this.#groupPositions.splice(groupIndex);
+					this.clearGroupCaches(groupIndex);
 				}
 
 				const newItem = {
@@ -737,7 +697,7 @@ export class GroupPositionsState<
 				itemChangeState.prevRawStartTime = rawStartTime;
 				itemChangeState.prevRawEndTime = rawEndTime;
 
-				this.dispatchEvent(new CustomEvent("renderRequest"));
+				this.requestRender();
 
 				return {
 					endTime: newItem.endTime,
@@ -748,7 +708,7 @@ export class GroupPositionsState<
 			}
 		}
 
-		return undefined;
+		return;
 	}
 
 	public itemResizeCancel(): void {
@@ -760,7 +720,7 @@ export class GroupPositionsState<
 		) {
 			this.#itemChangeState = undefined;
 
-			this.clearGroupPositions(itemChangeState);
+			this.clearChangedItemGroupCaches(itemChangeState);
 		}
 	}
 
@@ -780,7 +740,7 @@ export class GroupPositionsState<
 		) {
 			this.#itemChangeState = undefined;
 
-			this.clearGroupPositions(itemChangeState, skipRender);
+			this.clearChangedItemGroupCaches(itemChangeState, skipRender);
 
 			const newItem = itemChangeState.newItem;
 
@@ -792,7 +752,7 @@ export class GroupPositionsState<
 			};
 		}
 
-		return undefined;
+		return;
 	}
 
 	private buildGroupLines(index: number): TItem[][] {
@@ -803,13 +763,13 @@ export class GroupPositionsState<
 		const group = this.getGroup(index);
 
 		const itemGroup = this.getItemGroup(index);
-		const draggedItemInit = itemChangeState?.item;
-		const draggedItem = itemChangeState?.newItem;
+		const changedItemInit = itemChangeState?.item;
+		const changedItem = itemChangeState?.newItem;
 
 		const lines = layoutGroupRows<TGroupId, TItemId, TItem>(
 			itemGroup,
-			draggedItemInit,
-			draggedItem?.groupId === group?.id ? draggedItem : undefined,
+			changedItemInit,
+			changedItem?.groupId === group?.id ? changedItem : undefined,
 			itemWindowMin,
 			itemWindowMax,
 		);
@@ -866,7 +826,27 @@ export class GroupPositionsState<
 		return itemGroupsMap;
 	}
 
-	private clearGroupPositions(
+	public buildSize(): void {
+		const groups = this.#groups;
+		const groupSizes = this.#groupSizes;
+
+		const numGroups = groups.length;
+		let size = ZERO;
+
+		for (let index = ZERO; index < numGroups; index++) {
+			size += groupSizes[index] ?? this.getGroupLineSize(index);
+		}
+
+		this.#size = size;
+	}
+
+	private clearGroupCaches(index: number): void {
+		delete this.#groupLineSets[index];
+		delete this.#groupSizes[index];
+		this.#groupPositions.length = index;
+	}
+
+	private clearChangedItemGroupCaches(
 		itemState: { item: TItem; newItem: TItem },
 		skipRender?: boolean | undefined,
 	): void {
@@ -888,7 +868,7 @@ export class GroupPositionsState<
 			const newGroupIndex = this.getGroupIndex(newGroupId);
 
 			if (newGroupIndex !== undefined) {
-				this.#groupPositions.splice(newGroupIndex);
+				this.clearGroupCaches(newGroupIndex);
 			}
 		}
 
@@ -896,11 +876,11 @@ export class GroupPositionsState<
 			const groupIndex = this.getGroupIndex(initGroupId);
 
 			if (groupIndex !== undefined) {
-				this.#groupPositions.splice(groupIndex);
+				this.clearGroupCaches(groupIndex);
 			}
 
 			if (!skipRender) {
-				this.dispatchEvent(new CustomEvent("renderRequest"));
+				this.requestRender();
 			}
 		}
 	}
@@ -939,16 +919,16 @@ export class GroupPositionsState<
 
 	private getGroupDrawMax(): number {
 		const groupOverdraw = this.#groupOverdraw;
-		const groupWindowMax = this.#groupWindowMax;
+		const groupPosWindowMax = this.#groupPosWindowMax;
 
-		return groupWindowMax + groupOverdraw;
+		return groupPosWindowMax + groupOverdraw;
 	}
 
 	private getGroupDrawMin(): number {
 		const groupOverdraw = this.#groupOverdraw;
-		const groupWindowMin = this.#groupWindowMin;
+		const groupPosWindowMin = this.#groupPosWindowMin;
 
-		return groupWindowMin - groupOverdraw;
+		return groupPosWindowMin - groupOverdraw;
 	}
 
 	private getGroupIndex(groupId: TGroupId): number | undefined {
@@ -960,32 +940,12 @@ export class GroupPositionsState<
 			}
 		}
 
-		return undefined;
+		return;
 	}
 
 	private getGroupLines(
 		index: number,
 	): readonly (readonly Readonly<TItem>[])[] {
-		const itemChangeState = this.#itemChangeState;
-
-		// If the dragged item is part of the initial or new item groups, then don't
-		// use the cache or cache the result, because the group and position of the
-		// dragged item could be changing quickly.
-		if (itemChangeState) {
-			const group = this.getGroup(index);
-
-			if (group) {
-				const groupId = group.id;
-
-				if (
-					itemChangeState.item?.groupId === groupId ||
-					itemChangeState.newItem?.groupId === groupId
-				) {
-					return this.buildGroupLines(index);
-				}
-			}
-		}
-
 		const groupLineSets = this.#groupLineSets;
 
 		let groupLines = groupLineSets[index];
@@ -998,6 +958,19 @@ export class GroupPositionsState<
 		return groupLines;
 	}
 
+	private getGroupSizeCached(index: number): number {
+		const groupSizes = this.#groupSizes;
+
+		let groupSize = groupSizes[index];
+
+		if (groupSize === undefined) {
+			groupSize = this.buildGroupSize(index);
+			groupSizes[index] = groupSize;
+		}
+
+		return groupSize;
+	}
+
 	private getItemById(itemId: TItemId): TItem | undefined {
 		const items = this.#items;
 
@@ -1007,7 +980,7 @@ export class GroupPositionsState<
 			}
 		}
 
-		return undefined;
+		return;
 	}
 
 	private getItemGroup(index: number): readonly Readonly<TItem>[] {
@@ -1035,7 +1008,7 @@ export class GroupPositionsState<
 
 		if (groups.length === ZERO || items.length === ZERO) {
 			this.#itemGroups = [];
-			this.dispatchEvent(new CustomEvent("renderRequest"));
+			this.requestRender();
 			return;
 		}
 
@@ -1071,6 +1044,50 @@ export class GroupPositionsState<
 
 		this.clearItemCaches();
 
+		this.requestRender();
+	}
+
+	private requestRender(): void {
+		const groups = this.#groups;
+
+		const groupDrawMin = this.getGroupDrawMin();
+		const groupDrawMax = this.getGroupDrawMax();
+
+		let [visibleGroupIndexMin, visibleGroupStartPos] = this.getGroupByPosition(
+			this.getGroupDrawMin(),
+		);
+		const numGroups = groups.length;
+
+		let currentPos = visibleGroupStartPos;
+		let visibleGroupIndexMax: number;
+
+		for (
+			visibleGroupIndexMax = visibleGroupIndexMin;
+			visibleGroupIndexMax < numGroups && currentPos < groupDrawMax;
+			visibleGroupIndexMax++
+		) {
+			currentPos += this.getGroupSizeCached(visibleGroupIndexMax);
+		}
+
+		const windowMinAdjusted = currentPos - (groupDrawMax - groupDrawMin);
+		currentPos = visibleGroupStartPos;
+
+		// If the selected groups are shorter than the window range, snap them to
+		// the end of the range and add more groups to the start as long as there
+		// are some.
+		for (
+			;
+			visibleGroupIndexMin > ZERO && currentPos > windowMinAdjusted;
+			visibleGroupIndexMin--
+		) {
+			currentPos -= this.getGroupSizeCached(visibleGroupIndexMin);
+		}
+
+		this.#visibleGroupIndexMin = visibleGroupIndexMin;
+		this.#visibleGroupIndexMax = visibleGroupIndexMax;
+
+		this.buildSize();
+
 		this.dispatchEvent(new CustomEvent("renderRequest"));
 	}
 
@@ -1081,7 +1098,7 @@ export class GroupPositionsState<
 			return time;
 		}
 
-		const timezoneOffset = this.#timezoneOffset ?? ZERO;
+		const timezoneOffset = this.#timezoneOffset;
 
 		return (
 			Math.round(time / itemTimeSnap) * itemTimeSnap -

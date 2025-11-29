@@ -40,6 +40,7 @@
 	background-image: repeating-linear-gradient(135deg, #00f, #f0f 100px);
 	grid-area: center;
 	isolation: isolate;
+	overflow: hidden;
 	position: relative;
 }
 
@@ -50,6 +51,7 @@
 	display: var(--h-start-bar-display, unset);
 	left: 0;
 	grid-area: h-start;
+	overflow: hidden;
 	position: sticky;
 }
 
@@ -57,6 +59,7 @@
 	background-color: #0f0;
 	display: var(--h-end-bar-display, unset);
 	grid-area: h-end;
+	overflow: hidden;
 	position: sticky;
 	right: 0;
 }
@@ -65,6 +68,7 @@
 	background-color: #f00;
 	display: var(--v-start-bar-display, unset);
 	grid-area: v-start;
+	overflow: hidden;
 	position: sticky;
 	top: 0;
 }
@@ -74,6 +78,7 @@
 	display: var(--v-end-bar-display, unset);
 	bottom: 0;
 	grid-area: v-end;
+	overflow: hidden;
 	position: sticky;
 }
 
@@ -84,6 +89,7 @@
 	display: var(--h-start-bar-display, var(--v-start-bar-display, unset));
 	left: 0;
 	grid-area: h-start-v-start;
+	overflow: hidden;
 	position: sticky;
 	top: 0;
 }
@@ -94,6 +100,7 @@
 	bottom: 0;
 	left: 0;
 	grid-area: h-start-v-end;
+	overflow: hidden;
 	position: sticky;
 }
 
@@ -101,6 +108,7 @@
 	background-color: #0ff;
 	display: var(--h-end-bar-display, var(--v-start-bar-display, unset));
 	grid-area: h-end-v-start;
+	overflow: hidden;
 	position: sticky;
 	right: 0;
 	top: 0;
@@ -111,6 +119,7 @@
 	display: var(--h-end-bar-display, var(--v-end-bar-display, unset));
 	bottom: 0;
 	grid-area: h-end-v-end;
+	overflow: hidden;
 	position: sticky;
 	right: 0;
 }

@@ -4,7 +4,7 @@ import {
 	type ItemDragValidator,
 	type ItemResizeValidator,
 } from "./groupPositionsState";
-import { parseFloatAttribute, ZERO } from "./math";
+import { parseFloatAttribute, UNIT, ZERO } from "./math";
 import "./scroller";
 import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./scroller";
 import { validateStringOptions } from "./string";
@@ -55,6 +55,13 @@ export class Timeline<
 		this.addEventListener("windowChange", this.updateWindows.bind(this), {
 			passive: true,
 		});
+		this.addEventListener(
+			"windowSizeChange",
+			this.updateScrollWindow.bind(this),
+			{
+				passive: true,
+			},
+		);
 
 		const groupPositionsState = new GroupPositionsState<
 			TGroupId,
@@ -64,7 +71,7 @@ export class Timeline<
 		>();
 		groupPositionsState.addEventListener(
 			"renderRequest",
-			this.onRenderRequestHandler.bind(this),
+			this.requestRender.bind(this),
 			{ passive: true },
 		);
 		this.#groupPositionsState = groupPositionsState;
@@ -148,12 +155,9 @@ export class Timeline<
 	):
 		| { endTime: number; groupId: TGroupId; id: TItemId; startTime: number }
 		| undefined {
-		const rect = this.getBoundingClientRect();
-
 		return this.#groupPositionsState.itemDrag(
-			this.getHValue(clientX - rect.left),
-
-			this.vScrollPos + clientY - rect.top,
+			this.getHValueFromClient(clientX),
+			this.getVValueFromClient(clientY),
 		);
 	}
 
@@ -173,11 +177,9 @@ export class Timeline<
 	}
 
 	public itemDragStart(id: TItemId, clientX: number): void {
-		const rect = this.getBoundingClientRect();
-
 		this.#groupPositionsState.itemDragStart(
 			id,
-			this.getHValue(clientX - rect.left + this.scrollLeft),
+			this.getHValueFromClient(clientX),
 		);
 	}
 
@@ -189,10 +191,8 @@ export class Timeline<
 				startTime: number;
 		  }
 		| undefined {
-		const rect = this.getBoundingClientRect();
-
 		return this.#groupPositionsState.itemResize(
-			this.getHValue(clientX - rect.left),
+			this.getHValueFromClient(clientX),
 		);
 	}
 
@@ -212,20 +212,16 @@ export class Timeline<
 	}
 
 	public itemEndResizeStart(id: TItemId, clientX: number): void {
-		const rect = this.getBoundingClientRect();
-
 		this.#groupPositionsState.itemEndResizeStart(
 			id,
-			this.getHValue(clientX - rect.left + this.scrollLeft),
+			this.getHValueFromClient(clientX),
 		);
 	}
 
 	public itemStartResizeStart(id: TItemId, clientX: number): void {
-		const rect = this.getBoundingClientRect();
-
 		this.#groupPositionsState.itemStartResizeStart(
 			id,
-			this.getHValue(clientX - rect.left + this.scrollLeft),
+			this.getHValueFromClient(clientX),
 		);
 	}
 
@@ -331,12 +327,8 @@ export class Timeline<
 			parseFloatAttribute(this.getAttribute("row-height")),
 		);
 
-		const bbox = this.getBoundingClientRect();
-		const vSize = bbox.height;
-		this.setVExtrema(ZERO, vSize);
-		this.setVWindow(ZERO, vSize);
-
-		this.updateFullHeight();
+		this.updateScrollHeight();
+		this.updateScrollWindow();
 	}
 
 	protected override disconnectedCallback(): void {
@@ -345,20 +337,24 @@ export class Timeline<
 		super.disconnectedCallback();
 	}
 
-	private onRenderRequestHandler(): void {
-		this.updateFullHeight();
-
+	private requestRender(): void {
+		this.updateScrollHeight();
 		this.dispatchEvent(new CustomEvent("renderRequest"));
 	}
 
-	private updateFullHeight(): void {
+	private updateScrollHeight(): void {
 		const groupPositionsState = this.#groupPositionsState;
 
-		const fullHeight = groupPositionsState.getHeight();
-		const bbox = this.getBoundingClientRect();
-		const vSize = bbox.height;
+		const size = groupPositionsState.size;
 
-		this.setVExtrema(ZERO, Math.max(fullHeight, vSize));
+		this.setVExtrema(ZERO, size > ZERO ? size : UNIT);
+	}
+
+	private updateScrollWindow(): void {
+		const vWindowMin = this.vWindowMin;
+		const vWindowSize = this.vWindowSize;
+
+		this.setVWindow(vWindowMin, vWindowMin + vWindowSize);
 	}
 
 	private updateWindows(): void {
@@ -369,10 +365,12 @@ export class Timeline<
 		const vWindowMax = this.vWindowMax;
 		const vWindowMin = this.vWindowMin;
 
-		groupPositionsState.setGroupWindow(vWindowMin, vWindowMax);
-		groupPositionsState.setItemWindow(hWindowMin, hWindowMax);
-
-		this.dispatchEvent(new CustomEvent("renderRequest"));
+		groupPositionsState.setWindow(
+			this.getVPos(vWindowMin),
+			this.getVPos(vWindowMax),
+			hWindowMin,
+			hWindowMax,
+		);
 	}
 }
 

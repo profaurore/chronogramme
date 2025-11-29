@@ -51,8 +51,10 @@ export const TimelineStateProvider = <
 	onItemSelect,
 	selected,
 	selectedItemId,
+	showPeriod,
 	setSelectedItemId,
-	timelineRef,
+	timeline,
+	timelineUnit,
 }: React.PropsWithChildren<
 	TimelineState<
 		TGroupIdKey,
@@ -99,7 +101,9 @@ export const TimelineStateProvider = <
 			selected,
 			selectedItemId,
 			setSelectedItemId,
-			timelineRef,
+			showPeriod,
+			timeline,
+			timelineUnit,
 		}),
 		[
 			canMove,
@@ -117,7 +121,9 @@ export const TimelineStateProvider = <
 			selected,
 			selectedItemId,
 			setSelectedItemId,
-			timelineRef,
+			showPeriod,
+			timeline,
+			timelineUnit,
 		],
 	);
 

@@ -34,7 +34,7 @@ export const RowItems = <
 		TItemTimeEndKey
 	>,
 >(): React.ReactNode => {
-	const { timelineRef } = useTimelineState<
+	const { timeline } = useTimelineState<
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
@@ -57,12 +57,6 @@ export const RowItems = <
 		TItemTimeEndKey,
 		TItem
 	>();
-
-	const timeline = timelineRef.current;
-
-	if (!timeline) {
-		return;
-	}
 
 	const renderedItems: React.ReactNode[] = [];
 
@@ -97,6 +91,7 @@ export const RowItems = <
 				>
 					item={item}
 					itemVStartPos={itemVStartPos}
+					key={`item-${item.id}`}
 					timeline={timeline}
 				/>,
 			);
