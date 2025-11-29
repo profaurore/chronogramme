@@ -720,7 +720,7 @@ function RenderedTimeline<
 						const detail = event.detail;
 
 						if (detail instanceof DragMoveEventDetail) {
-							const result = timeline.itemDrag(detail.x, detail.y);
+							const result = timeline.itemDragMove(detail.x, detail.y);
 
 							if (result) {
 								onItemDrag?.({
@@ -784,7 +784,7 @@ function RenderedTimeline<
 						const detail = event.detail;
 
 						if (detail instanceof DragMoveEventDetail) {
-							timeline.itemResize(detail.x);
+							timeline.itemResizeMove(detail.x);
 						}
 					}
 				},

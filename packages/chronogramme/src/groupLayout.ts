@@ -1,7 +1,7 @@
 import { MOST_SIGNIFICANT_BIT, UNIT, ZERO } from "./math";
 import type { BaseItem } from "./timeline";
 
-export function layoutGroupRows<
+export function layoutGroupLines<
 	TGroupId = number,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
@@ -12,8 +12,8 @@ export function layoutGroupRows<
 	min: number,
 	max: number,
 ): TItem[][] {
-	const rows: TItem[][] = [];
-	const rowMaxs: number[] = [];
+	const lines: TItem[][] = [];
+	const linesMaxs: number[] = [];
 	const leftMinOfMaxs: number[] = [];
 	const rightMinOfMaxs: number[] = [];
 
@@ -46,11 +46,11 @@ export function layoutGroupRows<
 	}
 
 	function insertValueAtIdx(updateIdx: number, endTime: number) {
-		rowMaxs[updateIdx] = endTime;
+		linesMaxs[updateIdx] = endTime;
 		leftMinOfMaxs[updateIdx] = endTime;
 		rightMinOfMaxs[updateIdx] = endTime;
 
-		const powerOfTwo = Math.ceil(Math.log2(rowMaxs.length));
+		const powerOfTwo = Math.ceil(Math.log2(linesMaxs.length));
 
 		// The power of the update index within the binary tree.
 		// From https://stackoverflow.com/a/61442366
@@ -70,13 +70,13 @@ export function layoutGroupRows<
 				const leftOfLeftMin = leftMinOfMaxs[leftSubstep]!;
 				// biome-ignore lint/style/noNonNullAssertion: Guaranteed by the data.
 				const rightOfLeftMin = rightMinOfMaxs[leftSubstep]!;
-				const rowMax = rowMaxs[currentIdx] ?? Number.POSITIVE_INFINITY;
+				const lineMax = linesMaxs[currentIdx] ?? Number.POSITIVE_INFINITY;
 				const rightMin =
 					rightMinOfMaxs[rightSubstep] ?? Number.POSITIVE_INFINITY;
 
-				const leftMin = Math.min(leftOfLeftMin, rightOfLeftMin, rowMax);
+				const leftMin = Math.min(leftOfLeftMin, rightOfLeftMin, lineMax);
 				leftMinOfMaxs[currentIdx] = leftMin;
-				rightMinOfMaxs[currentIdx] = Math.min(leftMin, rowMax, rightMin);
+				rightMinOfMaxs[currentIdx] = Math.min(leftMin, lineMax, rightMin);
 			}
 
 			// Uses the paper folding sequence  to determine which branch of a node
@@ -107,21 +107,21 @@ export function layoutGroupRows<
 
 	for (const item of filteredItems) {
 		let insertIdx = findInsertIdx(item.startTime);
-		let row = rows[insertIdx ?? -UNIT];
+		let line = lines[insertIdx ?? -UNIT];
 
-		if (insertIdx === undefined || row === undefined) {
-			insertIdx = rows.length;
+		if (insertIdx === undefined || line === undefined) {
+			insertIdx = lines.length;
 
-			row = [];
-			rows.push(row);
+			line = [];
+			lines.push(line);
 		}
 
-		row.push(item);
+		line.push(item);
 
 		insertValueAtIdx(insertIdx, item.endTime);
 	}
 
-	return rows;
+	return lines;
 }
 
 // Paper folding sequence (https://oeis.org/A014707)
@@ -130,12 +130,12 @@ function paperFoldingSequenceTerm(n: number): boolean {
 }
 
 // Very inefficient for larger item counts. Only use for testing.
-export function layoutGroupRowsReference<
+export function layoutGroupLinesReference<
 	TGroupId = number,
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 >(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
-	const rows: TItem[][] = [];
+	const lines: TItem[][] = [];
 
 	const filteredItems = items.filter((item) => {
 		return item.startTime < max && item.endTime > min;
@@ -145,21 +145,21 @@ export function layoutGroupRowsReference<
 	for (const item of filteredItems) {
 		const startTime = item.startTime;
 
-		let row = rows.find((r) => {
+		let line = lines.find((r) => {
 			const lastItem = r.at(-1);
 
 			return lastItem && lastItem.endTime <= startTime;
 		});
 
-		if (row === undefined) {
-			row = [];
-			rows.push(row);
+		if (line === undefined) {
+			line = [];
+			lines.push(line);
 		}
 
-		row.push(item);
+		line.push(item);
 	}
 
-	return rows;
+	return lines;
 }
 
 export function groupOrderedItems<

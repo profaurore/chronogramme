@@ -149,18 +149,6 @@ export class Timeline<
 		);
 	}
 
-	public itemDrag(
-		clientX: number,
-		clientY: number,
-	):
-		| { endTime: number; groupId: TGroupId; id: TItemId; startTime: number }
-		| undefined {
-		return this.#groupPositionsState.itemDrag(
-			this.getHValueFromClient(clientX),
-			this.getVValueFromClient(clientY),
-		);
-	}
-
 	public itemDragCancel(): void {
 		this.#groupPositionsState.itemDragCancel();
 	}
@@ -176,22 +164,21 @@ export class Timeline<
 		return this.#groupPositionsState.itemDragEnd(skipRender);
 	}
 
-	public itemDragStart(id: TItemId, clientX: number): void {
-		this.#groupPositionsState.itemDragStart(
-			id,
+	public itemDragMove(
+		clientX: number,
+		clientY: number,
+	):
+		| { endTime: number; groupId: TGroupId; id: TItemId; startTime: number }
+		| undefined {
+		return this.#groupPositionsState.itemDragMove(
 			this.getHValueFromClient(clientX),
+			this.getVValueFromClient(clientY),
 		);
 	}
 
-	public itemResize(clientX: number):
-		| {
-				endTime: number;
-				id: TItemId;
-				isStart: boolean;
-				startTime: number;
-		  }
-		| undefined {
-		return this.#groupPositionsState.itemResize(
+	public itemDragStart(id: TItemId, clientX: number): void {
+		this.#groupPositionsState.itemDragStart(
+			id,
 			this.getHValueFromClient(clientX),
 		);
 	}
@@ -214,6 +201,19 @@ export class Timeline<
 	public itemEndResizeStart(id: TItemId, clientX: number): void {
 		this.#groupPositionsState.itemEndResizeStart(
 			id,
+			this.getHValueFromClient(clientX),
+		);
+	}
+
+	public itemResizeMove(clientX: number):
+		| {
+				endTime: number;
+				id: TItemId;
+				isStart: boolean;
+				startTime: number;
+		  }
+		| undefined {
+		return this.#groupPositionsState.itemResizeMove(
 			this.getHValueFromClient(clientX),
 		);
 	}

@@ -1,4 +1,4 @@
-import { layoutGroupRows } from "./groupLayout";
+import { layoutGroupLines } from "./groupLayout";
 import { clampMinWins, UNIT, validateNumberInterval, ZERO } from "./math";
 import { validateObject } from "./object";
 import type { BaseGroup, BaseItem } from "./timeline";
@@ -420,7 +420,51 @@ export class GroupPositionsState<
 		this.#timezoneOffset = timezoneOffset ?? ZERO;
 	}
 
-	public itemDrag(
+	public itemDragCancel(): void {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState &&
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
+
+			this.clearChangedItemGroupCaches(itemChangeState);
+		}
+	}
+
+	public itemDragEnd(skipRender?: boolean):
+		| {
+				endTime: number;
+				groupId: TGroupId;
+				id: TItemId;
+				startTime: number;
+		  }
+		| undefined {
+		const itemChangeState = this.#itemChangeState;
+
+		if (
+			itemChangeState &&
+			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+		) {
+			this.#itemChangeState = undefined;
+
+			this.clearChangedItemGroupCaches(itemChangeState, skipRender);
+
+			const newItem = itemChangeState.newItem;
+
+			return {
+				endTime: newItem.endTime,
+				groupId: newItem.groupId,
+				id: newItem.id,
+				startTime: newItem.startTime,
+			};
+		}
+
+		return;
+	}
+
+	public itemDragMove(
 		dragTime: number,
 		dragGroupPos: number,
 	):
@@ -474,10 +518,7 @@ export class GroupPositionsState<
 				newEndTime = rawEndTime;
 			}
 
-			// TODO: Fix issue when dragging from a lower-index group to a
-			// higher-index group reduces the height of the lower-index group and
-			// causes the resulting group index to be incorrect.
-			const [newGroupIndex] = this.getGroupByPosition(dragGroupPos);
+			const [newGroupIndex] = this.getGroupByPosition(dragGroupPos, true);
 			const newGroupId = this.#groups[newGroupIndex]?.id ?? groupId;
 
 			const itemHMoved = newStartTime !== startTime || newEndTime !== endTime;
@@ -513,50 +554,6 @@ export class GroupPositionsState<
 					startTime: newItem.startTime,
 				};
 			}
-		}
-
-		return;
-	}
-
-	public itemDragCancel(): void {
-		const itemChangeState = this.#itemChangeState;
-
-		if (
-			itemChangeState &&
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
-		) {
-			this.#itemChangeState = undefined;
-
-			this.clearChangedItemGroupCaches(itemChangeState);
-		}
-	}
-
-	public itemDragEnd(skipRender?: boolean):
-		| {
-				endTime: number;
-				groupId: TGroupId;
-				id: TItemId;
-				startTime: number;
-		  }
-		| undefined {
-		const itemChangeState = this.#itemChangeState;
-
-		if (
-			itemChangeState &&
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
-		) {
-			this.#itemChangeState = undefined;
-
-			this.clearChangedItemGroupCaches(itemChangeState, skipRender);
-
-			const newItem = itemChangeState.newItem;
-
-			return {
-				endTime: newItem.endTime,
-				groupId: newItem.groupId,
-				id: newItem.id,
-				startTime: newItem.startTime,
-			};
 		}
 
 		return;
@@ -613,7 +610,7 @@ export class GroupPositionsState<
 		}
 	}
 
-	public itemResize(resizeTime: number):
+	public itemResizeMove(resizeTime: number):
 		| {
 				endTime: number;
 				id: TItemId;
@@ -766,7 +763,7 @@ export class GroupPositionsState<
 		const changedItemInit = itemChangeState?.item;
 		const changedItem = itemChangeState?.newItem;
 
-		const lines = layoutGroupRows<TGroupId, TItemId, TItem>(
+		const lines = layoutGroupLines<TGroupId, TItemId, TItem>(
 			itemGroup,
 			changedItemInit,
 			changedItem?.groupId === group?.id ? changedItem : undefined,
@@ -893,9 +890,18 @@ export class GroupPositionsState<
 
 	private getGroupByPosition(
 		position: number,
+		excludeChangingItem?: boolean,
 	): [index: number, startPos: number] {
-		const defaultGroupSize = this.#lineSize;
 		const groupSizes = this.#groupSizes;
+
+		let changingItemGroupIndex: number | undefined;
+		if (excludeChangingItem !== undefined) {
+			const changingItemGroupId = this.#itemChangeState?.item.groupId;
+
+			if (changingItemGroupId !== undefined) {
+				changingItemGroupIndex = this.getGroupIndex(changingItemGroupId);
+			}
+		}
 
 		const numGroups = groupSizes.length;
 
@@ -903,14 +909,28 @@ export class GroupPositionsState<
 		let currentPos = ZERO;
 
 		for (let index = ZERO; index < numGroups; index++) {
-			const groupSize = groupSizes[index] ?? defaultGroupSize;
+			const cachedGroupSize = groupSizes[index];
+			const groupSize = cachedGroupSize ?? this.getGroupLineSize(index);
 
 			const startPos = currentPos;
-			currentPos += groupSize;
 
-			if (currentPos > position) {
+			if (currentPos + groupSize > position) {
 				group = [index, startPos];
 				break;
+			}
+
+			if (index === changingItemGroupIndex && cachedGroupSize !== undefined) {
+				const lines = layoutGroupLines<TGroupId, TItemId, TItem>(
+					this.getItemGroup(index),
+					this.#itemChangeState?.item,
+					undefined,
+					this.#itemWindowMin,
+					this.#itemWindowMax,
+				);
+
+				currentPos += lines.length * this.getGroupLineSize(index);
+			} else {
+				currentPos += groupSize;
 			}
 		}
 

@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
 	groupOrderedItems,
-	layoutGroupRows,
-	layoutGroupRowsReference,
+	layoutGroupLines,
+	layoutGroupLinesReference,
 } from "./groupLayout";
 import type { BaseItem } from "./timeline";
 
-describe("layoutGroupRows", () => {
-	test("No items returns an empty list of rows", () => {
-		expect(layoutGroupRows([], undefined, undefined, 0, 100)).toEqual([]);
+describe("layoutGroupLines", () => {
+	test("No items returns an empty list of lines", () => {
+		expect(layoutGroupLines([], undefined, undefined, 0, 100)).toEqual([]);
 	});
 
 	test("Random values match reference implementation", () => {
@@ -39,13 +39,13 @@ describe("layoutGroupRows", () => {
 		min++;
 		max--;
 
-		expect(layoutGroupRows(items, undefined, undefined, min, max)).toEqual(
-			layoutGroupRowsReference(items, min, max),
+		expect(layoutGroupLines(items, undefined, undefined, min, max)).toEqual(
+			layoutGroupLinesReference(items, min, max),
 		);
 
-		// for (const [rowIdx, row] of rows.entries()) {
-		// 	for (const [itemIdx, item] of row.entries()) {
-		// 		const baseItem = referenceRows[rowIdx]?.[itemIdx];
+		// for (const [lineIdx, line] of lines.entries()) {
+		// 	for (const [itemIdx, item] of line.entries()) {
+		// 		const baseItem = referenceLines[lineIdx]?.[itemIdx];
 
 		// 		if (item !== baseItem) {
 		// 			// biome-ignore lint/suspicious/noConsole: Logging for debugging.
