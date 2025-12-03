@@ -34,15 +34,16 @@ import {
 	minCellWidth,
 	timeFactors,
 } from "./constants";
-import { DateHeader, type Unit } from "./DateHeader";
-import { Group } from "./Group";
-import { HeadersProvider } from "./headerContext/HeadersProvider";
-import { Row } from "./Row";
-import { TimelineHeaders } from "./TimelineHeaders";
-import type { ShowPeriod } from "./timelineStateContext/TimelineStateContext";
-import { TimelineStateProvider } from "./timelineStateContext/TimelineStateProvider";
-import type { FullRequired } from "./typeUtils";
-import { reactChildHasSecretKey, useRender } from "./utils";
+import { Group } from "./groups/Group";
+import { Row } from "./groups/Row";
+import { DateHeader, type Unit } from "./headers/DateHeader";
+import type { ShowPeriod } from "./headers/HeadersContext";
+import { HeadersContextProvider } from "./headers/HeadersContextProvider";
+import { TimelineHeaders } from "./headers/TimelineHeaders";
+import { HelpersContextProvider } from "./helpers/HelpersContextProvider";
+import { ItemContextProvider } from "./items/ItemContextProvider";
+import { reactChildHasSecretKey, useRender } from "./utils/reactUtils";
+import type { FullRequired } from "./utils/typeUtils";
 
 const MINUTES_TO_MILLISECONDS = 60 * 1000;
 const FIFTEEN_MINUTES = 15 * MINUTES_TO_MILLISECONDS;
@@ -1034,7 +1035,6 @@ function RenderedTimeline<
 					groupIndex={groupIndex}
 					horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 					itemHeightRatio={itemHeightRatio}
-					itemRenderer={itemRenderer}
 					key={`group-${group.id}-row`}
 					onClick={onRowClickHandler}
 					onContextMenu={onCanvasContextMenu}
@@ -1096,7 +1096,7 @@ function RenderedTimeline<
 			ref={timelineRef}
 		>
 			{timeline && (
-				<TimelineStateProvider<
+				<HelpersContextProvider<
 					TGroupIdKey,
 					TGroupTitleKey,
 					TGroupRightTitleKey,
@@ -1109,32 +1109,31 @@ function RenderedTimeline<
 					TGroup,
 					TItem
 				>
-					canMove={canMove}
-					canResizeLeft={canResizeLeft}
-					canResizeRight={canResizeRight}
-					canSelect={canSelect}
-					itemDragStateRef={itemDragStateRef}
-					itemResizeStateRef={itemResizeStateRef}
-					keys={resolvedKeys}
-					minResizeWidth={minResizeWidth}
-					onItemClick={onItemClick}
-					onItemContextMenu={onItemContextMenu}
-					onItemDoubleClick={onItemDoubleClick}
-					onItemSelect={onItemSelect}
-					selected={selected}
-					selectedItemId={selectedItemId}
-					setSelectedItemId={setSelectedItemId}
-					showPeriod={showPeriod}
 					timeline={timeline}
-					timelineUnit={timelineUnit}
 				>
-					<HeadersProvider
+					<HeadersContextProvider<
+						TGroupIdKey,
+						TGroupTitleKey,
+						TGroupRightTitleKey,
+						TItemIdKey,
+						TItemGroupKey,
+						TItemTitleKey,
+						TItemDivTitleKey,
+						TItemTimeStartKey,
+						TItemTimeEndKey,
+						TGroup,
+						TItem
+					>
 						leftSidebarWidth={sidebarWidth}
 						rightSidebarWidth={rightSidebarWidth}
+						showPeriod={showPeriod}
 						timeSteps={timeSteps}
+						timeline={timeline}
+						timelineUnit={timelineUnit}
 					>
 						{renderedHeader}
-					</HeadersProvider>
+					</HeadersContextProvider>
+
 					{renderedLeftGroups && (
 						<div
 							className="rct-sidebar"
@@ -1144,9 +1143,43 @@ function RenderedTimeline<
 							<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
 						</div>
 					)}
+
 					<div className="rct-horizontal-lines" slot="center">
-						{renderedGroupRows}
+						<ItemContextProvider<
+							TGroupIdKey,
+							TGroupTitleKey,
+							TGroupRightTitleKey,
+							TItemIdKey,
+							TItemGroupKey,
+							TItemTitleKey,
+							TItemDivTitleKey,
+							TItemTimeStartKey,
+							TItemTimeEndKey,
+							TGroup,
+							TItem
+						>
+							canMove={canMove}
+							canResizeLeft={canResizeLeft}
+							canResizeRight={canResizeRight}
+							canSelect={canSelect}
+							itemDragState={itemDragStateRef.current}
+							itemRenderer={itemRenderer}
+							itemResizeState={itemResizeStateRef.current}
+							keys={resolvedKeys}
+							minResizeWidth={minResizeWidth}
+							onClick={onItemClick}
+							onContextMenu={onItemContextMenu}
+							onDoubleClick={onItemDoubleClick}
+							onSelect={onItemSelect}
+							selected={selected}
+							selectedItemId={selectedItemId}
+							setSelectedItemId={setSelectedItemId}
+							timeline={timeline}
+						>
+							{renderedGroupRows}
+						</ItemContextProvider>
 					</div>
+
 					{renderedRightGroups && (
 						<div
 							className="rct-sidebar rct-sidebar-right"
@@ -1156,7 +1189,7 @@ function RenderedTimeline<
 							<div style={{ height: "100%" }}>{renderedRightGroups}</div>
 						</div>
 					)}
-				</TimelineStateProvider>
+				</HelpersContextProvider>
 			)}
 		</cg-timeline>
 	);

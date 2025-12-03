@@ -91,6 +91,10 @@ export class Timeline<
 		return this.#groupPositionsState.getGroup(groupIndex);
 	}
 
+	public getGroupIndexById(groupId: TGroupId): number | undefined {
+		return this.#groupPositionsState.getGroupIndexById(groupId);
+	}
+
 	public getGroupLineSize(groupIndex: number): number {
 		return this.#groupPositionsState.getGroupLineSize(groupIndex);
 	}
@@ -109,6 +113,16 @@ export class Timeline<
 		itemIndex: number,
 	): Readonly<TItem> | undefined {
 		return this.#groupPositionsState.getItem(groupIndex, lineIndex, itemIndex);
+	}
+
+	public getItemById(itemId: TItemId): TItem | undefined {
+		return this.#groupPositionsState.getItemById(itemId);
+	}
+
+	public getItemIndicesById(
+		itemId: TItemId,
+	): [groupIndex: number, lineIndex: number, itemIndex: number] | undefined {
+		return this.#groupPositionsState.getItemIndicesById(itemId);
 	}
 
 	public getLinePosition(groupIndex: number, lineIndex: number): number {

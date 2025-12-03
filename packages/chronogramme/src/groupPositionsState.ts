@@ -170,6 +170,18 @@ export class GroupPositionsState<
 		return groups[index];
 	}
 
+	public getGroupIndexById(groupId: TGroupId): number | undefined {
+		const groups = this.#groups;
+
+		for (const [groupIdx, group] of groups.entries()) {
+			if (group.id === groupId) {
+				return groupIdx;
+			}
+		}
+
+		return;
+	}
+
 	public getGroupLineSize(index: number): number {
 		const defaultLineSize = this.#lineSize;
 		const groups = this.#groups;
@@ -225,6 +237,36 @@ export class GroupPositionsState<
 		const groupLines = this.getGroupLines(groupIndex);
 
 		return groupLines[lineIndex]?.[itemIndex];
+	}
+
+	public getItemById(itemId: TItemId): TItem | undefined {
+		const items = this.#items;
+
+		for (const item of items) {
+			if (item.id === itemId) {
+				return item;
+			}
+		}
+
+		return;
+	}
+
+	public getItemIndicesById(
+		itemId: TItemId,
+	): [groupIndex: number, lineIndex: number, itemIndex: number] | undefined {
+		const groupLineSets = this.#groupLineSets;
+
+		for (const [groupIndex, groupLines] of groupLineSets.entries()) {
+			for (const [lineIndex, items] of groupLines.entries()) {
+				for (const [itemIndex, item] of items.entries()) {
+					if (item.id === itemId) {
+						return [groupIndex, lineIndex, itemIndex];
+					}
+				}
+			}
+		}
+
+		return;
 	}
 
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
@@ -529,7 +571,7 @@ export class GroupPositionsState<
 			}
 
 			if (itemHMoved || itemVMoved) {
-				const groupIndex = this.getGroupIndex(groupId);
+				const groupIndex = this.getGroupIndexById(groupId);
 
 				if (groupIndex !== undefined) {
 					this.clearGroupCaches(groupIndex);
@@ -679,7 +721,7 @@ export class GroupPositionsState<
 			const itemHMoved = newStartTime !== startTime || newEndTime !== endTime;
 
 			if (itemHMoved) {
-				const groupIndex = this.getGroupIndex(groupId);
+				const groupIndex = this.getGroupIndexById(groupId);
 
 				if (groupIndex !== undefined) {
 					this.clearGroupCaches(groupIndex);
@@ -862,7 +904,7 @@ export class GroupPositionsState<
 		const itemVMoved = newGroupId !== initGroupId;
 
 		if (itemVMoved) {
-			const newGroupIndex = this.getGroupIndex(newGroupId);
+			const newGroupIndex = this.getGroupIndexById(newGroupId);
 
 			if (newGroupIndex !== undefined) {
 				this.clearGroupCaches(newGroupIndex);
@@ -870,7 +912,7 @@ export class GroupPositionsState<
 		}
 
 		if (itemHMoved || itemVMoved) {
-			const groupIndex = this.getGroupIndex(initGroupId);
+			const groupIndex = this.getGroupIndexById(initGroupId);
 
 			if (groupIndex !== undefined) {
 				this.clearGroupCaches(groupIndex);
@@ -899,7 +941,7 @@ export class GroupPositionsState<
 			const changingItemGroupId = this.#itemChangeState?.item.groupId;
 
 			if (changingItemGroupId !== undefined) {
-				changingItemGroupIndex = this.getGroupIndex(changingItemGroupId);
+				changingItemGroupIndex = this.getGroupIndexById(changingItemGroupId);
 			}
 		}
 
@@ -951,18 +993,6 @@ export class GroupPositionsState<
 		return groupPosWindowMin - groupOverdraw;
 	}
 
-	private getGroupIndex(groupId: TGroupId): number | undefined {
-		const groups = this.#groups;
-
-		for (const [groupIdx, group] of groups.entries()) {
-			if (group.id === groupId) {
-				return groupIdx;
-			}
-		}
-
-		return;
-	}
-
 	private getGroupLines(
 		index: number,
 	): readonly (readonly Readonly<TItem>[])[] {
@@ -989,18 +1019,6 @@ export class GroupPositionsState<
 		}
 
 		return groupSize;
-	}
-
-	private getItemById(itemId: TItemId): TItem | undefined {
-		const items = this.#items;
-
-		for (const item of items) {
-			if (item.id === itemId) {
-				return item;
-			}
-		}
-
-		return;
 	}
 
 	private getItemGroup(index: number): readonly Readonly<TItem>[] {

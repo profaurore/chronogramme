@@ -1,6 +1,9 @@
 import { css } from "@linaria/core";
 import {
 	type ComponentProps,
+	type EventHandler,
+	type FocusEvent,
+	type KeyboardEvent,
 	type MouseEventHandler,
 	type ReactNode,
 	useCallback,
@@ -11,9 +14,11 @@ import {
 } from "react";
 import "./styles.css";
 import { TIME_MAX, TIME_MIN, UNIT } from "@chronogramme/chronogramme";
-import { Timeline as RCTimeline } from "@chronogramme/chronogramme-rct";
-import { GroupRow } from "../../src/GroupRow";
-import { RowItems } from "../../src/RowItems";
+import {
+	GroupRow,
+	Timeline as RCTimeline,
+	RowItems,
+} from "@chronogramme/chronogramme-rct";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -29,14 +34,25 @@ const timelineClass = css`
 	margin-bottom: 1em;
 `;
 
-const buttonsClass = css`
+const buttonRowClass = css`
 	align-items: center;
 	display: flex;
 	gap: 5px;
 `;
 
+const headerClass = css`
+display:flex;
+flex-direction: column;
+gap: 5px;
+margin-bottom:5px;
+`;
+
 const DAYS_IN_WEEK = 7;
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+const MILLISECONDS_PER_WEEK = 7 * MILLISECONDS_PER_DAY;
+const MILLISECONDS_PER_MONTH = 30 * MILLISECONDS_PER_DAY;
+const MILLISECONDS_PER_YEAR = 365 * MILLISECONDS_PER_DAY;
+const MILLISECONDS_PER_DECADE = 10 * MILLISECONDS_PER_YEAR;
 
 const formatter = new Intl.DateTimeFormat("en-CA", {
 	year: "numeric",
@@ -74,22 +90,12 @@ export function App(): ReactNode {
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
 	);
-	const [[extremaStart, extremaEnd], _setExtrema] = useState<[number, number]>([
-		TIME_MIN,
-		TIME_MAX,
-	]);
 
 	// Bug report: https://github.com/biomejs/biome/issues/3512
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
 	const windowString = useMemo(() => {
 		return formatDateRange(windowStart, windowEnd);
 	}, [windowEnd, windowStart]);
-
-	// Bug report: https://github.com/biomejs/biome/issues/3512
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
-	const extremaString = useMemo(() => {
-		return formatDateRange(extremaStart, extremaEnd);
-	}, [extremaEnd, extremaStart]);
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
 		setWindow(datesFromStartDate(TIME_MIN));
@@ -289,31 +295,101 @@ export function App(): ReactNode {
 		[items],
 	);
 
+	const onChangeZoomHandler =
+		(windowRange: number): MouseEventHandler =>
+		() => {
+			setWindow(([start]) => [start, start + windowRange]);
+		};
+
+	const onSetZoomHandler: EventHandler<FocusEvent | KeyboardEvent> = (
+		event,
+	) => {
+		if (event instanceof KeyboardEvent && event.key !== "Enter") {
+			return;
+		}
+
+		const target = event.target;
+
+		if (target instanceof HTMLInputElement) {
+			setWindow(([start]) => [
+				start,
+				start + Number.parseInt(target.value, 10) * MILLISECONDS_PER_DAY,
+			]);
+
+			target.value = "";
+		}
+	};
+
 	const rctId = useId();
 
 	return (
 		<>
-			<div className={buttonsClass}>
-				<button onClick={onStartOfTimeClickHandler} type="button">
-					Start of time
-				</button>
-				<button onClick={onNowClickHandler} type="button">
-					Now
-				</button>
-				<button onClick={onEndOfTimeClickHandler} type="button">
-					End of time
-				</button>
-				<button onClick={onAddClickHandler(50_000)} type="button">
-					Add 50k items
-				</button>
-				<button onClick={onAddClickHandler(250_000)} type="button">
-					Add 250k items
-				</button>
-				<span>{Intl.NumberFormat("en").format(items.length)} items</span>
+			<div className={headerClass}>
+				<div className={buttonRowClass}>
+					<button onClick={onStartOfTimeClickHandler} type="button">
+						Start of time
+					</button>
+					<button onClick={onNowClickHandler} type="button">
+						Now
+					</button>
+					<button onClick={onEndOfTimeClickHandler} type="button">
+						End of time
+					</button>
+					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
+				</div>
+
+				<div className={buttonRowClass}>
+					<button onClick={onAddClickHandler(50_000)} type="button">
+						Add 50k items
+					</button>
+					<button onClick={onAddClickHandler(250_000)} type="button">
+						Add 250k items
+					</button>
+					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
+				</div>
+
+				<div className={buttonRowClass}>
+					<input
+						onBlur={onSetZoomHandler}
+						onKeyUp={onSetZoomHandler}
+						placeholder="Days"
+						size={5}
+						type="number"
+					/>
+					<button
+						onClick={onChangeZoomHandler(MILLISECONDS_PER_DECADE)}
+						type="button"
+					>
+						Decade
+					</button>
+					<button
+						onClick={onChangeZoomHandler(MILLISECONDS_PER_YEAR)}
+						type="button"
+					>
+						Year
+					</button>
+					<button
+						onClick={onChangeZoomHandler(MILLISECONDS_PER_MONTH)}
+						type="button"
+					>
+						Month
+					</button>
+					<button
+						onClick={onChangeZoomHandler(MILLISECONDS_PER_WEEK)}
+						type="button"
+					>
+						Week
+					</button>
+					<button
+						onClick={onChangeZoomHandler(MILLISECONDS_PER_DAY)}
+						type="button"
+					>
+						Day
+					</button>
+					<div>{windowString}</div>
+				</div>
 			</div>
 
-			<div>Extrema: {extremaString}</div>
-			<div>Window: {windowString}</div>
 			<RCTimeline
 				id={rctId}
 				canResize="both"
