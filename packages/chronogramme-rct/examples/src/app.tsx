@@ -362,9 +362,6 @@ export function App(): ReactNode {
 				</div>
 
 				<div className={buttonRowClass}>
-					<button onClick={onAddClickHandler(UNIT)} type="button">
-						Add 1 item
-					</button>
 					<button onClick={onAddClickHandler(SOME_ITEMS)} type="button">
 						Add 50k items
 					</button>
