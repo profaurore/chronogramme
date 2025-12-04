@@ -1,6 +1,11 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { ZERO } from "@chronogramme/chronogramme";
-import { type ReactNode, type SyntheticEvent, useMemo } from "react";
+import {
+	type MouseEvent,
+	type ReactNode,
+	type SyntheticEvent,
+	useMemo,
+} from "react";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -41,7 +46,7 @@ interface GroupRowProviderProps<
 		TItemTimeEndKey
 	>,
 > {
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	group: RctToCoreGroup<TGroup>;
 	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
 	index: number;
@@ -129,13 +134,13 @@ export const GroupRowContextProvider = <
 		() => ({
 			className,
 			id,
-			onClick(event: React.MouseEvent): void {
+			onClick(event: MouseEvent): void {
 				onClick?.(id, timeline.getHValueFromClient(event.clientX), event);
 			},
-			onContextMenu(event: React.MouseEvent): void {
+			onContextMenu(event: MouseEvent): void {
 				onContextMenu?.(id, timeline.getHValueFromClient(event.clientX), event);
 			},
-			onDoubleClick(event: React.MouseEvent): void {
+			onDoubleClick(event: MouseEvent): void {
 				onDoubleClick?.(id, timeline.getHValueFromClient(event.clientX), event);
 			},
 			position,

@@ -41,7 +41,7 @@ interface HelpersProviderProps<
 		TItemTimeEndKey
 	>,
 > {
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
 			number,

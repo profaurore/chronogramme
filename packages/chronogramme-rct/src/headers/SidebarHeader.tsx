@@ -1,11 +1,11 @@
-import { useCallback } from "react";
+import { type CSSProperties, type ReactNode, useCallback } from "react";
 import { RIGHT_VARIANT } from "../constants";
 import { useHeadersContext } from "./useHeadersContext";
 
 type GetRootProps = (
-	args?: { style?: React.CSSProperties | undefined } | undefined,
+	args?: { style?: CSSProperties | undefined } | undefined,
 ) => {
-	style: React.CSSProperties;
+	style: CSSProperties;
 };
 
 export const SidebarHeader = <THeaderData,>({
@@ -17,11 +17,11 @@ export const SidebarHeader = <THeaderData,>({
 		| ((props: {
 				getRootProps: GetRootProps;
 				data?: THeaderData | undefined;
-		  }) => React.ReactNode)
+		  }) => ReactNode)
 		| undefined;
 	headerData?: THeaderData | undefined;
 	variant?: "left" | "right" | undefined;
-}): React.ReactNode => {
+}): ReactNode => {
 	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
 
 	const getRootProps: GetRootProps = useCallback(

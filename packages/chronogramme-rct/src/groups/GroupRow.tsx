@@ -3,7 +3,7 @@ import { STYLE_SIZE_PRECISION } from "../constants";
 import { useGroupRowContext } from "./useGroupRowContext";
 
 interface GroupRowProps {
-	children: React.ReactNode | undefined;
+	children: ReactNode | undefined;
 }
 
 export const GroupRow = ({ children }: GroupRowProps): ReactNode => {

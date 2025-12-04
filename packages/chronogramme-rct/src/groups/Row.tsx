@@ -1,5 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import type { SyntheticEvent } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import { RowItemsContextProvider } from "../items/RowItemsContextProvider";
 import type {
 	BaseGroup,
@@ -87,7 +87,7 @@ export const Row = <
 			RctToCoreItem<TItem>
 		>
 	>;
-}): React.ReactNode => (
+}): ReactNode => (
 	<GroupForHelpersContextProvider<
 		TGroupIdKey,
 		TGroupTitleKey,

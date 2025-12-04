@@ -30,7 +30,7 @@ interface ItemForHelpersContextProviderProps<
 		TItemTimeEndKey
 	>,
 > {
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	groupPosition: number;
 	item: RctToCoreItem<TItem>;
 	vOffsetInGroup: number;

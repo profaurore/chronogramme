@@ -1,5 +1,10 @@
 import { UNIT } from "@chronogramme/chronogramme";
-import { Children } from "react";
+import {
+	Children,
+	type CSSProperties,
+	type PropsWithChildren,
+	type ReactNode,
+} from "react";
 import { RIGHT_VARIANT } from "../constants";
 import { getReactChildProp, reactChildHasSecretKey } from "../utils/reactUtils";
 import { SidebarHeader } from "./SidebarHeader";
@@ -8,9 +13,9 @@ export const TimelineHeaders = ({
 	calendarHeaderClassName,
 	calendarHeaderStyle,
 	children,
-}: React.PropsWithChildren<{
+}: PropsWithChildren<{
 	calendarHeaderClassName?: string | undefined;
-	calendarHeaderStyle?: React.CSSProperties | undefined;
+	calendarHeaderStyle?: CSSProperties | undefined;
 
 	/**
 	 * @deprecated This property cannot be supported with this library's
@@ -22,11 +27,11 @@ export const TimelineHeaders = ({
 	 * @deprecated This property cannot be supported with this library's
 	 * structure.
 	 */
-	style?: React.CSSProperties | undefined;
-}>): React.ReactNode => {
-	const rightSidebarHeaders: React.ReactNode[] = [];
-	const leftSidebarHeaders: React.ReactNode[] = [];
-	const calendarHeaders: React.ReactNode[] = [];
+	style?: CSSProperties | undefined;
+}>): ReactNode => {
+	const rightSidebarHeaders: ReactNode[] = [];
+	const leftSidebarHeaders: ReactNode[] = [];
+	const calendarHeaders: ReactNode[] = [];
 
 	Children.map(children, (child) => {
 		if (reactChildHasSecretKey(child, SidebarHeader.secretKey)) {

@@ -87,7 +87,7 @@ interface TimelineProps<
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
 	canSelect?: boolean | undefined;
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	className?: string | undefined;
 	dragSnap?: number | undefined;
 	groupRenderer: GroupRenderer<
@@ -702,7 +702,7 @@ function RenderedTimeline<
 
 	if (!hideHeaders) {
 		if (children) {
-			const headers: React.ReactNode[] = [];
+			const headers: ReactNode[] = [];
 			Children.forEach(children, (child) => {
 				if (reactChildHasSecretKey(child, TimelineHeaders.secretKey)) {
 					headers.push(child);

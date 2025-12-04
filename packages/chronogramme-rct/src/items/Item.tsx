@@ -1,4 +1,9 @@
-import { useCallback, useMemo } from "react";
+import {
+	type MouseEventHandler,
+	type ReactNode,
+	useCallback,
+	useMemo,
+} from "react";
 import {
 	leftResizeStyle,
 	overridableStyles,
@@ -58,7 +63,7 @@ export const Item = <
 }: {
 	item: RctToCoreItem<TItem>;
 	vOffsetInGroup: number;
-}): React.ReactNode => {
+}): ReactNode => {
 	const {
 		canMove: timelineCanDrag,
 		canResizeLeft: timelineCanResizeLeft,
@@ -147,7 +152,7 @@ export const Item = <
 	const visibleTimeEnd = timeline.hWindowMax;
 	const visibleTimeStart = timeline.hWindowMin;
 
-	const onClickHandler: React.MouseEventHandler<HTMLDivElement> = useCallback(
+	const onClickHandler: MouseEventHandler<HTMLDivElement> = useCallback(
 		function onClickHandlerInner(event) {
 			const nativeEvent = event.nativeEvent;
 
@@ -177,7 +182,7 @@ export const Item = <
 		],
 	);
 
-	const onPointerDownCaptureHandler: React.MouseEventHandler<HTMLDivElement> =
+	const onPointerDownCaptureHandler: MouseEventHandler<HTMLDivElement> =
 		useCallback(
 			function onPointerDownCaptureHandlerInner(event) {
 				if (!canMove) {
@@ -217,45 +222,35 @@ export const Item = <
 			],
 		);
 
-	const onDoubleClickHandler: React.MouseEventHandler<HTMLDivElement> =
-		useCallback(
-			function onDoubleClickHandlerInner(event) {
-				const nativeEvent = event.nativeEvent;
+	const onDoubleClickHandler: MouseEventHandler<HTMLDivElement> = useCallback(
+		function onDoubleClickHandlerInner(event) {
+			const nativeEvent = event.nativeEvent;
 
-				if (nativeEvent instanceof PointerEvent) {
-					event.stopPropagation();
+			if (nativeEvent instanceof PointerEvent) {
+				event.stopPropagation();
 
-					onDoubleClick?.(
-						itemId,
-						event,
-						timeline.getHValue(nativeEvent.clientX),
-					);
+				onDoubleClick?.(itemId, event, timeline.getHValue(nativeEvent.clientX));
+			}
+		},
+		[itemId, onDoubleClick, timeline.getHValue],
+	);
+
+	const onContextMenuHandler: MouseEventHandler<HTMLDivElement> = useCallback(
+		function onContextMenuHandlerInner(event) {
+			const nativeEvent = event.nativeEvent;
+
+			if (nativeEvent instanceof PointerEvent) {
+				event.stopPropagation();
+
+				if (onContextMenu) {
+					event.preventDefault();
+
+					onContextMenu(itemId, event, timeline.getHValue(nativeEvent.clientX));
 				}
-			},
-			[itemId, onDoubleClick, timeline.getHValue],
-		);
-
-	const onContextMenuHandler: React.MouseEventHandler<HTMLDivElement> =
-		useCallback(
-			function onContextMenuHandlerInner(event) {
-				const nativeEvent = event.nativeEvent;
-
-				if (nativeEvent instanceof PointerEvent) {
-					event.stopPropagation();
-
-					if (onContextMenu) {
-						event.preventDefault();
-
-						onContextMenu(
-							itemId,
-							event,
-							timeline.getHValue(nativeEvent.clientX),
-						);
-					}
-				}
-			},
-			[itemId, onContextMenu, timeline.getHValue],
-		);
+			}
+		},
+		[itemId, onContextMenu, timeline.getHValue],
+	);
 
 	const getItemPropsHandler = useCallback<GetItemProps>(
 		(params) => ({
@@ -309,7 +304,7 @@ export const Item = <
 		],
 	);
 
-	const onLeftResizerPointerDownCapture: React.MouseEventHandler<HTMLDivElement> =
+	const onLeftResizerPointerDownCapture: MouseEventHandler<HTMLDivElement> =
 		useCallback(
 			function onPointerDownCapture(event) {
 				if (!canResizeLeft) {
@@ -331,7 +326,7 @@ export const Item = <
 			],
 		);
 
-	const onRightResizerPointerDownCapture: React.MouseEventHandler<HTMLDivElement> =
+	const onRightResizerPointerDownCapture: MouseEventHandler<HTMLDivElement> =
 		useCallback(
 			function onPointerDownCapture(event) {
 				if (!canResizeRight) {

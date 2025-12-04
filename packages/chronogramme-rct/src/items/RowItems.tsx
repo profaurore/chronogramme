@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Item } from "../items/Item";
 import { ItemForHelpersContextProvider } from "../items/ItemForHelpersContextProvider";
 import type { BaseGroup, BaseItem } from "../timeline";
@@ -33,7 +34,7 @@ export const RowItems = <
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>,
->(): React.ReactNode => {
+>(): ReactNode => {
 	const {
 		index: groupIndex,
 		itemVOffset,
@@ -54,7 +55,7 @@ export const RowItems = <
 		TItem
 	>();
 
-	const renderedItems: React.ReactNode[] = [];
+	const renderedItems: ReactNode[] = [];
 
 	const lineIndices = timeline.getVisibleGroupLinesIter(groupIndex);
 

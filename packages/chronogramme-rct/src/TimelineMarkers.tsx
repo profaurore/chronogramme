@@ -1,3 +1,4 @@
-export const TimelineMarkers = ({
-	children,
-}: React.PropsWithChildren): React.ReactNode => children;
+import type { PropsWithChildren, ReactNode } from "react";
+
+export const TimelineMarkers = ({ children }: PropsWithChildren): ReactNode =>
+	children;

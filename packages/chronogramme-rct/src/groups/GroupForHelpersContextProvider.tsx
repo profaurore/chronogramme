@@ -42,7 +42,7 @@ interface GroupForHelpersProviderProps<
 		TItemTimeEndKey
 	>,
 > {
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	group: RctToCoreGroup<TGroup>;
 	index: number;
 	timeline: InstanceType<

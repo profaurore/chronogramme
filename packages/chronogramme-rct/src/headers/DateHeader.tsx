@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type CSSProperties, type ReactNode, useMemo } from "react";
 import { nextTimeUnits } from "../constants";
 import { defaultLabelFormat } from "../utils/dateUtils";
 import { CustomDateHeader } from "./CustomDateHeader";
@@ -33,11 +33,11 @@ export const DateHeader = <THeaderData,>({
 	// TODO: Only make optional if THeaderData is undefined (or never?)
 	headerData?: THeaderData;
 	height?: number | undefined;
-	intervalRenderer?: (() => React.ReactNode) | undefined;
+	intervalRenderer?: (() => ReactNode) | undefined;
 	labelFormat?: (LabelFormatFn | string) | undefined;
-	style?: React.CSSProperties | undefined;
+	style?: CSSProperties | undefined;
 	unit?: Unit | "primaryHeader" | undefined;
-}): React.ReactNode => {
+}): ReactNode => {
 	const { timelineUnit } = useHeadersContext();
 
 	const innerHeaderData = useMemo(

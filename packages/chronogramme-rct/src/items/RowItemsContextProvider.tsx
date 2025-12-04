@@ -1,6 +1,6 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { HALF, UNIT } from "@chronogramme/chronogramme";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
 	RowItemsContext,
 	type RowItemsContextValue,
@@ -43,7 +43,7 @@ interface RowItemsContextProviderProps<
 		TItemTimeEndKey
 	>,
 > {
-	children?: React.ReactNode | undefined;
+	children?: ReactNode | undefined;
 	index: number;
 	itemHeightRatio: number;
 	timeline: InstanceType<
@@ -102,7 +102,7 @@ export const RowItemsContextProvider = <
 	TItemTimeEndKey,
 	TGroup,
 	TItem
->): React.ReactNode => {
+>): ReactNode => {
 	const position = timeline.getGroupPosition(index);
 	const lineSize = timeline.getGroupLineSize(index);
 	const itemVOffset = HALF * (UNIT - itemHeightRatio) * lineSize;

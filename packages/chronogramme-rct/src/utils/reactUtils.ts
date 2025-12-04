@@ -6,7 +6,7 @@ const RENDER_WRAP_BITMASK = 0xff;
 export function composeEvents<TEvent>(
 	...fns: (EventHandler<SyntheticEvent<TEvent>> | undefined)[]
 ): EventHandler<SyntheticEvent<TEvent>> {
-	return (event: React.SyntheticEvent<TEvent>) => {
+	return (event: SyntheticEvent<TEvent>) => {
 		event.preventDefault();
 		for (const fn of fns) {
 			fn?.(event);

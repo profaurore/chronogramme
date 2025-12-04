@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo } from "react";
+import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import type { BaseGroup, BaseItem } from "../timeline";
 import { ItemContext, type ItemContextVariable } from "./ItemContext";
 
@@ -51,7 +51,7 @@ export const ItemContextProvider = <
 	selectedItemId,
 	setSelectedItemId,
 	timeline,
-}: React.PropsWithChildren<
+}: PropsWithChildren<
 	ItemContextVariable<
 		TGroupIdKey,
 		TGroupTitleKey,

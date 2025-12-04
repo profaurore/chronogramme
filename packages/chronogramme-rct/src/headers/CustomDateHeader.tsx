@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { CustomHeaderChildProps } from "./CustomHeader";
 import type { Unit } from "./DateHeader";
 import { Interval } from "./Interval";
@@ -24,8 +24,8 @@ export const CustomDateHeader = <THeaderData,>({
 		labelWidth: number,
 	) => string;
 	headerData: THeaderData | undefined;
-	intervalRenderer: (() => React.ReactNode) | undefined;
-	style: React.CSSProperties | undefined;
+	intervalRenderer: (() => ReactNode) | undefined;
+	style: CSSProperties | undefined;
 	unitProp: Unit | "primaryHeader" | undefined;
 }>): ReactNode => (
 	<div

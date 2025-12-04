@@ -1,11 +1,11 @@
-import { type Context, createContext } from "react";
+import { type Context, createContext, type MouseEvent } from "react";
 
 export interface GroupRowContextValue {
 	className: string;
 	id: number;
-	onClick: ((event: React.MouseEvent) => void) | undefined;
-	onContextMenu: ((event: React.MouseEvent) => void) | undefined;
-	onDoubleClick: ((event: React.MouseEvent) => void) | undefined;
+	onClick: ((event: MouseEvent) => void) | undefined;
+	onContextMenu: ((event: MouseEvent) => void) | undefined;
+	onDoubleClick: ((event: MouseEvent) => void) | undefined;
 	position: number;
 	size: number;
 }
