@@ -1,4 +1,4 @@
-import type { BarResizeStrategy } from "./barState";
+import type { BarResizeStrategy, BarState } from "./barState";
 import { clampMaxWins, UNIT, ZERO } from "./math";
 
 interface FlexSegment {
@@ -79,21 +79,19 @@ function flexSegments(
 		for (const segment of localSegments) {
 			const factor = segment.factor;
 
-			if (!factor) {
-				continue;
-			}
+			if (factor) {
+				const size = segment.size;
+				const min = segment.min;
+				const max = segment.max;
 
-			const size = segment.size;
-			const min = segment.min;
-			const max = segment.max;
+				const computedSize = size + factor * ratio;
+				const clampedSize = clampMaxWins(computedSize, min, max);
+				segment.size = clampedSize;
 
-			const computedSize = size + factor * ratio;
-			const clampedSize = clampMaxWins(computedSize, min, max);
-			segment.size = clampedSize;
-
-			if (clampedSize === size || clampedSize !== computedSize) {
-				segment.factor = ZERO;
-				numFlexibleSegments -= UNIT;
+				if (clampedSize === size || clampedSize !== computedSize) {
+					segment.factor = ZERO;
+					numFlexibleSegments -= UNIT;
+				}
 			}
 		}
 	}
@@ -105,7 +103,9 @@ function flexSegments(
 	];
 }
 
-export const proportionalBarResizeStrategy: BarResizeStrategy = (state) => {
+export const proportionalBarResizeStrategy: BarResizeStrategy = (
+	state: Readonly<BarState>,
+) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;
@@ -141,7 +141,9 @@ export const proportionalBarResizeStrategy: BarResizeStrategy = (state) => {
 	return { endSize, startSize };
 };
 
-export const preserveSidesBarResizeStrategy: BarResizeStrategy = (state) => {
+export const preserveSidesBarResizeStrategy: BarResizeStrategy = (
+	state: Readonly<BarState>,
+) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;
@@ -186,7 +188,9 @@ export const preserveSidesBarResizeStrategy: BarResizeStrategy = (state) => {
 	return { endSize, startSize };
 };
 
-export const preserveMiddleBarResizeStrategy: BarResizeStrategy = (state) => {
+export const preserveMiddleBarResizeStrategy: BarResizeStrategy = (
+	state: Readonly<BarState>,
+) => {
 	const size = state.size;
 	const endIdeal = state.endIdeal;
 	const endMax = state.endMax;

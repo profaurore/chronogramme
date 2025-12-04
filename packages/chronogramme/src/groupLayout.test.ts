@@ -4,6 +4,7 @@ import {
 	layoutGroupLines,
 	layoutGroupLinesReference,
 } from "./groupLayout";
+import { UNIT } from "./math";
 import type { BaseItem } from "./timeline";
 
 describe("layoutGroupLines", () => {
@@ -18,7 +19,7 @@ describe("layoutGroupLines", () => {
 		let min = Number.POSITIVE_INFINITY;
 		let max = Number.NEGATIVE_INFINITY;
 
-		for (let i = 0; i < itemCount; i++) {
+		for (let i = 0; i < itemCount; i += UNIT) {
 			const startTime = Math.random() * 10_000_000 + i * 1_000_000;
 			const endTime = startTime + 1_000_000 + Math.random() * 39_000_000;
 
@@ -36,8 +37,8 @@ describe("layoutGroupLines", () => {
 		items.sort((a, b) => a.startTime - b.startTime);
 
 		// Offsets to test filtering.
-		min++;
-		max--;
+		min += UNIT;
+		max -= UNIT;
 
 		expect(layoutGroupLines(items, undefined, undefined, min, max)).toEqual(
 			layoutGroupLinesReference(items, min, max),

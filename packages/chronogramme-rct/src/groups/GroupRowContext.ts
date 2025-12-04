@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { type Context, createContext } from "react";
 
 export interface GroupRowContextValue {
 	className: string;
@@ -10,6 +10,5 @@ export interface GroupRowContextValue {
 	size: number;
 }
 
-export const GroupRowContext = createContext<GroupRowContextValue | undefined>(
-	undefined,
-);
+export const GroupRowContext: Context<GroupRowContextValue | undefined> =
+	createContext<GroupRowContextValue | undefined>(undefined);

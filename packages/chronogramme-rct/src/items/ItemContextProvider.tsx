@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { BaseGroup, BaseItem } from "../timeline";
 import { ItemContext, type ItemContextVariable } from "./ItemContext";
 
@@ -43,6 +43,10 @@ export const ItemContextProvider = <
 	itemResizeState,
 	keys,
 	minResizeWidth,
+	onClick,
+	onContextMenu,
+	onDoubleClick,
+	onSelect,
 	selected,
 	selectedItemId,
 	setSelectedItemId,
@@ -61,7 +65,7 @@ export const ItemContextProvider = <
 		TGroup,
 		TItem
 	>
->) => {
+>): ReactNode => {
 	const contextValue = useMemo<
 		ItemContextVariable<
 			TGroupIdKey,
@@ -87,6 +91,10 @@ export const ItemContextProvider = <
 			itemResizeState,
 			keys,
 			minResizeWidth,
+			onClick,
+			onContextMenu,
+			onDoubleClick,
+			onSelect,
 			selected,
 			selectedItemId,
 			setSelectedItemId,
@@ -102,6 +110,10 @@ export const ItemContextProvider = <
 			itemResizeState,
 			keys,
 			minResizeWidth,
+			onClick,
+			onContextMenu,
+			onDoubleClick,
+			onSelect,
 			selected,
 			selectedItemId,
 			setSelectedItemId,

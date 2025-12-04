@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { type Context, createContext } from "react";
 
 export interface ItemForHelpersContextValue {
 	id: number;
@@ -11,6 +11,6 @@ export interface ItemForHelpersContextValue {
 	startTime: number;
 }
 
-export const ItemForHelpersContext = createContext<
+export const ItemForHelpersContext: Context<
 	ItemForHelpersContextValue | undefined
->(undefined);
+> = createContext<ItemForHelpersContextValue | undefined>(undefined);

@@ -1,205 +1,47 @@
-import { UNIT } from "@chronogramme/chronogramme";
+import { UNIT, ZERO } from "@chronogramme/chronogramme";
 import type { LabelFormatFn, Unit } from "../headers/DateHeader";
+
+const MILLISECONDS_PER_SECOND = 1000;
+const MILLISECONDS_PER_DAY = 86_400_000;
+const MILLISECONDS_PER_WEEK = 604_800_000;
+const DAYS_PER_WEEK = 7;
+const MONTHS_PER_YEAR = 12;
+
+// biome-ignore lint/style/noMagicNumbers: Math constants
+const DIVISORS_OF_TWELVE: number[] = [1, 2, 3, 4, 6, 12];
+
+const THURSDAY_DAY = 4;
+const SUNDAY_DAY = 7;
+
+const MEDIUM_LABEL_WIDTH = 50;
+const MEDIUM_LONG_LABEL_WIDTH = 100;
+const LONG_LABEL_WIDTH = 150;
 
 // Adapted from: https://stackoverflow.com/a/6117889
 const weekOfYear = (time: number): number => {
 	const date = new Date(time);
+
 	// Copy date so don't modify original
 	const d = new Date(
 		Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
 	);
+
 	// Set to nearest Thursday: current date + 4 - current day number
 	// Make Sunday's day number 7
-	d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+	d.setUTCDate(d.getUTCDate() + THURSDAY_DAY - (d.getUTCDay() || SUNDAY_DAY));
+
 	// Get first day of year
-	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), ZERO, UNIT));
+
 	// Calculate full weeks to nearest Thursday
 	const weekNo = Math.ceil(
-		((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
+		((d.getTime() - yearStart.getTime()) / MILLISECONDS_PER_DAY + UNIT) /
+			DAYS_PER_WEEK,
 	);
+
 	// Return array of year and week number
 	return weekNo;
 };
-
-export function startOfUnit(unit: Unit, time: number): number {
-	const date = new Date(time);
-
-	switch (unit) {
-		case "year": {
-			date.setMonth(0, 0);
-			date.setHours(0, 0, 0, 0);
-			break;
-		}
-
-		case "month": {
-			date.setDate(0);
-			date.setHours(0, 0, 0, 0);
-			break;
-		}
-
-		case "week": {
-			date.setHours(0, 0, 0, 0);
-			date.setDate(date.getDate() - date.getDay());
-			break;
-		}
-
-		case "day": {
-			date.setHours(0, 0, 0, 0);
-			break;
-		}
-
-		case "hour": {
-			date.setMinutes(0, 0, 0);
-			break;
-		}
-
-		case "minute": {
-			date.setSeconds(0, 0);
-			break;
-		}
-
-		case "second": {
-			date.setMilliseconds(0);
-			break;
-		}
-
-		default:
-			break;
-	}
-
-	return date.getTime();
-}
-
-export function alignWithUnitStep(
-	unit: Unit,
-	step: number,
-	time: number,
-): number {
-	if (step <= 1) {
-		return time;
-	}
-
-	const date = new Date(time);
-
-	switch (unit) {
-		case "year": {
-			const year = date.getFullYear();
-			date.setFullYear(year - (year % step));
-			break;
-		}
-
-		// Months are unusual because they vary in length and repeat every year. If
-		// the step is greater than or equal to one year, perform the alignment on a
-		// year basis. If the step is less than one year, perform the alignment on a
-		// divisor of 12 so that the yearly cycle is maintained.
-		case "month": {
-			if (step >= 12) {
-				const yearsStep = Math.round(step / 12);
-				const year = date.getFullYear();
-				date.setFullYear(year - (year % yearsStep));
-				date.setMonth(0);
-				break;
-			}
-
-			// Only align on divisors of 12. Get the closest value, favoring a higher
-			// value in the case of a tie so that cells are larger as opposed to
-			// smaller.
-			let monthStep = 0;
-			let bestDiff = Number.POSITIVE_INFINITY;
-			for (const option of [1, 2, 3, 4, 6, 12]) {
-				const diff = Math.abs(step - option);
-				if (diff <= bestDiff) {
-					monthStep = option;
-					bestDiff = diff;
-				}
-			}
-
-			const month = date.getMonth();
-			date.setMonth(month - (month % monthStep));
-			break;
-		}
-
-		case "week": {
-			date.setTime(time - (time % 604_800_000));
-			break;
-		}
-
-		case "day": {
-			date.setTime(time - (time % 86_400_000));
-			break;
-		}
-
-		case "hour": {
-			date.setTime(time - (time % 3_600_000));
-			break;
-		}
-
-		case "minute": {
-			date.setTime(time - (time % 60_000));
-			break;
-		}
-
-		case "second": {
-			date.setTime(time - (time % 1000));
-			break;
-		}
-
-		default:
-			break;
-	}
-
-	return date.getTime();
-}
-
-export function addUnitStep(unit: Unit, step: number, time: number): number {
-	if (step < 1) {
-		throw new Error("Step < 1 shouldn't happen!");
-	}
-
-	const date = new Date(time);
-
-	switch (unit) {
-		case "year": {
-			date.setFullYear(date.getFullYear() + step * UNIT);
-			break;
-		}
-
-		case "month": {
-			date.setMonth(date.getMonth() + step * UNIT);
-			break;
-		}
-
-		case "week": {
-			date.setDate(date.getDate() + step * 7);
-			break;
-		}
-
-		case "day": {
-			date.setDate(date.getDate() + step * UNIT);
-			break;
-		}
-
-		case "hour": {
-			date.setHours(date.getHours() + step * UNIT);
-			break;
-		}
-
-		case "minute": {
-			date.setMinutes(date.getMinutes() + step * UNIT);
-			break;
-		}
-
-		case "second": {
-			date.setSeconds(date.getSeconds() + step * UNIT);
-			break;
-		}
-
-		default:
-			break;
-	}
-
-	return date.getTime();
-}
 
 const formatOptions = {
 	year: {
@@ -345,19 +187,206 @@ const formatOptions = {
 	},
 } as const;
 
+export const MILLISECONDS_PER_MINUTE = 60_000;
+export const MILLISECONDS_PER_FIFTEEN_MINUTES = 900_000;
+export const MILLISECONDS_PER_HOUR = 3_600_000;
+
+export function startOfUnit(unit: Unit, time: number): number {
+	const date = new Date(time);
+
+	// biome-ignore lint/nursery/noUnnecessaryConditions: Biome bug - https://github.com/biomejs/biome/issues/8332
+	switch (unit) {
+		case "year": {
+			date.setMonth(0, 0);
+			date.setHours(0, 0, 0, 0);
+			break;
+		}
+
+		case "month": {
+			date.setDate(0);
+			date.setHours(0, 0, 0, 0);
+			break;
+		}
+
+		case "week": {
+			date.setHours(0, 0, 0, 0);
+			date.setDate(date.getDate() - date.getDay());
+			break;
+		}
+
+		case "day": {
+			date.setHours(0, 0, 0, 0);
+			break;
+		}
+
+		case "hour": {
+			date.setMinutes(0, 0, 0);
+			break;
+		}
+
+		case "minute": {
+			date.setSeconds(0, 0);
+			break;
+		}
+
+		case "second": {
+			date.setMilliseconds(0);
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	return date.getTime();
+}
+
+export function alignWithUnitStep(
+	unit: Unit,
+	step: number,
+	time: number,
+): number {
+	if (step <= 1) {
+		return time;
+	}
+
+	const date = new Date(time);
+
+	// biome-ignore lint/nursery/noUnnecessaryConditions: Biome bug - https://github.com/biomejs/biome/issues/8332
+	switch (unit) {
+		case "year": {
+			const year = date.getFullYear();
+			date.setFullYear(year - (year % step));
+			break;
+		}
+
+		// Months are unusual because they vary in length and repeat every year. If
+		// the step is greater than or equal to one year, perform the alignment on a
+		// year basis. If the step is less than one year, perform the alignment on a
+		// divisor of 12 so that the yearly cycle is maintained.
+		case "month": {
+			if (step >= MONTHS_PER_YEAR) {
+				const yearsStep = Math.round(step / MONTHS_PER_YEAR);
+				const year = date.getFullYear();
+				date.setFullYear(year - (year % yearsStep));
+				date.setMonth(0);
+				break;
+			}
+
+			// Only align on divisors of 12. Get the closest value, favoring a higher
+			// value in the case of a tie so that cells are larger as opposed to
+			// smaller.
+			let monthStep = 0;
+			let bestDiff = Number.POSITIVE_INFINITY;
+			for (const option of DIVISORS_OF_TWELVE) {
+				const diff = Math.abs(step - option);
+				if (diff <= bestDiff) {
+					monthStep = option;
+					bestDiff = diff;
+				}
+			}
+
+			const month = date.getMonth();
+			date.setMonth(month - (month % monthStep));
+			break;
+		}
+
+		case "week": {
+			date.setTime(time - (time % MILLISECONDS_PER_WEEK));
+			break;
+		}
+
+		case "day": {
+			date.setTime(time - (time % MILLISECONDS_PER_DAY));
+			break;
+		}
+
+		case "hour": {
+			date.setTime(time - (time % MILLISECONDS_PER_HOUR));
+			break;
+		}
+
+		case "minute": {
+			date.setTime(time - (time % MILLISECONDS_PER_MINUTE));
+			break;
+		}
+
+		case "second": {
+			date.setTime(time - (time % MILLISECONDS_PER_SECOND));
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	return date.getTime();
+}
+
+export function addUnitStep(unit: Unit, step: number, time: number): number {
+	if (step < 1) {
+		throw new Error("Step < 1 shouldn't happen!");
+	}
+
+	const date = new Date(time);
+
+	// biome-ignore lint/nursery/noUnnecessaryConditions: Biome bug - https://github.com/biomejs/biome/issues/8332
+	switch (unit) {
+		case "year": {
+			date.setFullYear(date.getFullYear() + step * UNIT);
+			break;
+		}
+
+		case "month": {
+			date.setMonth(date.getMonth() + step * UNIT);
+			break;
+		}
+
+		case "week": {
+			date.setDate(date.getDate() + step * DAYS_PER_WEEK);
+			break;
+		}
+
+		case "day": {
+			date.setDate(date.getDate() + step * UNIT);
+			break;
+		}
+
+		case "hour": {
+			date.setHours(date.getHours() + step * UNIT);
+			break;
+		}
+
+		case "minute": {
+			date.setMinutes(date.getMinutes() + step * UNIT);
+			break;
+		}
+
+		case "second": {
+			date.setSeconds(date.getSeconds() + step * UNIT);
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	return date.getTime();
+}
+
 export const defaultLabelFormat: LabelFormatFn = function defaultLabelFormat(
-	[timeStart],
-	unit,
-	labelWidth,
+	[timeStart]: [number, number],
+	unit: Unit,
+	labelWidth: number,
 ) {
 	const unitFormatters = formatOptions[unit];
 	let format: (time: number) => string;
 
-	if (labelWidth >= 150) {
+	if (labelWidth >= LONG_LABEL_WIDTH) {
 		format = unitFormatters.long;
-	} else if (labelWidth >= 100) {
+	} else if (labelWidth >= MEDIUM_LONG_LABEL_WIDTH) {
 		format = unitFormatters.mediumLong;
-	} else if (labelWidth >= 50) {
+	} else if (labelWidth >= MEDIUM_LABEL_WIDTH) {
 		format = unitFormatters.medium;
 	} else {
 		format = unitFormatters.short;

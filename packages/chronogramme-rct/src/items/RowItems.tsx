@@ -67,31 +67,9 @@ export const RowItems = <
 		for (const itemIndex of itemIndices) {
 			const item = timeline.getItem(groupIndex, lineIndex, itemIndex);
 
-			if (!item) {
-				continue;
-			}
-
-			renderedItems.push(
-				<ItemForHelpersContextProvider<
-					TGroupIdKey,
-					TGroupTitleKey,
-					TGroupRightTitleKey,
-					TItemIdKey,
-					TItemGroupKey,
-					TItemTitleKey,
-					TItemDivTitleKey,
-					TItemTimeStartKey,
-					TItemTimeEndKey,
-					TGroup,
-					TItem
-				>
-					groupPosition={groupPosition}
-					item={item}
-					key={`item-${item.id}`}
-					vOffsetInGroup={vOffsetInGroup}
-					vSize={itemVSize}
-				>
-					<Item<
+			if (item) {
+				renderedItems.push(
+					<ItemForHelpersContextProvider<
 						TGroupIdKey,
 						TGroupTitleKey,
 						TGroupRightTitleKey,
@@ -104,11 +82,31 @@ export const RowItems = <
 						TGroup,
 						TItem
 					>
+						groupPosition={groupPosition}
 						item={item}
+						key={`item-${item.id}`}
 						vOffsetInGroup={vOffsetInGroup}
-					/>
-				</ItemForHelpersContextProvider>,
-			);
+						vSize={itemVSize}
+					>
+						<Item<
+							TGroupIdKey,
+							TGroupTitleKey,
+							TGroupRightTitleKey,
+							TItemIdKey,
+							TItemGroupKey,
+							TItemTitleKey,
+							TItemDivTitleKey,
+							TItemTimeStartKey,
+							TItemTimeEndKey,
+							TGroup,
+							TItem
+						>
+							item={item}
+							vOffsetInGroup={vOffsetInGroup}
+						/>
+					</ItemForHelpersContextProvider>,
+				);
+			}
 		}
 	}
 

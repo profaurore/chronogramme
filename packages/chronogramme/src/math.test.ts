@@ -361,7 +361,7 @@ describe("validateSize", () => {
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
 			["Errors if a symbol", Symbol("Symbol")],
-			["Errors if a function", () => undefined],
+			["Errors if a function", (): void => undefined],
 			["Errors if infinite", Number.NEGATIVE_INFINITY],
 			["Errors if not a number", Number.NaN],
 		];
@@ -543,7 +543,7 @@ describe("validatePosition", () => {
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
 			["Errors if a symbol", Symbol("Symbol")],
-			["Errors if a function", () => undefined],
+			["Errors if a function", (): void => undefined],
 			["Errors if infinite", Number.NEGATIVE_INFINITY],
 			["Errors if not a number", Number.NaN],
 		];
@@ -649,7 +649,7 @@ describe("validatePosition", () => {
 describe("validateNumberInterval", () => {
 	describe("Invalid values", () => {
 		const symbol = Symbol("Symbol");
-		const fn = () => undefined;
+		const fn = (): void => undefined;
 
 		const testList: readonly (readonly [
 			string,
@@ -696,21 +696,17 @@ describe("validateNumberInterval", () => {
 			],
 			[
 				"Errors if min is a symbol",
-				(() => {
-					return {
-						interval: [symbol, 10],
-						error: new NotANumberError("min", symbol),
-					};
-				})(),
+				(() => ({
+					interval: [symbol, 10],
+					error: new NotANumberError("min", symbol),
+				}))(),
 			],
 			[
 				"Errors if min is a function",
-				(() => {
-					return {
-						interval: [fn, 10],
-						error: new NotANumberError("min", fn),
-					};
-				})(),
+				(() => ({
+					interval: [fn, 10],
+					error: new NotANumberError("min", fn),
+				}))(),
 			],
 			[
 				"Errors if min is infinite",
@@ -834,7 +830,7 @@ describe("validateNumberInterval", () => {
 describe("validateSizeInterval", () => {
 	describe("Invalid values", () => {
 		const symbol = Symbol("Symbol");
-		const fn = () => undefined;
+		const fn = (): void => undefined;
 
 		const testList: readonly (readonly [
 			string,
@@ -881,21 +877,17 @@ describe("validateSizeInterval", () => {
 			],
 			[
 				"Errors if min is a symbol",
-				(() => {
-					return {
-						interval: [symbol, 10],
-						error: new NotASizeError("min", symbol),
-					};
-				})(),
+				(() => ({
+					interval: [symbol, 10],
+					error: new NotASizeError("min", symbol),
+				}))(),
 			],
 			[
 				"Errors if min is a function",
-				(() => {
-					return {
-						interval: [fn, 10],
-						error: new NotASizeError("min", fn),
-					};
-				})(),
+				(() => ({
+					interval: [fn, 10],
+					error: new NotASizeError("min", fn),
+				}))(),
 			],
 			[
 				"Errors if min is infinite",

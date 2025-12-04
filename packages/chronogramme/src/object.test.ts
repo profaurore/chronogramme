@@ -17,7 +17,7 @@ describe("validateObject", () => {
 			["Errors if a big integer", BigInt(42)],
 			["Errors if a string", "invalid"],
 			["Errors if a symbol", Symbol("Symbol")],
-			["Errors if a function", () => undefined],
+			["Errors if a function", (): void => undefined],
 		];
 
 		test.each(testList)("%s", (_testTitle, testParams) => {

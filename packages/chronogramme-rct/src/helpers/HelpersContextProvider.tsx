@@ -1,5 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import { useContext, useMemo } from "react";
+import { type ReactNode, useContext, useMemo } from "react";
 import { GroupForHelpersContext } from "../groups/GroupForHelpersContext";
 import { ItemForHelpersContext } from "../items/ItemForHelpersContext";
 import type {
@@ -97,7 +97,7 @@ export const HelpersContextProvider = <
 	TItemTimeEndKey,
 	TGroup,
 	TItem
->) => {
+>): ReactNode => {
 	const groupForHelpersContext = useContext(GroupForHelpersContext);
 	const itemForHelpersContext = useContext(ItemForHelpersContext);
 

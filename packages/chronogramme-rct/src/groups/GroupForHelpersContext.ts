@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { type Context, createContext } from "react";
 
 export interface GroupForHelpersContextValue {
 	id: number;
@@ -6,6 +6,6 @@ export interface GroupForHelpersContextValue {
 	size: number;
 }
 
-export const GroupForHelpersContext = createContext<
+export const GroupForHelpersContext: Context<
 	GroupForHelpersContextValue | undefined
->(undefined);
+> = createContext<GroupForHelpersContextValue | undefined>(undefined);

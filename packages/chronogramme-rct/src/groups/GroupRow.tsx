@@ -1,10 +1,12 @@
+import type { ReactNode } from "react";
+import { STYLE_SIZE_PRECISION } from "../constants";
 import { useGroupRowContext } from "./useGroupRowContext";
 
 interface GroupRowProps {
 	children: React.ReactNode | undefined;
 }
 
-export const GroupRow = ({ children }: GroupRowProps) => {
+export const GroupRow = ({ children }: GroupRowProps): ReactNode => {
 	const {
 		className,
 		id,
@@ -27,11 +29,11 @@ export const GroupRow = ({ children }: GroupRowProps) => {
 			onContextMenu={onContextMenu}
 			onDoubleClick={onDoubleClick}
 			style={{
-				height: `${size.toFixed(4)}px`,
+				height: `${size.toFixed(STYLE_SIZE_PRECISION)}px`,
 				left: "0px",
 				position: "absolute",
 				right: "0px",
-				top: `${position.toFixed(4)}px`,
+				top: `${position.toFixed(STYLE_SIZE_PRECISION)}px`,
 			}}
 		>
 			{children}

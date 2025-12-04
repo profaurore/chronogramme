@@ -1,4 +1,6 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
+import type { ReactNode } from "react";
+import { STYLE_SIZE_PRECISION } from "../constants";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -62,7 +64,7 @@ export const Group = <
 			RctToCoreItem<TItem>
 		>
 	>;
-}) => {
+}): ReactNode => {
 	const groupPosition = timeline.getGroupPosition(groupIndex);
 	const groupSize = timeline.getGroupSize(groupIndex);
 
@@ -74,12 +76,12 @@ export const Group = <
 				(groupIndex % 2 === 0 ? "even" : "odd")
 			}
 			style={{
-				height: `${groupSize.toFixed(4)}px`,
+				height: `${groupSize.toFixed(STYLE_SIZE_PRECISION)}px`,
 				left: "0px",
-				lineHeight: `${groupSize.toFixed(4)}px`,
+				lineHeight: `${groupSize.toFixed(STYLE_SIZE_PRECISION)}px`,
 				position: "absolute",
 				right: "0px",
-				top: `${groupPosition.toFixed(4)}px`,
+				top: `${groupPosition.toFixed(STYLE_SIZE_PRECISION)}px`,
 			}}
 		>
 			<GroupForHelpersContextProvider<

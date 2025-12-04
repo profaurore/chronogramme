@@ -1,7 +1,10 @@
 import { useContext } from "react";
-import { ItemForHelpersContext } from "./ItemForHelpersContext";
+import {
+	ItemForHelpersContext,
+	type ItemForHelpersContextValue,
+} from "./ItemForHelpersContext";
 
-export function useItemForHelpersContext() {
+export function useItemForHelpersContext(): ItemForHelpersContextValue {
 	const context = useContext(ItemForHelpersContext);
 
 	if (!context) {

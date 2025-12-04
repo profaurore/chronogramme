@@ -1,9 +1,26 @@
-export type Interval = [minimum: number, maximum: number];
-export type IntervalString = `${number},${number}`;
 type OptionalInterval = [
 	minimum: number | undefined,
 	maximum: number | undefined,
 ];
+
+const PARSE_INTERVAL_NUM_PARTS = 2;
+
+function isNumber(value: unknown): value is number {
+	return typeof value === "number";
+}
+
+function validateNumber(
+	valueName: string,
+	value: unknown,
+): asserts value is number {
+	if (!(isNumber(value) && Number.isFinite(value))) {
+		throw new NotANumberError(valueName, value);
+	}
+}
+
+export type Interval = [minimum: number, maximum: number];
+
+export type IntervalString = `${number},${number}`;
 
 /** Math */
 export const ZERO = 0;
@@ -143,10 +160,6 @@ export function mean(...values: readonly number[]): number {
 	return result;
 }
 
-function isNumber(value: unknown): value is number {
-	return typeof value === "number";
-}
-
 export class NotASizeError extends Error {
 	public readonly value: unknown;
 
@@ -254,13 +267,13 @@ export const validateSize: (
 	maximum: number,
 	inclusiveMaximum: boolean,
 ) => asserts value is number = (
-	valueName,
-	value,
-	minimum,
-	inclusiveMinimum,
-	maximum,
-	inclusiveMaximum,
-) => {
+	valueName: string,
+	value: unknown,
+	minimum: number,
+	inclusiveMinimum: boolean,
+	maximum: number,
+	inclusiveMaximum: boolean,
+): asserts value is number => {
 	if (!(isNumber(value) && Number.isFinite(value))) {
 		throw new NotASizeError(valueName, value);
 	}
@@ -297,15 +310,6 @@ export function validatePosition(
 	}
 }
 
-function validateNumber(
-	valueName: string,
-	value: unknown,
-): asserts value is number {
-	if (!(isNumber(value) && Number.isFinite(value))) {
-		throw new NotANumberError(valueName, value);
-	}
-}
-
 export class IntervalExtremaError extends Error {
 	public readonly maximum: unknown;
 
@@ -330,11 +334,11 @@ export const validateNumberInterval: (
 	extremaName: string,
 	interval: readonly [unknown, unknown],
 ) => asserts interval is Interval = (
-	minName,
-	maxName,
-	extremaName,
-	interval,
-) => {
+	minName: string,
+	maxName: string,
+	extremaName: string,
+	interval: readonly [unknown, unknown],
+): asserts interval is Interval => {
 	const [intervalMin, intervalMax] = interval;
 
 	validateNumber(minName, intervalMin);
@@ -351,11 +355,11 @@ export const validateSizeInterval: (
 	extremaName: string,
 	interval: readonly [unknown, unknown],
 ) => asserts interval is Interval = (
-	minName,
-	maxName,
-	extremaName,
-	interval,
-) => {
+	minName: string,
+	maxName: string,
+	extremaName: string,
+	interval: readonly [unknown, unknown],
+): asserts interval is Interval => {
 	const [intervalMin, intervalMax] = interval;
 
 	validateSize(minName, intervalMin, ZERO, true, Number.MAX_VALUE, true);
@@ -385,8 +389,6 @@ export class NotAnIntervalError extends Error {
 		this.value = value;
 	}
 }
-
-const PARSE_INTERVAL_NUM_PARTS = 2;
 
 export function parseIntervalAttribute(
 	name: string,

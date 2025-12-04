@@ -80,8 +80,8 @@ export class Scroller extends HTMLElement {
 		SCROLLER_OBSERVED_ATTRIBUTES;
 
 	private static readonly resizeHandler = new Singleton(
-		() => {
-			return new ResizeObserver(([entry]: readonly ResizeObserverEntry[]) => {
+		() =>
+			new ResizeObserver(([entry]: readonly ResizeObserverEntry[]) => {
 				if (entry) {
 					const target = entry.target;
 
@@ -90,8 +90,7 @@ export class Scroller extends HTMLElement {
 						target.onResizeHandler(bbox.width, bbox.height);
 					}
 				}
-			});
-		},
+			}),
 
 		(resizeObserver) => {
 			resizeObserver.disconnect();
@@ -1218,7 +1217,7 @@ export class Scroller extends HTMLElement {
 		const vValueStartPrev = this.getVValue(ZERO);
 		const vValueEndPrev = this.getVValue(this.scrollHeight);
 
-		return () => {
+		return (): void => {
 			const hScrollPos = hScrollState.scrollPos;
 			const hScrollSize = hScrollState.scrollSize;
 			const hValueStart = this.getHValue(ZERO);
@@ -1300,7 +1299,7 @@ export class Scroller extends HTMLElement {
 		const vWindowMinPrev = vScrollState.windowMin;
 		const vWindowMaxPrev = vScrollState.windowMax;
 
-		return () => {
+		return (): void => {
 			const hWindowMin = hScrollState.windowMin;
 			const hWindowMax = hScrollState.windowMax;
 
@@ -1340,7 +1339,7 @@ export class Scroller extends HTMLElement {
 		const vScrollState = this.#vScrollState;
 		const vWindowSizePrev = vScrollState.windowSize;
 
-		return () => {
+		return (): void => {
 			const hWindowSize = hScrollState.windowSize;
 			const vWindowSize = vScrollState.windowSize;
 

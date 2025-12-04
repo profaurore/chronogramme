@@ -9,7 +9,7 @@ const alias = {
 		__dirname,
 		"./packages/chronogramme-rct/src",
 	),
-};
+} as const;
 
 export const baseViteConfig = {
 	resolve: {
@@ -23,4 +23,4 @@ export const baseViteConfig = {
 			allow: Object.values(alias).map((item) => path.resolve(item, "..")),
 		},
 	},
-};
+} as const;

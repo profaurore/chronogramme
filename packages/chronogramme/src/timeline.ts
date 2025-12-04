@@ -9,6 +9,16 @@ import "./scroller";
 import { SCROLLER_OBSERVED_ATTRIBUTES, Scroller } from "./scroller";
 import { validateStringOptions } from "./string";
 
+const TIMELINE_OBSERVED_ATTRIBUTES = [
+	...SCROLLER_OBSERVED_ATTRIBUTES,
+	"item-time-snap",
+	"items-draggable",
+	"items-end-resizable",
+	"items-start-resizable",
+	"line-size",
+	"timezone-offset",
+] as const;
+
 export interface BaseItem<TItemId = number, TGroupId = number> {
 	endTime: EpochTimeStamp;
 	groupId: TGroupId;
@@ -23,16 +33,6 @@ export interface BaseGroup<TGroupId = number> {
 	id: TGroupId;
 	lineSize?: number | undefined;
 }
-
-const TIMELINE_OBSERVED_ATTRIBUTES = [
-	...SCROLLER_OBSERVED_ATTRIBUTES,
-	"item-time-snap",
-	"items-draggable",
-	"items-end-resizable",
-	"items-start-resizable",
-	"line-size",
-	"timezone-offset",
-] as const;
 
 export class Timeline<
 	TGroupId = number,

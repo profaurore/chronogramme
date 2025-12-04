@@ -113,3 +113,5 @@ export const nextTimeUnits = {
 	month: "year",
 	year: "year",
 } as const;
+
+export const STYLE_SIZE_PRECISION = 4;

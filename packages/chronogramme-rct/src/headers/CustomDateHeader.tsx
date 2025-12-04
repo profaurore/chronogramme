@@ -27,34 +27,32 @@ export const CustomDateHeader = <THeaderData,>({
 	intervalRenderer: (() => React.ReactNode) | undefined;
 	style: React.CSSProperties | undefined;
 	unitProp: Unit | "primaryHeader" | undefined;
-}>): ReactNode => {
-	return (
-		<div
-			data-testid="dateHeader"
-			className={className}
-			{...getRootProps({ style })}
-		>
-			{intervals.map((interval) => {
-				const intervalText = getLabelFormat(
-					[interval.startTime, interval.endTime],
-					unit,
-					interval.labelWidth,
-				);
+}>): ReactNode => (
+	<div
+		data-testid="dateHeader"
+		className={className}
+		{...getRootProps({ style })}
+	>
+		{intervals.map((interval) => {
+			const intervalText = getLabelFormat(
+				[interval.startTime, interval.endTime],
+				unit,
+				interval.labelWidth,
+			);
 
-				return (
-					<Interval
-						key={`label-${interval.startTime.valueOf()}`}
-						unit={unit}
-						interval={interval}
-						showPeriod={showPeriod}
-						intervalText={intervalText}
-						primaryHeader={unitProp === "primaryHeader"}
-						getIntervalProps={getIntervalProps}
-						intervalRenderer={intervalRenderer}
-						headerData={headerData}
-					/>
-				);
-			})}
-		</div>
-	);
-};
+			return (
+				<Interval
+					key={`label-${interval.startTime.valueOf()}`}
+					unit={unit}
+					interval={interval}
+					showPeriod={showPeriod}
+					intervalText={intervalText}
+					primaryHeader={unitProp === "primaryHeader"}
+					getIntervalProps={getIntervalProps}
+					intervalRenderer={intervalRenderer}
+					headerData={headerData}
+				/>
+			);
+		})}
+	</div>
+);

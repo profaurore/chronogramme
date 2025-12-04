@@ -4,7 +4,11 @@ export const TIME_MIN = -8.64e15;
 
 export const TIME_MAX = 8.64e15;
 
-export const clampTime = clampMinWins;
+export const clampTime: (
+	value: number,
+	minimum: number,
+	maximum: number,
+) => number = clampMinWins;
 
 /**
  * Clamps a time interval between two values.

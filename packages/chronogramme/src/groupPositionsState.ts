@@ -4,6 +4,19 @@ import { validateObject } from "./object";
 import type { BaseGroup, BaseItem } from "./timeline";
 import { yieldToMain } from "./yieldToMain";
 
+interface ItemChangeState<
+	TGroupId = number,
+	TItemId = number,
+	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
+> {
+	changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
+	item: TItem;
+	newItem: TItem;
+	prevRawEndTime: number;
+	prevRawStartTime: number;
+	triggerTime: number;
+}
+
 const ITEM_CHANGE_TYPE = {
 	drag: 0,
 	resizeEnd: 1,
@@ -33,19 +46,6 @@ export type ItemResizeValidator<TItem> = (
 // 	groupIdx: number;
 // 	offset: number;
 // }
-
-interface ItemChangeState<
-	TGroupId = number,
-	TItemId = number,
-	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
-> {
-	changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
-	item: TItem;
-	newItem: TItem;
-	prevRawEndTime: number;
-	prevRawStartTime: number;
-	triggerTime: number;
-}
 
 export class GroupPositionsState<
 	TGroupId = number,
@@ -197,7 +197,7 @@ export class GroupPositionsState<
 		if (groupPosition === undefined) {
 			let lastKnownPosition: number | undefined;
 			let lastKnownIndex = index;
-			for (; lastKnownIndex >= ZERO; lastKnownIndex--) {
+			for (; lastKnownIndex >= ZERO; lastKnownIndex -= UNIT) {
 				lastKnownPosition = groupPositions[lastKnownIndex];
 				if (lastKnownPosition !== undefined) {
 					break;
@@ -205,7 +205,7 @@ export class GroupPositionsState<
 			}
 
 			let currentPos = lastKnownPosition ?? ZERO;
-			for (let i = Math.max(lastKnownIndex, ZERO); i < index; i++) {
+			for (let i = Math.max(lastKnownIndex, ZERO); i < index; i += UNIT) {
 				groupPositions[i] = currentPos;
 				currentPos += this.getGroupSize(i);
 			}
@@ -315,7 +315,7 @@ export class GroupPositionsState<
 		for (
 			let index = visibleGroupIndexMin;
 			index < visibleGroupIndexMax;
-			index++
+			index += UNIT
 		) {
 			yield index;
 		}
@@ -346,7 +346,7 @@ export class GroupPositionsState<
 		for (
 			let lineIndex = firstLineIndex;
 			lineIndex < lastLineIndex;
-			lineIndex++
+			lineIndex += UNIT
 		) {
 			yield lineIndex;
 		}
@@ -359,7 +359,7 @@ export class GroupPositionsState<
 		const groupLines = this.getGroupLines(groupIndex);
 		const numItems = groupLines[lineIndex]?.length ?? ZERO;
 
-		for (let itemIndex = ZERO; itemIndex < numItems; itemIndex++) {
+		for (let itemIndex = ZERO; itemIndex < numItems; itemIndex += UNIT) {
 			yield itemIndex;
 		}
 	}
@@ -872,7 +872,7 @@ export class GroupPositionsState<
 		const numGroups = groups.length;
 		let size = ZERO;
 
-		for (let index = ZERO; index < numGroups; index++) {
+		for (let index = ZERO; index < numGroups; index += UNIT) {
 			size += groupSizes[index] ?? this.getGroupLineSize(index);
 		}
 
@@ -950,7 +950,7 @@ export class GroupPositionsState<
 		let group: [index: number, startPos: number] | undefined;
 		let currentPos = ZERO;
 
-		for (let index = ZERO; index < numGroups; index++) {
+		for (let index = ZERO; index < numGroups; index += UNIT) {
 			const cachedGroupSize = groupSizes[index];
 			const groupSize = cachedGroupSize ?? this.getGroupLineSize(index);
 
@@ -1102,7 +1102,7 @@ export class GroupPositionsState<
 		for (
 			visibleGroupIndexMax = visibleGroupIndexMin;
 			visibleGroupIndexMax < numGroups && currentPos < groupDrawMax;
-			visibleGroupIndexMax++
+			visibleGroupIndexMax += UNIT
 		) {
 			currentPos += this.getGroupSizeCached(visibleGroupIndexMax);
 		}
@@ -1116,7 +1116,7 @@ export class GroupPositionsState<
 		for (
 			;
 			visibleGroupIndexMin > ZERO && currentPos > windowMinAdjusted;
-			visibleGroupIndexMin--
+			visibleGroupIndexMin -= UNIT
 		) {
 			currentPos -= this.getGroupSizeCached(visibleGroupIndexMin);
 		}

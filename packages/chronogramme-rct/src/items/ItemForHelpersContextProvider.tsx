@@ -1,5 +1,5 @@
 import { ZERO } from "@chronogramme/chronogramme";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { BaseGroup, BaseItem, RctToCoreItem } from "../timeline";
 import {
 	ItemForHelpersContext,
@@ -81,7 +81,7 @@ export const ItemForHelpersContextProvider = <
 	TItemTimeStartKey,
 	TItemTimeEndKey,
 	TItem
->) => {
+>): ReactNode => {
 	const { timeline } = useItemContext<
 		TGroupIdKey,
 		TGroupTitleKey,
@@ -110,8 +110,8 @@ export const ItemForHelpersContextProvider = <
 	const renderedHSize = renderedHEndPos - renderedHStartPos;
 	const renderedVStartPosInGroup = groupPosition + renderedVStartPos;
 
-	const contextValue = useMemo<ItemForHelpersContextValue>(() => {
-		return {
+	const contextValue = useMemo<ItemForHelpersContextValue>(
+		() => ({
 			id,
 			range,
 			renderedHSize,
@@ -120,17 +120,18 @@ export const ItemForHelpersContextProvider = <
 			renderedVStartPos,
 			renderedVStartPosInGroup,
 			startTime,
-		};
-	}, [
-		id,
-		range,
-		renderedHSize,
-		renderedHStartPos,
-		renderedVSize,
-		renderedVStartPos,
-		renderedVStartPosInGroup,
-		startTime,
-	]);
+		}),
+		[
+			id,
+			range,
+			renderedHSize,
+			renderedHStartPos,
+			renderedVSize,
+			renderedVStartPos,
+			renderedVStartPosInGroup,
+			startTime,
+		],
+	);
 
 	// Unfortunate type cast to handle the trickiness of creating context
 	// providers with generics.

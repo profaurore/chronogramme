@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, type Mock, test, vi } from "vitest";
 import {
 	type BarResizeStrategy,
 	type BarSideResizeStrategy,
@@ -20,8 +20,8 @@ import {
 } from "./object";
 import { getError } from "./testUtils";
 
-const mockedResizeStrategyDefault = vi.fn();
-const mockedSideResizeStrategyDefault = vi.fn();
+const mockedResizeStrategyDefault: Mock = vi.fn();
+const mockedSideResizeStrategyDefault: Mock = vi.fn();
 
 vi.mock("./barStateUtils.ts", async (importOriginal) => {
 	const original = await importOriginal<typeof barStateUtilsImport>();
@@ -30,14 +30,14 @@ vi.mock("./barStateUtils.ts", async (importOriginal) => {
 		...original,
 
 		// biome-ignore lint/style/useNamingConvention: Mocked constant.
-		get BAR_RESIZE_STRATEGY_DEFAULT() {
+		get BAR_RESIZE_STRATEGY_DEFAULT(): Mock {
 			return mockedResizeStrategyDefault.mockImplementation(
 				original.BAR_RESIZE_STRATEGY_DEFAULT,
 			);
 		},
 
 		// biome-ignore lint/style/useNamingConvention: Mocked constant.
-		get BAR_SIDE_RESIZE_STRATEGY_DEFAULT() {
+		get BAR_SIDE_RESIZE_STRATEGY_DEFAULT(): Mock {
 			return mockedSideResizeStrategyDefault.mockImplementation(
 				original.BAR_SIDE_RESIZE_STRATEGY_DEFAULT,
 			);

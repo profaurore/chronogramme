@@ -1,10 +1,10 @@
-import type { BarSideResizeStrategy } from "./barState";
+import type { BarSideResizeStrategy, BarState } from "./barState";
 import { clampMaxWins, ZERO } from "./math";
 
 export const consumeSideBarResizeStrategy: BarSideResizeStrategy = (
-	state,
-	isStart,
-	targetSize,
+	state: Readonly<BarState>,
+	isStart: boolean,
+	targetSize: number | undefined,
 ) => {
 	const min = isStart ? state.startMin : state.endMin;
 	const max = isStart ? state.startMax : state.endMax;
@@ -46,9 +46,9 @@ export const consumeSideBarResizeStrategy: BarSideResizeStrategy = (
 };
 
 export const constrainBarSideResizeStrategy: BarSideResizeStrategy = (
-	state,
-	isStart,
-	targetSize,
+	state: Readonly<BarState>,
+	isStart: boolean,
+	targetSize: number | undefined,
 ) => {
 	const min = isStart ? state.startMin : state.endMin;
 	const max = isStart ? state.startMax : state.endMax;

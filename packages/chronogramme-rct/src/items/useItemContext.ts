@@ -32,7 +32,19 @@ export function useItemContext<
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>,
->() {
+>(): ItemContextVariable<
+	TGroupIdKey,
+	TGroupTitleKey,
+	TGroupRightTitleKey,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TGroup,
+	TItem
+> {
 	// Unfortunate type cast to handle the trickiness of creating context
 	// providers with generics.
 	const context = useContext(ItemContext) as unknown as ItemContextVariable<

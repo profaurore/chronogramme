@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { HelpersContext } from "./HelpersContext";
+import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
-export function useHelpersContext() {
+export function useHelpersContext(): HelpersContextValue {
 	const context = useContext(HelpersContext);
 
 	if (!context) {

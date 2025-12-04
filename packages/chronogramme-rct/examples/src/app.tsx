@@ -1,4 +1,4 @@
-import { css } from "@linaria/core";
+import { css, type LinariaClassName } from "@linaria/core";
 import {
 	type ComponentProps,
 	type EventHandler,
@@ -13,7 +13,7 @@ import {
 	useState,
 } from "react";
 import "./styles.css";
-import { TIME_MAX, TIME_MIN, UNIT } from "@chronogramme/chronogramme";
+import { TIME_MAX, TIME_MIN, UNIT, ZERO } from "@chronogramme/chronogramme";
 import {
 	GroupRow,
 	Timeline as RCTimeline,
@@ -27,20 +27,20 @@ import type {
 	RowRenderer,
 } from "../../src/timeline";
 
-const timelineClass = css`
+const timelineClass: LinariaClassName = css`
 	flex: none;
 	font-size: 12px;
 	height: 400px;
 	margin-bottom: 1em;
 `;
 
-const buttonRowClass = css`
+const buttonRowClass: LinariaClassName = css`
 	align-items: center;
 	display: flex;
 	gap: 5px;
 `;
 
-const headerClass = css`
+const headerClass: LinariaClassName = css`
 display:flex;
 flex-direction: column;
 gap: 5px;
@@ -48,13 +48,25 @@ margin-bottom:5px;
 `;
 
 const DAYS_IN_WEEK = 7;
-const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
-const MILLISECONDS_PER_WEEK = 7 * MILLISECONDS_PER_DAY;
-const MILLISECONDS_PER_MONTH = 30 * MILLISECONDS_PER_DAY;
-const MILLISECONDS_PER_YEAR = 365 * MILLISECONDS_PER_DAY;
-const MILLISECONDS_PER_DECADE = 10 * MILLISECONDS_PER_YEAR;
+const MILLISECONDS_PER_DAY = 86_400_000;
+const MILLISECONDS_PER_WEEK = 604_800_000;
+const MILLISECONDS_PER_MONTH = 2_592_000_000;
+const MILLISECONDS_PER_YEAR = 31_536_000_000;
+const MILLISECONDS_PER_DECADE = 315_360_000_000;
 
-const formatter = new Intl.DateTimeFormat("en-CA", {
+const SOME_ITEMS = 50_000;
+const MANY_ITEMS = 250_000;
+
+const EVEN_MULTIPLE = 2;
+const EVEN_GROUP_ROW_HEIGHT = 10;
+const ODD_GROUP_ROW_HEIGHT = 20;
+
+const GROUP_COUNT = 1000;
+const ITEM_BASE_RANGE = 5_000_000_000;
+const END_BASE_OFFSET = 10_000_000;
+const END_RANDOM_FACTOR = 50_000_000;
+
+const formatter: Intl.DateTimeFormat = new Intl.DateTimeFormat("en-CA", {
 	year: "numeric",
 	month: "2-digit",
 	day: "2-digit",
@@ -84,8 +96,6 @@ function datesFromStartDate(start: number): [number, number] {
 	];
 }
 
-const GROUP_COUNT = 1000;
-
 export function App(): ReactNode {
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
@@ -93,9 +103,10 @@ export function App(): ReactNode {
 
 	// Bug report: https://github.com/biomejs/biome/issues/3512
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
-	const windowString = useMemo(() => {
-		return formatDateRange(windowStart, windowEnd);
-	}, [windowEnd, windowStart]);
+	const windowString = useMemo(
+		() => formatDateRange(windowStart, windowEnd),
+		[windowEnd, windowStart],
+	);
 
 	const onStartOfTimeClickHandler: MouseEventHandler = () => {
 		setWindow(datesFromStartDate(TIME_MIN));
@@ -118,29 +129,30 @@ export function App(): ReactNode {
 
 	const onAddClickHandler =
 		(addCount: number): MouseEventHandler =>
-		() => {
+		(): void => {
 			setItems((prevItems) => {
 				const now = Date.now();
 				const groupItemCount = addCount / GROUP_COUNT;
-				const indexOffsetFactor = 5_000_000_000 / groupItemCount;
+				const indexOffsetFactor = ITEM_BASE_RANGE / groupItemCount;
 				const newItems = prevItems.slice(0);
 				let prevCount = newItems.length;
 
-				for (let i = 0; i < GROUP_COUNT; i++) {
-					for (let j = 0; j < groupItemCount; j++) {
+				for (let i = 0; i < GROUP_COUNT; i += UNIT) {
+					for (let j = 0; j < groupItemCount; j += UNIT) {
 						const startTime =
 							now + Math.random() * indexOffsetFactor + j * indexOffsetFactor;
 
 						newItems.push({
 							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
-							end_time: startTime + 10_000_000 + Math.random() * 50_000_000,
+							end_time:
+								startTime + END_BASE_OFFSET + Math.random() * END_RANDOM_FACTOR,
 							group: i,
 							id: prevCount,
 							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
 							start_time: startTime,
 						});
 
-						prevCount++;
+						prevCount += UNIT;
 					}
 				}
 
@@ -151,10 +163,13 @@ export function App(): ReactNode {
 	useEffect(() => {
 		const newGroups: BaseGroup[] = [];
 
-		for (let i = 0; i < GROUP_COUNT; i++) {
+		for (let i = 0; i < GROUP_COUNT; i += UNIT) {
 			newGroups.push({
 				id: i,
-				lineHeight: i % 2 ? 10 : 20,
+				lineHeight:
+					i % EVEN_MULTIPLE === ZERO
+						? EVEN_GROUP_ROW_HEIGHT
+						: ODD_GROUP_ROW_HEIGHT,
 			});
 		}
 
@@ -164,8 +179,8 @@ export function App(): ReactNode {
 	const onItemMoveHandler = useCallback<
 		Exclude<ComponentProps<typeof RCTimeline>["onItemMove"], undefined>
 	>((itemId, dragTime, newGroupOrder) => {
-		setItems((prev) => {
-			return prev.map((item) => {
+		setItems((prev) =>
+			prev.map((item) => {
 				if (item.id === itemId) {
 					const newItem = { ...item };
 					newItem.start_time = dragTime;
@@ -176,15 +191,15 @@ export function App(): ReactNode {
 				}
 
 				return item;
-			});
-		});
+			}),
+		);
 	}, []);
 
 	const onItemResizeHandler = useCallback<
 		Exclude<ComponentProps<typeof RCTimeline>["onItemResize"], undefined>
 	>((itemId, endTimeOrStartTime, edge) => {
-		setItems((prev) => {
-			return prev.map((item) => {
+		setItems((prev) =>
+			prev.map((item) => {
 				if (item.id === itemId) {
 					const newItem = { ...item };
 					if (edge === "left") {
@@ -197,8 +212,8 @@ export function App(): ReactNode {
 				}
 
 				return item;
-			});
-		});
+			}),
+		);
 	}, []);
 
 	const onTimeChangeHandler = useCallback<
@@ -218,8 +233,8 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const rowRenderer = useCallback<RowRenderer>(({ group }) => {
-		return (
+	const rowRenderer = useCallback<RowRenderer>(
+		({ group }) => (
 			<GroupRow>
 				<RowItems />
 				<div
@@ -232,8 +247,9 @@ export function App(): ReactNode {
 					{group.id}
 				</div>
 			</GroupRow>
-		);
-	}, []);
+		),
+		[],
+	);
 
 	const itemRenderer = useCallback<ItemRenderer>(
 		({ getItemProps, getResizeProps, item }) => {
@@ -297,12 +313,12 @@ export function App(): ReactNode {
 
 	const onChangeZoomHandler =
 		(windowRange: number): MouseEventHandler =>
-		() => {
+		(): void => {
 			setWindow(([start]) => [start, start + windowRange]);
 		};
 
 	const onSetZoomHandler: EventHandler<FocusEvent | KeyboardEvent> = (
-		event,
+		event: FocusEvent | KeyboardEvent,
 	) => {
 		if (event instanceof KeyboardEvent && event.key !== "Enter") {
 			return;
@@ -339,10 +355,13 @@ export function App(): ReactNode {
 				</div>
 
 				<div className={buttonRowClass}>
-					<button onClick={onAddClickHandler(50_000)} type="button">
+					<button onClick={onAddClickHandler(UNIT)} type="button">
+						Add 1 item
+					</button>
+					<button onClick={onAddClickHandler(SOME_ITEMS)} type="button">
 						Add 50k items
 					</button>
-					<button onClick={onAddClickHandler(250_000)} type="button">
+					<button onClick={onAddClickHandler(MANY_ITEMS)} type="button">
 						Add 250k items
 					</button>
 					<span>{Intl.NumberFormat("en").format(items.length)} items</span>

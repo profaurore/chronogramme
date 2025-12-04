@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { type Context, createContext } from "react";
 
 interface ItemDimensions {
 	collisionLeft: number;
@@ -30,6 +30,5 @@ export interface HelpersContextValue {
 	getLeftOffsetFromDate: (date: number) => number;
 }
 
-export const HelpersContext = createContext<HelpersContextValue | undefined>(
-	undefined,
-);
+export const HelpersContext: Context<HelpersContextValue | undefined> =
+	createContext<HelpersContextValue | undefined>(undefined);

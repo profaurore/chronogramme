@@ -1,3 +1,7 @@
+function isFunction<Fn extends () => void>(value: unknown): value is Fn {
+	return typeof value === "function";
+}
+
 export class NotAFunctionError extends Error {
 	public readonly value: unknown;
 
@@ -9,10 +13,6 @@ export class NotAFunctionError extends Error {
 		this.valueName = valueName;
 		this.value = value;
 	}
-}
-
-function isFunction<Fn extends () => void>(value: unknown): value is Fn {
-	return typeof value === "function";
 }
 
 export function validateFunction<Fn>(

@@ -19,7 +19,10 @@ export class NotABooleanError extends Error {
 export const validateBoolean: (
 	valueName: string,
 	value: unknown,
-) => asserts value is boolean = (valueName, value) => {
+) => asserts value is boolean = (
+	valueName: string,
+	value: unknown,
+): asserts value is boolean => {
 	if (typeof value !== "boolean") {
 		throw new NotABooleanError(valueName, value);
 	}

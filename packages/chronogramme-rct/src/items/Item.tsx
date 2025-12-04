@@ -3,6 +3,7 @@ import {
 	leftResizeStyle,
 	overridableStyles,
 	rightResizeStyle,
+	STYLE_SIZE_PRECISION,
 	selectedAndCanMove,
 	selectedAndCanResizeLeft,
 	selectedAndCanResizeLeftAndDragLeft,
@@ -257,48 +258,40 @@ export const Item = <
 		);
 
 	const getItemPropsHandler = useCallback<GetItemProps>(
-		(params) => {
-			return {
-				className: "rct-item",
-				onClick: composeEvents(onClickHandler, params.onClick),
-				onMouseDown: params.onMouseDown,
-				onPointerDownCapture: onPointerDownCaptureHandler,
-				onMouseUp: params.onMouseUp,
-				onTouchStart: params.onTouchStart,
-				onTouchEnd: params.onTouchEnd,
-				onDoubleClick: composeEvents(
-					onDoubleClickHandler,
-					params.onDoubleClick,
-				),
-				onContextMenu: composeEvents(
-					onContextMenuHandler,
-					params.onContextMenu,
-				),
+		(params) => ({
+			className: "rct-item",
+			onClick: composeEvents(onClickHandler, params.onClick),
+			onMouseDown: params.onMouseDown,
+			onPointerDownCapture: onPointerDownCaptureHandler,
+			onMouseUp: params.onMouseUp,
+			onTouchStart: params.onTouchStart,
+			onTouchEnd: params.onTouchEnd,
+			onDoubleClick: composeEvents(onDoubleClickHandler, params.onDoubleClick),
+			onContextMenu: composeEvents(onContextMenuHandler, params.onContextMenu),
+			slot: "center",
+			style: {
+				...params.style,
+				...overridableStyles,
+				...(selected ? selectedStyle : {}),
+				...(selected && canMove ? selectedAndCanMove : {}),
+				...(selected && canResizeLeft ? selectedAndCanResizeLeft : {}),
+				...(selected && canResizeLeft && dragging
+					? selectedAndCanResizeLeftAndDragLeft
+					: {}),
+				...(selected && canResizeRight ? selectedAndCanResizeRight : {}),
+				...(selected && canResizeRight && dragging
+					? selectedAndCanResizeRightAndDragRight
+					: {}),
+				position: "absolute",
+				boxSizing: "border-box",
 				slot: "center",
-				style: {
-					...params.style,
-					...overridableStyles,
-					...(selected ? selectedStyle : {}),
-					...(selected && canMove ? selectedAndCanMove : {}),
-					...(selected && canResizeLeft ? selectedAndCanResizeLeft : {}),
-					...(selected && canResizeLeft && dragging
-						? selectedAndCanResizeLeftAndDragLeft
-						: {}),
-					...(selected && canResizeRight ? selectedAndCanResizeRight : {}),
-					...(selected && canResizeRight && dragging
-						? selectedAndCanResizeRightAndDragRight
-						: {}),
-					position: "absolute",
-					boxSizing: "border-box",
-					slot: "center",
-					left: `${left.toFixed(4)}px`,
-					top: `${vOffsetInGroup.toFixed(4)}px`,
-					width: `${width.toFixed(4)}px`,
-					height: `${height.toFixed(4)}px`,
-					lineHeight: `${height.toFixed(4)}px`,
-				},
-			};
-		},
+				left: `${left.toFixed(STYLE_SIZE_PRECISION)}px`,
+				top: `${vOffsetInGroup.toFixed(STYLE_SIZE_PRECISION)}px`,
+				width: `${width.toFixed(STYLE_SIZE_PRECISION)}px`,
+				height: `${height.toFixed(STYLE_SIZE_PRECISION)}px`,
+				lineHeight: `${height.toFixed(STYLE_SIZE_PRECISION)}px`,
+			},
+		}),
 		[
 			width,
 			left,
@@ -361,24 +354,22 @@ export const Item = <
 		);
 
 	const getResizePropsHandler = useCallback<GetResizeProps>(
-		({ leftClassName, leftStyle, rightClassName, rightStyle } = {}) => {
-			return {
-				left: {
-					className:
-						"rct-item-handler rct-item-handler-left rct-item-handler-resize-left " +
-						(leftClassName ?? ""),
-					onPointerDownCapture: onLeftResizerPointerDownCapture,
-					style: { ...leftResizeStyle, ...leftStyle },
-				},
-				right: {
-					className:
-						"rct-item-handler rct-item-handler-right rct-item-handler-resize-right" +
-						(rightClassName ?? ""),
-					onPointerDownCapture: onRightResizerPointerDownCapture,
-					style: { ...rightResizeStyle, ...rightStyle },
-				},
-			};
-		},
+		({ leftClassName, leftStyle, rightClassName, rightStyle } = {}) => ({
+			left: {
+				className:
+					"rct-item-handler rct-item-handler-left rct-item-handler-resize-left " +
+					(leftClassName ?? ""),
+				onPointerDownCapture: onLeftResizerPointerDownCapture,
+				style: { ...leftResizeStyle, ...leftStyle },
+			},
+			right: {
+				className:
+					"rct-item-handler rct-item-handler-right rct-item-handler-resize-right" +
+					(rightClassName ?? ""),
+				onPointerDownCapture: onRightResizerPointerDownCapture,
+				style: { ...rightResizeStyle, ...rightStyle },
+			},
+		}),
 		[onLeftResizerPointerDownCapture, onRightResizerPointerDownCapture],
 	);
 

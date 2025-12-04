@@ -1,6 +1,12 @@
 import { MOST_SIGNIFICANT_BIT, UNIT, ZERO } from "./math";
 import type { BaseItem } from "./timeline";
 
+// Paper folding sequence (https://oeis.org/A014707)
+function paperFoldingSequenceTerm(n: number): boolean {
+	// biome-ignore lint/style/noMagicNumbers: Mathematical formula.
+	return n % 4 !== 0 && (n % 4 === 2 || paperFoldingSequenceTerm((n - 1) / 2));
+}
+
 export function layoutGroupLines<
 	TGroupId = number,
 	TItemId = number,
@@ -25,7 +31,7 @@ export function layoutGroupLines<
 		let currentIdx = (UNIT << powerOfTwo) - UNIT;
 		let selectedIdx: number | undefined;
 
-		for (let power = powerOfTwo; power >= ZERO; power--) {
+		for (let power = powerOfTwo; power >= ZERO; power -= UNIT) {
 			const branchMin = leftMinOfMaxs[currentIdx];
 
 			if (branchMin === undefined) {
@@ -45,7 +51,7 @@ export function layoutGroupLines<
 		return selectedIdx;
 	}
 
-	function insertValueAtIdx(updateIdx: number, endTime: number) {
+	function insertValueAtIdx(updateIdx: number, endTime: number): void {
 		linesMaxs[updateIdx] = endTime;
 		leftMinOfMaxs[updateIdx] = endTime;
 		rightMinOfMaxs[updateIdx] = endTime;
@@ -60,7 +66,7 @@ export function layoutGroupLines<
 
 		let currentIdx = updateIdx;
 
-		for (let power = updateIdxPower; power <= powerOfTwo; power++) {
+		for (let power = updateIdxPower; power <= powerOfTwo; power += UNIT) {
 			if (power !== ZERO) {
 				const substep = UNIT << (power - UNIT);
 				const leftSubstep = currentIdx - substep;
@@ -124,11 +130,6 @@ export function layoutGroupLines<
 	return lines;
 }
 
-// Paper folding sequence (https://oeis.org/A014707)
-function paperFoldingSequenceTerm(n: number): boolean {
-	return n % 4 !== 0 && (n % 4 === 2 || paperFoldingSequenceTerm((n - 1) / 2));
-}
-
 // Very inefficient for larger item counts. Only use for testing.
 export function layoutGroupLinesReference<
 	TGroupId = number,
@@ -137,9 +138,9 @@ export function layoutGroupLinesReference<
 >(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
 	const lines: TItem[][] = [];
 
-	const filteredItems = items.filter((item) => {
-		return item.startTime < max && item.endTime > min;
-	});
+	const filteredItems = items.filter(
+		(item) => item.startTime < max && item.endTime > min,
+	);
 	filteredItems.sort((a, b) => a.startTime - b.startTime);
 
 	for (const item of filteredItems) {

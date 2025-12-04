@@ -35,7 +35,19 @@ export function useRowItemsContext<
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>,
->() {
+>(): RowItemsContextValue<
+	TGroupIdKey,
+	TGroupTitleKey,
+	TGroupRightTitleKey,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TGroup,
+	TItem
+> {
 	// Unfortunate type cast to handle the trickiness of creating context
 	// providers with generics.
 	const context = useContext(

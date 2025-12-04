@@ -11,7 +11,7 @@ if (
 ) {
 	yieldToMain = window.scheduler.yield.bind(window.scheduler);
 } else {
-	yieldToMain = function yieldToMainUsingPromise() {
+	yieldToMain = function yieldToMainUsingPromise(): Promise<void> {
 		return new Promise((resolve) => {
 			setTimeout(resolve, ZERO);
 		});

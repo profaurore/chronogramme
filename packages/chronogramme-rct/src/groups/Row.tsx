@@ -11,9 +11,9 @@ import type {
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 import { GroupRowContextProvider } from "./GroupRowContextProvider";
 
-const getRowLayerRootProps = () => {
-	return { style: {} };
-};
+const getRowLayerRootProps = (): { style: Record<string, never> } => ({
+	style: {},
+});
 
 export const Row = <
 	TGroupIdKey extends string = "id",
@@ -87,9 +87,25 @@ export const Row = <
 			RctToCoreItem<TItem>
 		>
 	>;
-}): React.ReactNode => {
-	return (
-		<GroupForHelpersContextProvider<
+}): React.ReactNode => (
+	<GroupForHelpersContextProvider<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TGroup,
+		TItem
+	>
+		group={group}
+		index={groupIndex}
+		timeline={timeline}
+	>
+		<GroupRowContextProvider<
 			TGroupIdKey,
 			TGroupTitleKey,
 			TGroupRightTitleKey,
@@ -103,10 +119,15 @@ export const Row = <
 			TItem
 		>
 			group={group}
+			horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 			index={groupIndex}
+			key={`group-${group.id}`}
+			onClick={onClick}
+			onContextMenu={onContextMenu}
+			onDoubleClick={onDoubleClick}
 			timeline={timeline}
 		>
-			<GroupRowContextProvider<
+			<RowItemsContextProvider<
 				TGroupIdKey,
 				TGroupTitleKey,
 				TGroupRightTitleKey,
@@ -119,39 +140,16 @@ export const Row = <
 				TGroup,
 				TItem
 			>
-				group={group}
-				horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 				index={groupIndex}
-				key={`group-${group.id}`}
-				onClick={onClick}
-				onContextMenu={onContextMenu}
-				onDoubleClick={onDoubleClick}
+				itemHeightRatio={itemHeightRatio}
 				timeline={timeline}
 			>
-				<RowItemsContextProvider<
-					TGroupIdKey,
-					TGroupTitleKey,
-					TGroupRightTitleKey,
-					TItemIdKey,
-					TItemGroupKey,
-					TItemTitleKey,
-					TItemDivTitleKey,
-					TItemTimeStartKey,
-					TItemTimeEndKey,
-					TGroup,
-					TItem
-				>
-					index={groupIndex}
-					itemHeightRatio={itemHeightRatio}
-					timeline={timeline}
-				>
-					<RowComponent
-						getLayerRootProps={getRowLayerRootProps}
-						group={group.originalGroup}
-						rowData={rowData}
-					/>
-				</RowItemsContextProvider>
-			</GroupRowContextProvider>
-		</GroupForHelpersContextProvider>
-	);
-};
+				<RowComponent
+					getLayerRootProps={getRowLayerRootProps}
+					group={group.originalGroup}
+					rowData={rowData}
+				/>
+			</RowItemsContextProvider>
+		</GroupRowContextProvider>
+	</GroupForHelpersContextProvider>
+);

@@ -21,17 +21,7 @@ interface ScrollStateParameters {
 	windowSize: number;
 }
 
-export type ScrollResizeStrategyOptions =
-	(typeof SCROLL_RESIZE_STRATEGY_OPTIONS)[number];
-
-export const SCROLL_RESIZE_STRATEGY_OPTIONS = [
-	"preserveUnitPerPixel",
-	"preserveWindow",
-] as const;
-
 const DEFAULT_RESYNC_THRESHOLD_SIZE = 500;
-
-export const DEFAULT_MAX_ELEMENT_SIZE = 100_000;
 
 const requiredParameters = ["windowSize"] as const;
 
@@ -43,6 +33,16 @@ const optionalParameters = [
 	"windowMax",
 	"windowMin",
 ] as const;
+
+export type ScrollResizeStrategyOptions =
+	(typeof SCROLL_RESIZE_STRATEGY_OPTIONS)[number];
+
+export const SCROLL_RESIZE_STRATEGY_OPTIONS = [
+	"preserveUnitPerPixel",
+	"preserveWindow",
+] as const;
+
+export const DEFAULT_MAX_ELEMENT_SIZE = 100_000;
 
 export class ScrollState {
 	#isMaxTerminal!: boolean;
@@ -258,7 +258,7 @@ export class ScrollState {
 	 */
 	public setMaxElementSize(
 		maxElementSize: number | undefined = DEFAULT_MAX_ELEMENT_SIZE,
-	) {
+	): void {
 		validateSize(
 			"maxElementSize",
 			maxElementSize,
@@ -292,7 +292,7 @@ export class ScrollState {
 	 */
 	public setResyncThresholdSize(
 		resyncThresholdSize: number | undefined = DEFAULT_RESYNC_THRESHOLD_SIZE,
-	) {
+	): void {
 		validateSize(
 			"resyncThresholdSize",
 			resyncThresholdSize,

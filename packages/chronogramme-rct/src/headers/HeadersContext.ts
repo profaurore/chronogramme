@@ -1,5 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import { createContext } from "react";
+import { type Context, createContext } from "react";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -57,6 +57,5 @@ export interface HeadersContextValue<
 	timelineUnit: Unit;
 }
 
-export const HeadersContext = createContext<HeadersContextValue | undefined>(
-	undefined,
-);
+export const HeadersContext: Context<HeadersContextValue | undefined> =
+	createContext<HeadersContextValue | undefined>(undefined);

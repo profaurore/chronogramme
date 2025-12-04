@@ -3,7 +3,7 @@ import type {
 	Timeline as HTMLTimeline,
 } from "@chronogramme/chronogramme";
 
-import { createContext, type SyntheticEvent } from "react";
+import { type Context, createContext, type SyntheticEvent } from "react";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -96,6 +96,5 @@ export interface ItemContextVariable<
 	>;
 }
 
-export const ItemContext = createContext<ItemContextVariable | undefined>(
-	undefined,
-);
+export const ItemContext: Context<ItemContextVariable | undefined> =
+	createContext<ItemContextVariable | undefined>(undefined);

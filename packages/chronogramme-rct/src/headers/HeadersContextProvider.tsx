@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { BaseGroup, BaseItem } from "../timeline";
 import { HeadersContext, type HeadersContextValue } from "./HeadersContext";
 
@@ -54,7 +54,7 @@ export const HeadersContextProvider = <
 		TGroup,
 		TItem
 	>
->) => {
+>): ReactNode => {
 	const contextValue = useMemo<
 		HeadersContextValue<
 			TGroupIdKey,

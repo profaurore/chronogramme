@@ -14,16 +14,16 @@ import type { Unit } from "./DateHeader";
 import type { ShowPeriod } from "./HeadersContext";
 import { useHeadersContext } from "./useHeadersContext";
 
+type GetRootProps = (args?: { style?: CSSProperties | undefined }) => {
+	style: CSSProperties;
+};
+
 export interface TimeInterval {
 	endTime: number;
 	labelWidth: number;
 	left: number;
 	startTime: number;
 }
-
-type GetRootProps = (args?: { style?: CSSProperties | undefined }) => {
-	style: CSSProperties;
-};
 
 export type GetIntervalProps = (args: {
 	interval: TimeInterval;
@@ -137,16 +137,14 @@ export const CustomHeader = <THeaderData,>({
 	);
 
 	const getRootProps: GetRootProps = useCallback(
-		(props) => {
-			return {
-				style: {
-					...props?.style,
-					position: "relative",
-					width: timeline.hScrollSize,
-					height,
-				},
-			};
-		},
+		(props) => ({
+			style: {
+				...props?.style,
+				position: "relative",
+				width: timeline.hScrollSize,
+				height,
+			},
+		}),
 		[height, timeline.hScrollSize],
 	);
 

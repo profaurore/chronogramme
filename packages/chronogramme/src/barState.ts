@@ -11,19 +11,6 @@ import {
 } from "./math";
 import { validateObject } from "./object";
 
-export interface BarStateParameters {
-	endMax?: number | undefined;
-	endMin?: number | undefined;
-	endSize?: number | undefined;
-	middleMin?: number | undefined;
-	resizeStrategy?: BarResizeStrategy | undefined;
-	sideResizeStrategy?: BarSideResizeStrategy | undefined;
-	size: number;
-	startMax?: number | undefined;
-	startMin?: number | undefined;
-	startSize?: number | undefined;
-}
-
 const requiredParameters = ["size"] as const;
 
 const optionalParameters = [
@@ -38,6 +25,19 @@ const optionalParameters = [
 	"startSize",
 	"tinyStrategy",
 ] as const;
+
+export interface BarStateParameters {
+	endMax?: number | undefined;
+	endMin?: number | undefined;
+	endSize?: number | undefined;
+	middleMin?: number | undefined;
+	resizeStrategy?: BarResizeStrategy | undefined;
+	sideResizeStrategy?: BarSideResizeStrategy | undefined;
+	size: number;
+	startMax?: number | undefined;
+	startMin?: number | undefined;
+	startSize?: number | undefined;
+}
 
 /** The strategy used when the container is resized. */
 export type BarResizeStrategy = (state: Readonly<BarState>) => {

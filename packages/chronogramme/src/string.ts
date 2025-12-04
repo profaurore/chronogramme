@@ -1,3 +1,12 @@
+function validateString(
+	valueName: string,
+	value: unknown,
+): asserts value is string {
+	if (typeof value !== "string") {
+		throw new NotAStringError(valueName, value);
+	}
+}
+
 export class NotAStringError extends Error {
 	public readonly value: unknown;
 
@@ -30,15 +39,6 @@ export class UnknownStringOptionError extends Error {
 		this.valueName = valueName;
 		this.value = value;
 		this.options = options;
-	}
-}
-
-function validateString(
-	valueName: string,
-	value: unknown,
-): asserts value is string {
-	if (typeof value !== "string") {
-		throw new NotAStringError(valueName, value);
 	}
 }
 

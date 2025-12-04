@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { GroupRowContext } from "./GroupRowContext";
+import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 
-export function useGroupRowContext() {
+export function useGroupRowContext(): GroupRowContextValue {
 	const context = useContext(GroupRowContext);
 
 	if (!context) {

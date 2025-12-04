@@ -162,6 +162,7 @@
 				"noVoidTypeReturn": "error",
 				"useExhaustiveDependencies": "error",
 				"useHookAtTopLevel": "error",
+				"useImageSize": "error",
 				"useImportExtensions": "off",
 				"useIsNan": "error",
 				"useJsonImportAttributes": "error",
@@ -174,14 +175,33 @@
 				"useYield": "error"
 			},
 			"nursery": {
+				"noContinue": "error",
+				"noDeprecatedImports": "error",
+				"noDuplicateDependencies": "error",
+				"noEmptySource": "error",
 				"noFloatingPromises": "error",
-				"noImportCycles": "off",
+				"noForIn": "error",
+				"noImportCycles": "error",
+				"noIncrementDecrement": "error",
+				"noMisusedPromises": "error",
+				"noNextAsyncClientComponent": "error",
+				"noParametersOnlyUsedInRecursion": "error",
+				"noReactForwardRef": "error",
 				"noShadow": "error",
+				"noSyncScripts": "error",
+				"noUnknownAttribute": "error",
+				"noUnnecessaryConditions": "error",
 				"noUnresolvedImports": "off",
+				"noUnusedExpressions": "error",
+				"noUselessCatchBinding": "error",
 				"noUselessUndefined": "off",
+				"useArraySortCompare": "error",
+				"useConsistentArrowReturn": "error",
 				"useExhaustiveSwitchCases": "error",
-				"useExplicitType": "off",
-				"useSortedClasses": "error"
+				"useExplicitType": "error",
+				"useFind": "error",
+				"useSortedClasses": "error",
+				"useSpread": "error"
 			},
 			"performance": {
 				"noAccumulatingSpread": "error",
@@ -213,6 +233,7 @@
 				"noHeadElement": "error",
 				"noImplicitBoolean": "error",
 				"noInferrableTypes": "error",
+				"noMagicNumbers": "error",
 				"noNamespace": "error",
 				"noNegationElse": "error",
 				"noNestedTernary": "error",
@@ -246,9 +267,11 @@
 					}
 				},
 				"useConsistentObjectDefinitions": "error",
+				"useConsistentTypeDefinitions": "error",
 				"useConst": "error",
 				"useDefaultParameterLast": "error",
 				"useDefaultSwitchClause": "error",
+				"useDeprecatedReason": "error",
 				"useEnumInitializers": "error",
 				"useExplicitLengthCheck": "error",
 				"useExponentiationOperator": "error",
@@ -271,6 +294,7 @@
 				"useNumberNamespace": "error",
 				"useNumericSeparators": "error",
 				"useObjectSpread": "error",
+				"useReactFunctionComponents": "error",
 				"useReadonlyClassProperties": "error",
 				"useSelfClosingElements": "error",
 				"useShorthandAssign": "error",
@@ -289,6 +313,7 @@
 				"noArrayIndexKey": "error",
 				"noAssignInExpressions": "error",
 				"noAsyncPromiseExecutor": "error",
+				"noBiomeFirstException": "error",
 				"noBitwiseOperators": "off",
 				"noCatchAssign": "error",
 				"noClassAssign": "error",
@@ -309,6 +334,7 @@
 				"noDuplicateClassMembers": "error",
 				"noDuplicateCustomProperties": "error",
 				"noDuplicateElseIf": "error",
+				"noDuplicateFields": "error",
 				"noDuplicateFontNames": "error",
 				"noDuplicateJsxProps": "error",
 				"noDuplicateObjectKeys": "error",
@@ -339,8 +365,10 @@
 				"noMisleadingInstantiator": "error",
 				"noMisplacedAssertion": "error",
 				"noMisrefactoredShorthandAssign": "error",
+				"noNonNullAssertedOptionalChain": "error",
 				"noOctalEscape": "error",
 				"noPrototypeBuiltins": "error",
+				"noQuickfixBiome": "error",
 				"noReactSpecificProps": "off",
 				"noRedeclare": "error",
 				"noRedundantUseStrict": "error",
@@ -363,6 +391,7 @@
 				"noWith": "error",
 				"useAdjacentOverloadSignatures": "error",
 				"useAwait": "error",
+				"useBiomeIgnoreFolder": "error",
 				"useDefaultSwitchClauseLast": "error",
 				"useErrorMessage": "error",
 				"useGetterReturn": "error",
@@ -410,6 +439,16 @@
 			"json": {
 				"parser": {
 					"allowComments": true
+				}
+			}
+		},
+		{
+			"includes": ["**/*.test.*"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noMagicNumbers": "off"
+					}
 				}
 			}
 		}

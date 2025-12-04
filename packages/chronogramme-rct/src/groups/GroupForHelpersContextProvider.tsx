@@ -1,5 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type {
 	BaseGroup,
 	BaseItem,
@@ -102,7 +102,7 @@ export const GroupForHelpersContextProvider = <
 	TItemTimeEndKey,
 	TGroup,
 	TItem
->) => {
+>): ReactNode => {
 	const position = timeline.getGroupPosition(index);
 	const size = timeline.getGroupSize(index);
 

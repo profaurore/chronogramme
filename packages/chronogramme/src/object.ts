@@ -1,3 +1,7 @@
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
 export class NotAnObjectError extends Error {
 	public readonly value: unknown;
 
@@ -55,21 +59,17 @@ export class UnknownPropertyError extends Error {
 	}
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null;
-}
-
 export const validateObject: (
 	valueName: string,
 	value: unknown,
 	requiredProperties: readonly string[],
 	optionalProperties: readonly string[],
 ) => asserts value is Record<string, unknown> = (
-	valueName,
-	value,
-	requiredProperties,
-	optionalProperties,
-) => {
+	valueName: string,
+	value: unknown,
+	requiredProperties: readonly string[],
+	optionalProperties: readonly string[],
+): asserts value is Record<string, unknown> => {
 	if (!isObject(value)) {
 		throw new NotAnObjectError(valueName, value);
 	}
@@ -80,6 +80,7 @@ export const validateObject: (
 		}
 	}
 
+	// biome-ignore lint/nursery/noForIn: Intentional iteration over the object's properties.
 	for (const property in value) {
 		if (
 			!(

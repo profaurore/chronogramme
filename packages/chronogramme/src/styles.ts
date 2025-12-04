@@ -10,4 +10,6 @@ function buildScrollerStylesheet(): CSSStyleSheet {
 }
 
 /** Lazily instanciated stylesheet singleton. */
-export const scrollerStylesheet = new Singleton(buildScrollerStylesheet);
+export const scrollerStylesheet: Singleton<CSSStyleSheet> = new Singleton(
+	buildScrollerStylesheet,
+);

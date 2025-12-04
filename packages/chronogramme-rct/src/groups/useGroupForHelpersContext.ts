@@ -1,7 +1,10 @@
 import { useContext } from "react";
-import { GroupForHelpersContext } from "./GroupForHelpersContext";
+import {
+	GroupForHelpersContext,
+	type GroupForHelpersContextValue,
+} from "./GroupForHelpersContext";
 
-export function useGroupForHelpersContext() {
+export function useGroupForHelpersContext(): GroupForHelpersContextValue {
 	const context = useContext(GroupForHelpersContext);
 
 	if (!context) {
