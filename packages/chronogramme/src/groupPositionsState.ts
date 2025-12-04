@@ -418,10 +418,10 @@ export class GroupPositionsState<
 
 		const itemChangeState = this.#itemChangeState;
 
-		if (itemChangeState) {
+		if (itemChangeState !== undefined) {
 			const changedItem = this.getItemById(itemChangeState.item.id);
 
-			if (changedItem) {
+			if (changedItem !== undefined) {
 				const previousNewItem = itemChangeState.newItem;
 				const newItem = { ...changedItem };
 				newItem.startTime = previousNewItem.startTime;

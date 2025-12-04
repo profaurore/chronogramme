@@ -83,7 +83,7 @@ export const Interval = <THeaderData,>({
 		[interval, intervalText],
 	);
 
-	if (IntervalComponent) {
+	if (IntervalComponent !== undefined) {
 		return (
 			<IntervalComponent
 				getIntervalProps={getIntervalPropsHandler}

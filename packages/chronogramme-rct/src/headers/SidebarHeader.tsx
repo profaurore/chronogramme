@@ -34,11 +34,11 @@ export const SidebarHeader = <THeaderData,>({
 		[leftSidebarWidth, rightSidebarWidth, variant],
 	);
 
-	return ChildrenComponent ? (
-		<ChildrenComponent getRootProps={getRootProps} data={headerData} />
-	) : (
-		<div data-testid="sidebarHeader" {...getRootProps()} />
-	);
+	if (ChildrenComponent === undefined) {
+		return <div data-testid="sidebarHeader" {...getRootProps()} />;
+	}
+
+	return <ChildrenComponent getRootProps={getRootProps} data={headerData} />;
 };
 
 SidebarHeader.secretKey = "Chronogramme-SidebarHeader";

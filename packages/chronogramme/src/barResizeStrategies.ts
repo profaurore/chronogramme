@@ -79,7 +79,7 @@ function flexSegments(
 		for (const segment of localSegments) {
 			const factor = segment.factor;
 
-			if (factor) {
+			if (factor > ZERO) {
 				const size = segment.size;
 				const min = segment.min;
 				const max = segment.max;

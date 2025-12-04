@@ -68,7 +68,7 @@ export const RowItems = <
 		for (const itemIndex of itemIndices) {
 			const item = timeline.getItem(groupIndex, lineIndex, itemIndex);
 
-			if (item) {
+			if (item !== undefined) {
 				renderedItems.push(
 					<ItemForHelpersContextProvider<
 						TGroupIdKey,

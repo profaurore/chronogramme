@@ -341,7 +341,7 @@ export class ScrollState {
 
 		const delta = scrollPos - this.#scrollPos;
 
-		if (delta) {
+		if (delta !== ZERO) {
 			const prevWindowMin = this.#windowMin;
 			const min = this.#min;
 			const max = this.#max;

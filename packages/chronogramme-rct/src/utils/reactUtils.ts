@@ -18,19 +18,16 @@ export function useRender(): [number, () => void] {
 	return useReducer((x) => (x + UNIT) & RENDER_WRAP_BITMASK, ZERO);
 }
 
-export function reactChildHasSecretKey(
-	child: unknown,
-	secretKey: string,
-): boolean {
-	return (
-		child !== null &&
+export function getReactChildSecretKey(child: unknown): string | undefined {
+	return child !== null &&
 		typeof child === "object" &&
 		"type" in child &&
 		child.type !== null &&
 		typeof child.type === "object" &&
 		"secretKey" in child.type &&
-		child.type.secretKey === secretKey
-	);
+		typeof child.type.secretKey === "string"
+		? child.type.secretKey
+		: undefined;
 }
 
 export function getReactChildProp<T>(

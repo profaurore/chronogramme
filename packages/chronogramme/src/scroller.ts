@@ -82,7 +82,7 @@ export class Scroller extends HTMLElement {
 	private static readonly resizeHandler = new Singleton(
 		() =>
 			new ResizeObserver(([entry]: readonly ResizeObserverEntry[]) => {
-				if (entry) {
+				if (entry !== undefined) {
 					const target = entry.target;
 
 					if (target instanceof Scroller) {

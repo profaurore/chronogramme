@@ -59,7 +59,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 	public setStateData(data: StateData): void {
 		const activeState = this.#activeState;
 
-		if (activeState) {
+		if (activeState !== undefined) {
 			activeState.data = data;
 		}
 	}
@@ -86,7 +86,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 	private endAndMaybeCommit(event?: PointerEvent | undefined): void {
 		const activeState = this.#activeState;
 
-		if (activeState) {
+		if (activeState !== undefined) {
 			const target = activeState.target;
 
 			activeState.abortController.abort();
@@ -94,7 +94,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 			this.#activeState = undefined;
 
-			if (event) {
+			if (event !== undefined) {
 				this.dispatchEvent(
 					new CustomEvent("end", {
 						detail: new DragEndEventDetail(target),
@@ -167,7 +167,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 		) {
 			const parent = target?.parentNode;
 
-			if (parent) {
+			if (parent !== null) {
 				this.endAndMaybeCommit();
 
 				let mutationObserver: MutationObserver | undefined;

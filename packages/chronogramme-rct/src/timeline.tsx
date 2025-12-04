@@ -42,12 +42,13 @@ import { HeadersContextProvider } from "./headers/HeadersContextProvider";
 import { TimelineHeaders } from "./headers/TimelineHeaders";
 import { HelpersContextProvider } from "./helpers/HelpersContextProvider";
 import { ItemContextProvider } from "./items/ItemContextProvider";
+import { TimelineMarkers } from "./TimelineMarkers";
 import {
 	MILLISECONDS_PER_FIFTEEN_MINUTES,
 	MILLISECONDS_PER_HOUR,
 	MILLISECONDS_PER_MINUTE,
 } from "./utils/dateUtils";
-import { reactChildHasSecretKey, useRender } from "./utils/reactUtils";
+import { getReactChildSecretKey, useRender } from "./utils/reactUtils";
 import type { FullRequired } from "./utils/typeUtils";
 
 type ResizeEdge = "left" | "right";
@@ -312,7 +313,7 @@ function RenderedTimeline<
 	useEffect(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			if (moveResizeValidator === undefined) {
 				timeline.setItemDragValidator(undefined);
 				timeline.setItemResizeValidator(undefined);
@@ -362,7 +363,7 @@ function RenderedTimeline<
 		const itemDragState = itemDragStateRef.current;
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			const controller = new AbortController();
 			const options = { passive: true, signal: controller.signal };
 
@@ -375,7 +376,7 @@ function RenderedTimeline<
 						if (detail instanceof DragMoveEventDetail) {
 							const result = timeline.itemDragMove(detail.x, detail.y);
 
-							if (result) {
+							if (result !== undefined) {
 								onItemDrag?.({
 									eventType: "move",
 									itemId: result.id,
@@ -398,7 +399,7 @@ function RenderedTimeline<
 						const skipRender = onItemMove !== undefined;
 						const result = timeline.itemDragEnd(skipRender);
 
-						if (result) {
+						if (result !== undefined) {
 							onItemMove?.(result.id, result.startTime, result.groupId);
 						}
 					}
@@ -426,7 +427,7 @@ function RenderedTimeline<
 		const itemResizeState = itemResizeStateRef.current;
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			const controller = new AbortController();
 			const options = { passive: true, signal: controller.signal };
 
@@ -453,7 +454,7 @@ function RenderedTimeline<
 						const skipRender = onItemResize !== undefined;
 						const result = timeline.itemResizeEnd(skipRender);
 
-						if (result) {
+						if (result !== undefined) {
 							if (result.isStart) {
 								onItemResize?.(result.id, result.startTime, "left");
 							} else {
@@ -484,7 +485,7 @@ function RenderedTimeline<
 	useLayoutEffect(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			const onScrollBoundsChangeHandler = (event: Event): void => {
 				if (event instanceof CustomEvent) {
 					const detail = event.detail;
@@ -516,7 +517,7 @@ function RenderedTimeline<
 	useLayoutEffect(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			const onWindowChangeHandler = (event: Event): void => {
 				if (event instanceof CustomEvent) {
 					const detail = event.detail;
@@ -614,13 +615,13 @@ function RenderedTimeline<
 
 	const timeline = timelineRef?.current;
 
-	if (timeline) {
+	if (timeline !== null) {
 		const groupIndices = timeline.getVisibleGroupsIter();
 
 		for (const groupIndex of groupIndices) {
 			const group = timeline.getGroup(groupIndex);
 
-			if (group) {
+			if (group !== undefined) {
 				renderedLeftGroups?.push(
 					<Group<
 						TGroupIdKey,
@@ -700,31 +701,55 @@ function RenderedTimeline<
 
 	let renderedHeader: ReactNode | undefined;
 
-	if (!hideHeaders) {
-		if (children) {
-			const headers: ReactNode[] = [];
-			Children.forEach(children, (child) => {
-				if (reactChildHasSecretKey(child, TimelineHeaders.secretKey)) {
+	if (children !== null) {
+		const headers: ReactNode[] = [];
+		const markers: ReactNode[] = [];
+
+		Children.forEach(children, (child) => {
+			switch (getReactChildSecretKey(child)) {
+				case TimelineHeaders.secretKey: {
 					headers.push(child);
+					break;
 				}
-			});
 
-			if (headers.length > UNIT) {
-				throw new Error(
-					"more than one <TimelineHeaders /> child found under <Timeline />",
-				);
+				case TimelineMarkers.secretKey: {
+					markers.push(child);
+					break;
+				}
+
+				default: {
+					if (child !== undefined && child !== false && child !== null) {
+						throw new Error(
+							"<Timeline /> only expects <TimelineHeaders /> and <TimelineMarkers />",
+						);
+					}
+
+					break;
+				}
 			}
+		});
 
-			renderedHeader = headers[0];
+		if (headers.length > UNIT) {
+			throw new Error(
+				"more than one <TimelineHeaders /> child found under <Timeline />",
+			);
 		}
 
-		renderedHeader ??= (
-			<TimelineHeaders>
-				<DateHeader unit="primaryHeader" />
-				<DateHeader />
-			</TimelineHeaders>
-		);
+		if (markers.length > UNIT) {
+			throw new Error(
+				"more than one <TimelineMarkers /> child found under <Timeline />",
+			);
+		}
+
+		renderedHeader = headers[ZERO];
 	}
+
+	renderedHeader ??= (
+		<TimelineHeaders>
+			<DateHeader unit="primaryHeader" />
+			<DateHeader />
+		</TimelineHeaders>
+	);
 
 	return (
 		<cg-timeline
@@ -782,7 +807,7 @@ function RenderedTimeline<
 						timeline={timeline}
 						timelineUnit={timelineUnit}
 					>
-						{renderedHeader}
+						{!hideHeaders && renderedHeader}
 					</HeadersContextProvider>
 
 					{renderedLeftGroups && (
@@ -1150,7 +1175,7 @@ export const Timeline = <
 	useEffect(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			timeline.setGroups(
 				groups.map((group) => ({
 					id: group[resolvedKeys.groupIdKey],
@@ -1164,7 +1189,7 @@ export const Timeline = <
 	useMemo(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			timeline.setItems(
 				items.map((item) => ({
 					endTime: item[resolvedKeys.itemTimeEndKey],
@@ -1195,7 +1220,7 @@ export const Timeline = <
 	useEffect(() => {
 		const timeline = timelineRef.current;
 
-		if (timeline) {
+		if (timeline !== null) {
 			const abortController = new AbortController();
 			timeline.addEventListener("renderRequest", render, {
 				passive: true,

@@ -5,7 +5,7 @@ import { App } from "./app";
 
 const root: HTMLElement | null = document.getElementById("root");
 
-if (root) {
+if (root !== null) {
 	createRoot(root).render(
 		<StrictMode>
 			<App />

@@ -31,7 +31,7 @@ export class Singleton<T> {
 	public unsubscribe(callback?: ((instance: T) => void) | undefined): void {
 		const data = this.data;
 
-		if (data) {
+		if (data !== null) {
 			data.count -= UNIT;
 
 			callback?.(data.instance);

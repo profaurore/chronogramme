@@ -242,7 +242,7 @@ export const Item = <
 			if (nativeEvent instanceof PointerEvent) {
 				event.stopPropagation();
 
-				if (onContextMenu) {
+				if (onContextMenu !== undefined) {
 					event.preventDefault();
 
 					onContextMenu(itemId, event, timeline.getHValue(nativeEvent.clientX));
