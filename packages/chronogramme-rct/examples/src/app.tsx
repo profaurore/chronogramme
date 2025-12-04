@@ -349,6 +349,16 @@ export function App(): ReactNode {
 		<>
 			<div className={headerClass}>
 				<div className={buttonRowClass}>
+					<button onClick={onAddClickHandler(SOME_ITEMS)} type="button">
+						Add 50k items
+					</button>
+					<button onClick={onAddClickHandler(MANY_ITEMS)} type="button">
+						Add 250k items
+					</button>
+					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
+				</div>
+
+				<div className={buttonRowClass}>
 					<button onClick={onStartOfTimeClickHandler} type="button">
 						Start of time
 					</button>
@@ -358,17 +368,7 @@ export function App(): ReactNode {
 					<button onClick={onEndOfTimeClickHandler} type="button">
 						End of time
 					</button>
-					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
-				</div>
-
-				<div className={buttonRowClass}>
-					<button onClick={onAddClickHandler(SOME_ITEMS)} type="button">
-						Add 50k items
-					</button>
-					<button onClick={onAddClickHandler(MANY_ITEMS)} type="button">
-						Add 250k items
-					</button>
-					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
+					<div>{windowString}</div>
 				</div>
 
 				<div className={buttonRowClass}>
@@ -409,7 +409,6 @@ export function App(): ReactNode {
 					>
 						Day
 					</button>
-					<div>{windowString}</div>
 				</div>
 			</div>
 
