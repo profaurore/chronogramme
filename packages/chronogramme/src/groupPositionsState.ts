@@ -9,7 +9,10 @@ interface ItemChangeState<
 	TItemId = number,
 	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
 > {
-	changeType: (typeof ITEM_CHANGE_TYPE)[keyof typeof ITEM_CHANGE_TYPE];
+	changeType:
+		| typeof ITEM_CHANGE_TYPE_DRAG
+		| typeof ITEM_CHANGE_TYPE_RESIZE_END
+		| typeof ITEM_CHANGE_TYPE_RESIZE_START;
 	item: TItem;
 	newItem: TItem;
 	prevRawEndTime: number;
@@ -17,11 +20,9 @@ interface ItemChangeState<
 	triggerTime: number;
 }
 
-const ITEM_CHANGE_TYPE = {
-	drag: 0,
-	resizeEnd: 1,
-	resizeStart: 2,
-} as const;
+const ITEM_CHANGE_TYPE_DRAG = 0;
+const ITEM_CHANGE_TYPE_RESIZE_END = 1;
+const ITEM_CHANGE_TYPE_RESIZE_START = 2;
 
 const GROUP_LINE_SIZE_DEFAULT = 30;
 
@@ -151,7 +152,7 @@ export class GroupPositionsState<
 	public getDragOffset(): number | undefined {
 		const itemChangeState = this.#itemChangeState;
 
-		return itemChangeState?.changeType === ITEM_CHANGE_TYPE.drag
+		return itemChangeState?.changeType === ITEM_CHANGE_TYPE_DRAG
 			? itemChangeState.item.startTime - itemChangeState.triggerTime
 			: undefined;
 	}
@@ -159,7 +160,7 @@ export class GroupPositionsState<
 	public getDraggedItem(): TItem | undefined {
 		const itemChangeState = this.#itemChangeState;
 
-		return itemChangeState?.changeType === ITEM_CHANGE_TYPE.drag
+		return itemChangeState?.changeType === ITEM_CHANGE_TYPE_DRAG
 			? itemChangeState.newItem
 			: undefined;
 	}
@@ -279,8 +280,8 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		return itemChangeState !== undefined &&
-			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
-			? itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
+			? itemChangeState.changeType === ITEM_CHANGE_TYPE_RESIZE_START
 			: undefined;
 	}
 
@@ -289,12 +290,12 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState === undefined ||
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			return;
 		}
 
-		return itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart
+		return itemChangeState.changeType === ITEM_CHANGE_TYPE_RESIZE_START
 			? itemChangeState.item.startTime - itemChangeState.triggerTime
 			: itemChangeState.item.endTime - itemChangeState.triggerTime;
 	}
@@ -303,7 +304,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		return itemChangeState !== undefined &&
-			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 			? itemChangeState.newItem
 			: undefined;
 	}
@@ -467,7 +468,7 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
 
@@ -487,7 +488,7 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
 
@@ -516,7 +517,7 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType === ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			const itemDragValidator = this.#itemDragValidator;
 
@@ -606,7 +607,7 @@ export class GroupPositionsState<
 
 		if (draggedItem && (draggedItem.isDraggable ?? this.#itemsDraggable)) {
 			this.#itemChangeState = {
-				changeType: ITEM_CHANGE_TYPE.drag,
+				changeType: ITEM_CHANGE_TYPE_DRAG,
 				triggerTime: dragTime,
 				item: draggedItem,
 				newItem: { ...draggedItem },
@@ -624,7 +625,7 @@ export class GroupPositionsState<
 			(resizedItem.isEndResizable ?? this.#itemsEndResizable)
 		) {
 			this.#itemChangeState = {
-				changeType: ITEM_CHANGE_TYPE.resizeEnd,
+				changeType: ITEM_CHANGE_TYPE_RESIZE_END,
 				triggerTime: resizeTime,
 				item: resizedItem,
 				newItem: { ...resizedItem },
@@ -642,7 +643,7 @@ export class GroupPositionsState<
 			(resizedItem.isStartResizable ?? this.#itemsStartResizable)
 		) {
 			this.#itemChangeState = {
-				changeType: ITEM_CHANGE_TYPE.resizeStart,
+				changeType: ITEM_CHANGE_TYPE_RESIZE_START,
 				triggerTime: resizeTime,
 				item: resizedItem,
 				newItem: { ...resizedItem },
@@ -664,13 +665,13 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			const itemResizeValidator = this.#itemResizeValidator;
 
 			const triggerTime = itemChangeState.triggerTime;
 			const isStart =
-				itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart;
+				itemChangeState.changeType === ITEM_CHANGE_TYPE_RESIZE_START;
 
 			const initItem = itemChangeState.item;
 			const initStartTime = initItem.startTime;
@@ -755,7 +756,7 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
 
@@ -775,7 +776,7 @@ export class GroupPositionsState<
 
 		if (
 			itemChangeState &&
-			itemChangeState.changeType !== ITEM_CHANGE_TYPE.drag
+			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
 
@@ -786,7 +787,7 @@ export class GroupPositionsState<
 			return {
 				endTime: newItem.endTime,
 				id: newItem.id,
-				isStart: itemChangeState.changeType === ITEM_CHANGE_TYPE.resizeStart,
+				isStart: itemChangeState.changeType === ITEM_CHANGE_TYPE_RESIZE_START,
 				startTime: newItem.startTime,
 			};
 		}

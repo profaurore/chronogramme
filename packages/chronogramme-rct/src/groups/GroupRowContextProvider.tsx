@@ -1,5 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import { ZERO } from "@chronogramme/chronogramme";
+import { EVEN_MULTIPLE, ZERO } from "@chronogramme/chronogramme";
 import {
 	type MouseEvent,
 	type ReactNode,
@@ -127,7 +127,7 @@ export const GroupRowContextProvider = <
 	const originalGroup = group.originalGroup;
 	const className =
 		"rct-hl " +
-		(index % 2 === ZERO ? "rct-hl-even " : "rct-hl-odd ") +
+		(index % EVEN_MULTIPLE === ZERO ? "rct-hl-even " : "rct-hl-odd ") +
 		horizontalLineClassNamesForGroup?.(originalGroup)?.join(" ");
 
 	const contextValue = useMemo<GroupRowContextValue>(

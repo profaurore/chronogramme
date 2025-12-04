@@ -5,6 +5,7 @@ export { DragState } from "./dragState";
 export { WindowChangeEventDetail } from "./events";
 export { NotAFunctionError } from "./function";
 export {
+	EVEN_MULTIPLE,
 	HALF,
 	IntervalExtremaError,
 	NotANumberError,

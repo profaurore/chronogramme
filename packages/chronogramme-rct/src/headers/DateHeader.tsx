@@ -1,5 +1,5 @@
 import { type CSSProperties, type ReactNode, useMemo } from "react";
-import { nextTimeUnits } from "../constants";
+import { DEFAULT_HEADER_HEIGHT, nextTimeUnits } from "../constants";
 import { defaultLabelFormat } from "../utils/dateUtils";
 import { CustomDateHeader } from "./CustomDateHeader";
 import { CustomHeader } from "./CustomHeader";
@@ -23,7 +23,7 @@ export type LabelFormatFn = (
 export const DateHeader = <THeaderData,>({
 	className,
 	headerData,
-	height = 30,
+	height = DEFAULT_HEADER_HEIGHT,
 	intervalRenderer,
 	labelFormat = defaultLabelFormat,
 	style,

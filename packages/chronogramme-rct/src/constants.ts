@@ -115,3 +115,5 @@ export const nextTimeUnits = {
 } as const;
 
 export const STYLE_SIZE_PRECISION = 4;
+
+export const DEFAULT_HEADER_HEIGHT = 30;

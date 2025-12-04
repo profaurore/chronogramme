@@ -33,6 +33,7 @@ export const HALF = 0.5;
 
 /** Double value. */
 export const DOUBLE = 2;
+export const EVEN_MULTIPLE = 2;
 
 export const MOST_SIGNIFICANT_BIT = 31;
 

@@ -13,7 +13,13 @@ import {
 	useState,
 } from "react";
 import "./styles.css";
-import { TIME_MAX, TIME_MIN, UNIT, ZERO } from "@chronogramme/chronogramme";
+import {
+	EVEN_MULTIPLE,
+	TIME_MAX,
+	TIME_MIN,
+	UNIT,
+	ZERO,
+} from "@chronogramme/chronogramme";
 import {
 	GroupRow,
 	Timeline as RCTimeline,
@@ -57,7 +63,6 @@ const MILLISECONDS_PER_DECADE = 315_360_000_000;
 const SOME_ITEMS = 50_000;
 const MANY_ITEMS = 250_000;
 
-const EVEN_MULTIPLE = 2;
 const EVEN_GROUP_ROW_HEIGHT = 10;
 const ODD_GROUP_ROW_HEIGHT = 20;
 
@@ -134,11 +139,11 @@ export function App(): ReactNode {
 				const now = Date.now();
 				const groupItemCount = addCount / GROUP_COUNT;
 				const indexOffsetFactor = ITEM_BASE_RANGE / groupItemCount;
-				const newItems = prevItems.slice(0);
+				const newItems = prevItems.slice(ZERO);
 				let prevCount = newItems.length;
 
-				for (let i = 0; i < GROUP_COUNT; i += UNIT) {
-					for (let j = 0; j < groupItemCount; j += UNIT) {
+				for (let i = ZERO; i < GROUP_COUNT; i += UNIT) {
+					for (let j = ZERO; j < groupItemCount; j += UNIT) {
 						const startTime =
 							now + Math.random() * indexOffsetFactor + j * indexOffsetFactor;
 
@@ -163,7 +168,7 @@ export function App(): ReactNode {
 	useEffect(() => {
 		const newGroups: BaseGroup[] = [];
 
-		for (let i = 0; i < GROUP_COUNT; i += UNIT) {
+		for (let i = ZERO; i < GROUP_COUNT; i += UNIT) {
 			newGroups.push({
 				id: i,
 				lineHeight:
@@ -226,7 +231,8 @@ export function App(): ReactNode {
 		({ group }) => (
 			<div
 				style={{
-					backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+					backgroundColor:
+						group.id % EVEN_MULTIPLE === ZERO ? "#12345678" : undefined,
 				}}
 			>{`group-${group.id}`}</div>
 		),
@@ -239,7 +245,8 @@ export function App(): ReactNode {
 				<RowItems />
 				<div
 					style={{
-						backgroundColor: group.id % 2 === 0 ? "#12345678" : undefined,
+						backgroundColor:
+							group.id % EVEN_MULTIPLE === ZERO ? "#12345678" : undefined,
 						height: "100%",
 						width: "100%",
 					}}

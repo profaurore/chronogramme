@@ -1,4 +1,8 @@
-import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
+import {
+	EVEN_MULTIPLE,
+	type Timeline as HTMLTimeline,
+	ZERO,
+} from "@chronogramme/chronogramme";
 import type { ReactNode } from "react";
 import { STYLE_SIZE_PRECISION } from "../constants";
 import type {
@@ -73,7 +77,7 @@ export const Group = <
 			key={group.id}
 			className={
 				"rct-sidebar-row rct-sidebar-row-" +
-				(groupIndex % 2 === 0 ? "even" : "odd")
+				(groupIndex % EVEN_MULTIPLE === ZERO ? "even" : "odd")
 			}
 			style={{
 				height: `${groupSize.toFixed(STYLE_SIZE_PRECISION)}px`,

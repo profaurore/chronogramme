@@ -1,3 +1,4 @@
+import { UNIT } from "@chronogramme/chronogramme";
 import {
 	type CSSProperties,
 	type MouseEventHandler,
@@ -56,7 +57,7 @@ export const Interval = <THeaderData,>({
 		if (primaryHeader) {
 			const nextUnit = nextTimeUnits[unit];
 			const newStartTime = startOfUnit(nextUnit, interval.startTime);
-			const newEndTime = addUnitStep(unit, 1, newStartTime);
+			const newEndTime = addUnitStep(unit, UNIT, newStartTime);
 			showPeriod(newStartTime, newEndTime);
 		} else {
 			showPeriod(interval.startTime, interval.endTime);

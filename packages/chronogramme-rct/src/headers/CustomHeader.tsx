@@ -1,10 +1,11 @@
-import { UNIT } from "@chronogramme/chronogramme";
+import { HALF, UNIT } from "@chronogramme/chronogramme";
 import {
 	type CSSProperties,
 	type ReactNode,
 	useCallback,
 	useMemo,
 } from "react";
+import { DEFAULT_HEADER_HEIGHT } from "../constants";
 import {
 	addUnitStep,
 	alignWithUnitStep,
@@ -52,7 +53,7 @@ export const CustomHeader = <THeaderData,>({
 	unit,
 	children: ChildrenComponent,
 	headerData,
-	height = 30,
+	height = DEFAULT_HEADER_HEIGHT,
 }: {
 	children: (props: CustomHeaderChildProps<THeaderData>) => ReactNode;
 	headerData: THeaderData;
@@ -62,7 +63,7 @@ export const CustomHeader = <THeaderData,>({
 	const { showPeriod, timeSteps, timeline, timelineUnit } = useHeadersContext();
 
 	const windowRange = timeline.hWindowRange;
-	const halfWindow = windowRange / 2;
+	const halfWindow = windowRange * HALF;
 	const canvasStartTarget = timeline.hWindowMin - windowRange;
 	const canvasEndTarget = timeline.hWindowMax + windowRange;
 	const canvasStart = Math.max(
