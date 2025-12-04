@@ -12,16 +12,16 @@ import {
 import { validateObject } from "./object";
 
 export interface BarStateParameters {
-	endMax?: number;
-	endMin?: number;
-	endSize?: number;
-	middleMin?: number;
-	resizeStrategy?: BarResizeStrategy;
-	sideResizeStrategy?: BarSideResizeStrategy;
+	endMax?: number | undefined;
+	endMin?: number | undefined;
+	endSize?: number | undefined;
+	middleMin?: number | undefined;
+	resizeStrategy?: BarResizeStrategy | undefined;
+	sideResizeStrategy?: BarSideResizeStrategy | undefined;
 	size: number;
-	startMax?: number;
-	startMin?: number;
-	startSize?: number;
+	startMax?: number | undefined;
+	startMin?: number | undefined;
+	startSize?: number | undefined;
 }
 
 const requiredParameters = ["size"] as const;

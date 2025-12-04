@@ -68,7 +68,7 @@ export const Row = <
 	onContextMenu?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
-	onDoubleClick:
+	onDoubleClick?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	rowData: TRowData;

@@ -7,7 +7,10 @@ export class Singleton<T> {
 
 	private readonly destruct: ((instance: T) => void) | undefined;
 
-	public constructor(build: () => T, destruct?: (instance: T) => void) {
+	public constructor(
+		build: () => T,
+		destruct?: ((instance: T) => void) | undefined,
+	) {
 		this.build = build;
 		this.destruct = destruct;
 	}
@@ -25,7 +28,7 @@ export class Singleton<T> {
 		return data.instance;
 	}
 
-	public unsubscribe(callback?: (instance: T) => void): void {
+	public unsubscribe(callback?: ((instance: T) => void) | undefined): void {
 		const data = this.data;
 
 		if (data) {

@@ -13,12 +13,14 @@ export const SidebarHeader = <THeaderData,>({
 	headerData,
 	variant,
 }: {
-	children?: (props?: {
-		getRootProps: GetRootProps;
-		data?: THeaderData | undefined;
-	}) => React.ReactNode;
+	children?:
+		| ((props: {
+				getRootProps: GetRootProps;
+				data?: THeaderData | undefined;
+		  }) => React.ReactNode)
+		| undefined;
 	headerData?: THeaderData | undefined;
-	variant?: "left" | "right";
+	variant?: "left" | "right" | undefined;
 }): React.ReactNode => {
 	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
 

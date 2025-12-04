@@ -18,7 +18,7 @@ import type { ShowPeriod } from "./HeadersContext";
 type GetIntervalProps = (
 	args?:
 		| {
-				onClick?: MouseEventHandler;
+				onClick?: MouseEventHandler | undefined;
 				style?: CSSProperties | undefined;
 		  }
 		| undefined,

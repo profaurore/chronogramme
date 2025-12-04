@@ -51,7 +51,7 @@ interface GroupRowProviderProps<
 	onContextMenu?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
-	onDoubleClick:
+	onDoubleClick?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	timeline: InstanceType<

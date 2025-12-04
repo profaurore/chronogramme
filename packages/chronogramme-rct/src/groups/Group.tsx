@@ -53,7 +53,7 @@ export const Group = <
 		TGroupRightTitleKey,
 		TGroup
 	>;
-	isRightSidebar?: boolean;
+	isRightSidebar?: boolean | undefined;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
 			number,

@@ -96,7 +96,7 @@ export type BaseGroup<
 	TGroupTitleKey extends string = "title",
 	TGroupRightTitleKey extends string = "rightTitle",
 > = {
-	lineHeight?: number;
+	lineHeight?: number | undefined;
 } & {
 	[K in TGroupIdKey]: number;
 } & {
@@ -167,12 +167,16 @@ export type GetItemProps = (
 		| "onContextMenu"
 	>;
 
-export type GetResizeProps = (params?: {
-	leftClassName?: string;
-	leftStyle?: CSSProperties;
-	rightClassName?: string;
-	rightStyle?: CSSProperties;
-}) => {
+export type GetResizeProps = (
+	params?:
+		| {
+				leftClassName?: string | undefined;
+				leftStyle?: CSSProperties | undefined;
+				rightClassName?: string | undefined;
+				rightStyle?: CSSProperties | undefined;
+		  }
+		| undefined,
+) => {
 	left: FullRequired<
 		Pick<
 			HTMLAttributes<HTMLDivElement>,
@@ -315,8 +319,8 @@ interface TimelineProps<
 		TGroup
 	>;
 	groups: TGroup[];
-	headerHeight?: number;
-	hideHeaders?: boolean;
+	headerHeight?: number | undefined;
+	hideHeaders?: boolean | undefined;
 	horizontalLineClassNamesForGroup?: ((group: TGroup) => string[]) | undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
@@ -330,17 +334,19 @@ interface TimelineProps<
 		TItem
 	>;
 	items: TItem[];
-	keys?: TimelineKeys<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>;
+	keys?:
+		| TimelineKeys<
+				TGroupIdKey,
+				TGroupTitleKey,
+				TGroupRightTitleKey,
+				TItemIdKey,
+				TItemGroupKey,
+				TItemTitleKey,
+				TItemDivTitleKey,
+				TItemTimeStartKey,
+				TItemTimeEndKey
+		  >
+		| undefined;
 	lineHeight?: number | undefined;
 	minResizeWidth?: number | undefined;
 	moveResizeValidator?(action: "move", itemId: number, time: number): number;
@@ -362,37 +368,50 @@ interface TimelineProps<
 	onCanvasDoubleClick?:
 		| ((groupId: number, time: number, e: SyntheticEvent) => void)
 		| undefined;
-	onItemClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
-	onItemContextMenu?: (itemId: number, e: SyntheticEvent, time: number) => void;
-	onItemDeselect?: (e: SyntheticEvent) => void;
-	onItemDoubleClick?: (itemId: number, e: SyntheticEvent, time: number) => void;
-	onItemDrag?: (
-		itemDragObject:
-			| { eventType: "move"; itemId: number; time: number; newGroupId: number }
-			| {
-					eventType: "resize";
-					itemId: number;
-					time: number;
-					edge: "left" | "right";
-			  },
-	) => void;
-	onItemMove?: (
-		itemId: number,
-		dragTime: number,
-		newGroupOrder: number,
-	) => void;
-	onItemResize?(
-		itemId: number,
-		endTimeOrStartTime: number,
-		edge: ResizeEdge,
-	): void;
-	onItemSelect?: (itemId: number, e: SyntheticEvent, time: number) => void;
-	onTimeChange?: (
-		newVisibleTimeStart: number,
-		newVisibleTimeEnd: number,
-		updateScrollCanvas: (start: number, end: number) => void,
-	) => void;
-	rightSidebarWidth?: number;
+	onItemClick?:
+		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| undefined;
+	onItemContextMenu?:
+		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| undefined;
+	onItemDeselect?: ((e: SyntheticEvent) => void) | undefined;
+	onItemDoubleClick?:
+		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| undefined;
+	onItemDrag?:
+		| ((
+				itemDragObject:
+					| {
+							eventType: "move";
+							itemId: number;
+							time: number;
+							newGroupId: number;
+					  }
+					| {
+							eventType: "resize";
+							itemId: number;
+							time: number;
+							edge: "left" | "right";
+					  },
+		  ) => void)
+		| undefined;
+	onItemMove?:
+		| ((itemId: number, dragTime: number, newGroupOrder: number) => void)
+		| undefined;
+	onItemResize?:
+		| ((itemId: number, endTimeOrStartTime: number, edge: ResizeEdge) => void)
+		| undefined;
+	onItemSelect?:
+		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| undefined;
+	onTimeChange?:
+		| ((
+				newVisibleTimeStart: number,
+				newVisibleTimeEnd: number,
+				updateScrollCanvas: (start: number, end: number) => void,
+		  ) => void)
+		| undefined;
+	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
 		TGroupIdKey,
@@ -402,8 +421,8 @@ interface TimelineProps<
 		TRowData
 	>;
 	selected?: number[] | undefined;
-	sidebarWidth?: number;
-	timeSteps?: TimeSteps;
+	sidebarWidth?: number | undefined;
+	timeSteps?: TimeSteps | undefined;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
 }

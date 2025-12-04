@@ -475,7 +475,7 @@ export class GroupPositionsState<
 		}
 	}
 
-	public itemDragEnd(skipRender?: boolean):
+	public itemDragEnd(skipRender?: boolean | undefined):
 		| {
 				endTime: number;
 				groupId: TGroupId;
@@ -763,7 +763,7 @@ export class GroupPositionsState<
 		}
 	}
 
-	public itemResizeEnd(skipRender?: boolean):
+	public itemResizeEnd(skipRender?: boolean | undefined):
 		| {
 				endTime: number;
 				id: TItemId;
@@ -932,7 +932,7 @@ export class GroupPositionsState<
 
 	private getGroupByPosition(
 		position: number,
-		excludeChangingItem?: boolean,
+		excludeChangingItem?: boolean | undefined,
 	): [index: number, startPos: number] {
 		const groupSizes = this.#groupSizes;
 

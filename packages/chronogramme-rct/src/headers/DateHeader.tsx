@@ -30,6 +30,7 @@ export const DateHeader = <THeaderData,>({
 	unit,
 }: {
 	className?: string | undefined;
+	// TODO: Only make optional if THeaderData is undefined (or never?)
 	headerData?: THeaderData;
 	height?: number | undefined;
 	intervalRenderer?: (() => React.ReactNode) | undefined;

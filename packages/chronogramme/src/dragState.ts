@@ -30,7 +30,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 	readonly #endOnDisconnect: boolean;
 
-	public constructor(parameters?: Readonly<DragStateParameters>) {
+	public constructor(parameters?: Readonly<DragStateParameters> | undefined) {
 		super();
 
 		if (parameters !== undefined) {
@@ -83,7 +83,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 		this.onStartHandler(event, data);
 	}
 
-	private endAndMaybeCommit(event?: PointerEvent): void {
+	private endAndMaybeCommit(event?: PointerEvent | undefined): void {
 		const activeState = this.#activeState;
 
 		if (activeState) {

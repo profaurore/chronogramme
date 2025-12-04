@@ -167,7 +167,7 @@ export class Timeline<
 		this.#groupPositionsState.itemDragCancel();
 	}
 
-	public itemDragEnd(skipRender?: boolean):
+	public itemDragEnd(skipRender?: boolean | undefined):
 		| {
 				endTime: number;
 				groupId: TGroupId;
@@ -201,7 +201,7 @@ export class Timeline<
 		this.#groupPositionsState.itemResizeCancel();
 	}
 
-	public itemResizeEnd(skipRender?: boolean):
+	public itemResizeEnd(skipRender?: boolean | undefined):
 		| {
 				endTime: number;
 				id: TItemId;
