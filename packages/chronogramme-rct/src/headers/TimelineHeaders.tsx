@@ -6,7 +6,7 @@ import {
 	type ReactNode,
 } from "react";
 import { RIGHT_VARIANT } from "../constants";
-import { getReactChildProp, reactChildHasSecretKey } from "../utils/reactUtils";
+import { getReactChildProp, getReactChildSecretKey } from "../utils/reactUtils";
 import { SidebarHeader } from "./SidebarHeader";
 
 export const TimelineHeaders = ({
@@ -34,7 +34,7 @@ export const TimelineHeaders = ({
 	const calendarHeaders: ReactNode[] = [];
 
 	Children.map(children, (child) => {
-		if (reactChildHasSecretKey(child, SidebarHeader.secretKey)) {
+		if (getReactChildSecretKey(child) === SidebarHeader.secretKey) {
 			if (getReactChildProp(child, "variant") === RIGHT_VARIANT) {
 				rightSidebarHeaders.push(child);
 			} else {
