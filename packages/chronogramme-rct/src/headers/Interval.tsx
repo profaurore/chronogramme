@@ -53,16 +53,19 @@ export const Interval = <THeaderData,>({
 	showPeriod: ShowPeriod;
 	unit: Unit;
 }): ReactNode => {
+	const endTime = interval.endTime;
+	const startTime = interval.startTime;
+
 	const onClickHandler = useCallback(() => {
 		if (primaryHeader) {
 			const nextUnit = nextTimeUnits[unit];
-			const newStartTime = startOfUnit(nextUnit, interval.startTime);
+			const newStartTime = startOfUnit(nextUnit, startTime);
 			const newEndTime = addUnitStep(unit, UNIT, newStartTime);
 			showPeriod(newStartTime, newEndTime);
 		} else {
-			showPeriod(interval.startTime, interval.endTime);
+			showPeriod(startTime, endTime);
 		}
-	}, [interval.endTime, interval.startTime, primaryHeader, showPeriod, unit]);
+	}, [endTime, startTime, primaryHeader, showPeriod, unit]);
 
 	const getIntervalPropsHandler: GetIntervalProps = useCallback(
 		(props) => ({

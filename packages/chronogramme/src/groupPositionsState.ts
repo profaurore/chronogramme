@@ -453,7 +453,7 @@ export class GroupPositionsState<
 	}
 
 	public setLineSize(lineSize: number | undefined): void {
-		this.#lineSize = lineSize ?? GROUP_LINE_SIZE_DEFAULT;
+		this.#lineSize = lineSize || GROUP_LINE_SIZE_DEFAULT;
 
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
@@ -467,7 +467,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
@@ -487,7 +487,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
@@ -516,7 +516,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType === ITEM_CHANGE_TYPE_DRAG
 		) {
 			const itemDragValidator = this.#itemDragValidator;
@@ -543,7 +543,7 @@ export class GroupPositionsState<
 			let newStartTime: number;
 			let newEndTime: number;
 
-			if (rawItemHMoved && itemDragValidator) {
+			if (rawItemHMoved && itemDragValidator !== undefined) {
 				const validatedTimes = itemDragValidator(
 					initItem,
 					rawStartTime,
@@ -605,7 +605,10 @@ export class GroupPositionsState<
 	public itemDragStart(id: TItemId, dragTime: number): void {
 		const draggedItem = this.getItemById(id);
 
-		if (draggedItem && (draggedItem.isDraggable ?? this.#itemsDraggable)) {
+		if (
+			draggedItem !== undefined &&
+			(draggedItem.isDraggable ?? this.#itemsDraggable)
+		) {
 			this.#itemChangeState = {
 				changeType: ITEM_CHANGE_TYPE_DRAG,
 				triggerTime: dragTime,
@@ -621,7 +624,7 @@ export class GroupPositionsState<
 		const resizedItem = this.getItemById(id);
 
 		if (
-			resizedItem &&
+			resizedItem !== undefined &&
 			(resizedItem.isEndResizable ?? this.#itemsEndResizable)
 		) {
 			this.#itemChangeState = {
@@ -664,7 +667,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			const itemResizeValidator = this.#itemResizeValidator;
@@ -705,7 +708,7 @@ export class GroupPositionsState<
 			let newStartTime: number;
 			let newEndTime: number;
 
-			if (itemHRawMoved && itemResizeValidator) {
+			if (itemHRawMoved && itemResizeValidator !== undefined) {
 				const validatedTimes = itemResizeValidator(initItem, isStart, rawTime);
 				this.validateItemChangeValidatorReturn<ItemResizeValidator<TItem>>(
 					"itemResizeValidator",
@@ -755,7 +758,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;
@@ -775,7 +778,7 @@ export class GroupPositionsState<
 		const itemChangeState = this.#itemChangeState;
 
 		if (
-			itemChangeState &&
+			itemChangeState !== undefined &&
 			itemChangeState.changeType !== ITEM_CHANGE_TYPE_DRAG
 		) {
 			this.#itemChangeState = undefined;

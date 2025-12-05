@@ -5,6 +5,7 @@ import {
 	DragMoveEventDetail,
 	DragStartEventDetail,
 } from "./events";
+import { ZERO } from "./math";
 import { MOUSE_BUTTON_PRIMARY, MOUSE_BUTTONS_PRIMARY } from "./mouse";
 import { validateObject } from "./object";
 
@@ -119,7 +120,10 @@ export class DragState<StateData = undefined> extends EventTarget {
 	private onMoveHandler(event: PointerEvent): void {
 		const activeState = this.#activeState;
 
-		if (activeState && event.buttons & MOUSE_BUTTONS_PRIMARY) {
+		if (
+			activeState !== undefined &&
+			(event.buttons & MOUSE_BUTTONS_PRIMARY) !== ZERO
+		) {
 			const x = event.clientX;
 			const y = event.clientY;
 
@@ -145,7 +149,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 	private onRemoveHandler(): void {
 		const activeState = this.#activeState;
 
-		if (activeState && !activeState.target.isConnected) {
+		if (activeState !== undefined && !activeState.target.isConnected) {
 			this.endAndMaybeCommit();
 		}
 	}
@@ -162,8 +166,7 @@ export class DragState<StateData = undefined> extends EventTarget {
 		// Only the primary mouse button triggers scroll drag.
 		if (
 			event.button === MOUSE_BUTTON_PRIMARY &&
-			target instanceof HTMLElement &&
-			parent
+			target instanceof HTMLElement
 		) {
 			const parent = target?.parentNode;
 

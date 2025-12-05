@@ -720,7 +720,7 @@ function RenderedTimeline<
 				default: {
 					if (child !== undefined && child !== false && child !== null) {
 						throw new Error(
-							"<Timeline /> only expects <TimelineHeaders /> and <TimelineMarkers />",
+							"<Timeline /> only expects <TimelineHeaders /> and <TimelineMarkers /> as children",
 						);
 					}
 
@@ -771,7 +771,7 @@ function RenderedTimeline<
 			timezone-offset={timezoneOffset}
 			ref={timelineRef}
 		>
-			{timeline && (
+			{timeline !== null && (
 				<HelpersContextProvider<
 					TGroupIdKey,
 					TGroupTitleKey,
@@ -810,7 +810,7 @@ function RenderedTimeline<
 						{!hideHeaders && renderedHeader}
 					</HeadersContextProvider>
 
-					{renderedLeftGroups && (
+					{renderedLeftGroups !== undefined && (
 						<div
 							className="rct-sidebar"
 							slot="bar-h-start"
@@ -856,7 +856,7 @@ function RenderedTimeline<
 						</ItemContextProvider>
 					</div>
 
-					{renderedRightGroups && (
+					{renderedRightGroups !== undefined && (
 						<div
 							className="rct-sidebar rct-sidebar-right"
 							slot="bar-h-end"

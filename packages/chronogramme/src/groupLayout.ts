@@ -104,7 +104,11 @@ export function layoutGroupLines<
 		}
 	}
 
-	if (draggedItem && draggedItem.startTime < max && draggedItem.endTime > min) {
+	if (
+		draggedItem !== undefined &&
+		draggedItem.startTime < max &&
+		draggedItem.endTime > min
+	) {
 		filteredItems.push(draggedItem);
 	}
 

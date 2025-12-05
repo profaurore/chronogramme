@@ -19,6 +19,25 @@ type GetRootProps = (args?: { style?: CSSProperties | undefined }) => {
 	style: CSSProperties;
 };
 
+const getIntervalProps: GetIntervalProps = ({
+	interval,
+	style,
+}: {
+	interval: TimeInterval;
+	style?: CSSProperties | undefined;
+}) => {
+	const { labelWidth, left } = interval;
+
+	return {
+		style: {
+			...style,
+			left,
+			position: "absolute",
+			width: labelWidth,
+		},
+	};
+};
+
 export interface TimeInterval {
 	endTime: number;
 	labelWidth: number;
@@ -62,10 +81,17 @@ export const CustomHeader = <THeaderData,>({
 }): ReactNode => {
 	const { showPeriod, timeSteps, timeline, timelineUnit } = useHeadersContext();
 
+	const canvasTimeEnd = timeline.getHCanvasValueMax();
+	const canvasTimeStart = timeline.getHCanvasValueMin();
+	const timelineWidth = timeline.hWindowSize;
+	const visibleTimeEnd = timeline.hWindowMax;
+	const visibleTimeStart = timeline.hWindowMin;
+	const width = timeline.hScrollSize;
 	const windowRange = timeline.hWindowRange;
+
 	const halfWindow = windowRange * HALF;
-	const canvasStartTarget = timeline.hWindowMin - windowRange;
-	const canvasEndTarget = timeline.hWindowMax + windowRange;
+	const canvasStartTarget = visibleTimeStart - windowRange;
+	const canvasEndTarget = visibleTimeEnd + windowRange;
 	const canvasStart = Math.max(
 		canvasStartTarget - (canvasStartTarget % halfWindow),
 		timeline.hMin,
@@ -75,25 +101,20 @@ export const CustomHeader = <THeaderData,>({
 		timeline.hMax,
 	);
 
+	const timeStep = unit === "week" ? UNIT : timeSteps[unit];
+	const resolvedUnit = unit ?? timelineUnit;
+
 	const intervals = useMemo(() => {
 		// Align to the period start.
 		const periodStart = startOfUnit(unit, canvasStart);
 
 		// Align to the time step.
-		let time = alignWithUnitStep(
-			unit,
-			unit === "week" ? UNIT : timeSteps[unit],
-			periodStart,
-		);
+		let time = alignWithUnitStep(unit, timeStep, periodStart);
 
 		const result: TimeInterval[] = [];
 
 		while (time < canvasEnd) {
-			const nextTime = addUnitStep(
-				unit,
-				unit === "week" ? UNIT : timeSteps[unit],
-				time,
-			);
+			const nextTime = addUnitStep(unit, timeStep, time);
 
 			const left = timeline.getHPos(time);
 
@@ -108,61 +129,43 @@ export const CustomHeader = <THeaderData,>({
 		}
 
 		return result;
-	}, [canvasEnd, canvasStart, timeSteps, timeline.getHPos, unit]);
+	}, [canvasEnd, canvasStart, timeStep, timeline, unit]);
 
-	const canvasTimeEnd = timeline.getHCanvasValueMax();
-	const canvasTimeStart = timeline.getHCanvasValueMin();
 	const timelineContext = useMemo(
 		() => ({
-			timelineWidth: timeline.hWindowSize,
-			visibleTimeEnd: timeline.hWindowMax,
-			visibleTimeStart: timeline.hWindowMin,
 			canvasTimeEnd,
 			canvasTimeStart,
+			timelineWidth,
+			visibleTimeEnd,
+			visibleTimeStart,
 		}),
 		[
 			canvasTimeEnd,
 			canvasTimeStart,
-			timeline.hWindowMax,
-			timeline.hWindowMin,
-			timeline.hWindowSize,
+			timelineWidth,
+			visibleTimeEnd,
+			visibleTimeStart,
 		],
 	);
 
 	const headerContext = useMemo(
 		() => ({
-			unit: unit ?? timelineUnit,
 			intervals,
+			unit: resolvedUnit,
 		}),
-		[intervals, timelineUnit, unit],
+		[intervals, resolvedUnit],
 	);
 
 	const getRootProps: GetRootProps = useCallback(
 		(props) => ({
 			style: {
 				...props?.style,
-				position: "relative",
-				width: timeline.hScrollSize,
 				height,
+				position: "relative",
+				width,
 			},
 		}),
-		[height, timeline.hScrollSize],
-	);
-
-	const getIntervalProps: GetIntervalProps = useCallback(
-		({ interval, style }) => {
-			const { labelWidth, left } = interval;
-
-			return {
-				style: {
-					...style,
-					left,
-					position: "absolute",
-					width: labelWidth,
-				},
-			};
-		},
-		[],
+		[height, width],
 	);
 
 	return (

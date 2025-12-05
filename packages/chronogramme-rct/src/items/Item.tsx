@@ -172,13 +172,13 @@ export const Item = <
 			}
 		},
 		[
-			itemId,
 			canSelect,
-			selected,
+			itemId,
 			onClick,
 			onSelect,
+			selected,
 			setSelectedItemId,
-			timeline.getHValue,
+			timeline,
 		],
 	);
 
@@ -215,10 +215,10 @@ export const Item = <
 				canMove,
 				canResizeLeft,
 				canResizeRight,
-				itemDragState.start,
+				itemDragState,
 				itemId,
-				itemResizeState.reset,
-				timeline.itemDragStart,
+				itemResizeState,
+				timeline,
 			],
 		);
 
@@ -232,7 +232,7 @@ export const Item = <
 				onDoubleClick?.(itemId, event, timeline.getHValue(nativeEvent.clientX));
 			}
 		},
-		[itemId, onDoubleClick, timeline.getHValue],
+		[itemId, onDoubleClick, timeline],
 	);
 
 	const onContextMenuHandler: MouseEventHandler<HTMLDivElement> = useCallback(
@@ -249,7 +249,7 @@ export const Item = <
 				}
 			}
 		},
-		[itemId, onContextMenu, timeline.getHValue],
+		[itemId, onContextMenu, timeline],
 	);
 
 	const getItemPropsHandler = useCallback<GetItemProps>(
@@ -288,19 +288,19 @@ export const Item = <
 			},
 		}),
 		[
-			width,
-			left,
 			canMove,
 			canResizeLeft,
 			canResizeRight,
 			dragging,
-			selected,
 			height,
-			vOffsetInGroup,
+			left,
+			onClickHandler,
 			onContextMenuHandler,
 			onDoubleClickHandler,
-			onClickHandler,
 			onPointerDownCaptureHandler,
+			selected,
+			vOffsetInGroup,
+			width,
 		],
 	);
 
@@ -317,13 +317,7 @@ export const Item = <
 				itemResizeState.start(event);
 				timeline.itemStartResizeStart(itemId, event.clientX);
 			},
-			[
-				canResizeLeft,
-				itemDragState.reset,
-				itemId,
-				itemResizeState.start,
-				timeline.itemStartResizeStart,
-			],
+			[canResizeLeft, itemDragState, itemId, itemResizeState, timeline],
 		);
 
 	const onRightResizerPointerDownCapture: MouseEventHandler<HTMLDivElement> =
@@ -339,13 +333,7 @@ export const Item = <
 				itemResizeState.start(event);
 				timeline.itemEndResizeStart(itemId, event.clientX);
 			},
-			[
-				canResizeRight,
-				itemDragState.reset,
-				itemId,
-				itemResizeState.start,
-				timeline.itemEndResizeStart,
-			],
+			[canResizeRight, itemDragState, itemId, itemResizeState, timeline],
 		);
 
 	const getResizePropsHandler = useCallback<GetResizeProps>(
