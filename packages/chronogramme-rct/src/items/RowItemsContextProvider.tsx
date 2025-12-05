@@ -13,28 +13,17 @@ import type {
 } from "../Timeline";
 
 interface RowItemsContextProviderProps<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
 	TItem extends BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	> = BaseItem<
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -56,28 +45,17 @@ interface RowItemsContextProviderProps<
 	>;
 }
 export const RowItemsContextProvider = <
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
 	TItem extends BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	> = BaseItem<
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -137,7 +115,21 @@ export const RowItemsContextProvider = <
 	// providers with generics.
 	return (
 		<RowItemsContext.Provider
-			value={contextValue as unknown as RowItemsContextValue}
+			value={
+				contextValue as unknown as RowItemsContextValue<
+					"id",
+					"title",
+					"rightTitle",
+					"id",
+					"group",
+					"title",
+					"title",
+					"start_time",
+					"end_time",
+					BaseGroup<"id", "title", "rightTitle">,
+					BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+				>
+			}
 		>
 			{children}
 		</RowItemsContext.Provider>

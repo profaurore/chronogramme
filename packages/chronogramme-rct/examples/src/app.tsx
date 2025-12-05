@@ -129,8 +129,12 @@ export function App(): ReactNode {
 		);
 	};
 
-	const [items, setItems] = useState<BaseItem[]>([]);
-	const [groups, setGroups] = useState<BaseGroup[]>([]);
+	const [items, setItems] = useState<
+		BaseItem<"id", "group", "title", "title", "start_time", "end_time">[]
+	>([]);
+	const [groups, setGroups] = useState<
+		BaseGroup<"id", "title", "rightTitle">[]
+	>([]);
 
 	const onAddClickHandler =
 		(addCount: number): MouseEventHandler =>
@@ -166,7 +170,7 @@ export function App(): ReactNode {
 		};
 
 	useEffect(() => {
-		const newGroups: BaseGroup[] = [];
+		const newGroups: typeof groups = [];
 
 		for (let i = ZERO; i < GROUP_COUNT; i += UNIT) {
 			newGroups.push({
@@ -227,7 +231,14 @@ export function App(): ReactNode {
 		setWindow([newVisibleTimeStart, newVisibleTimeEnd]);
 	}, []);
 
-	const groupRenderer = useCallback<GroupRenderer>(
+	const groupRenderer = useCallback<
+		GroupRenderer<
+			"id",
+			"title",
+			"rightTitle",
+			BaseGroup<"id", "title", "rightTitle">
+		>
+	>(
 		({ group }) => (
 			<div
 				style={{
@@ -239,7 +250,15 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const rowRenderer = useCallback<RowRenderer>(
+	const rowRenderer = useCallback<
+		RowRenderer<
+			"id",
+			"title",
+			"rightTitle",
+			BaseGroup<"id", "title", "rightTitle">,
+			undefined
+		>
+	>(
 		({ group }) => (
 			<GroupRow>
 				<RowItems />
@@ -258,33 +277,39 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const itemRenderer = useCallback<ItemRenderer>(
-		({ getItemProps, getResizeProps, item }) => {
-			const { left: leftResizeProps, right: rightResizeProps } =
-				getResizeProps();
+	const itemRenderer = useCallback<
+		ItemRenderer<
+			"id",
+			"group",
+			"title",
+			"title",
+			"start_time",
+			"end_time",
+			BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+		>
+	>(({ getItemProps, getResizeProps, item }) => {
+		const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
 
-			leftResizeProps.style.background = "#f00";
-			rightResizeProps.style.background = "#f00";
+		leftResizeProps.style.background = "#f00";
+		rightResizeProps.style.background = "#f00";
 
-			leftResizeProps.style.zIndex = -1;
-			rightResizeProps.style.zIndex = -1;
+		leftResizeProps.style.zIndex = -1;
+		rightResizeProps.style.zIndex = -1;
 
-			return (
-				<div
-					{...getItemProps({
-						style: { textAlign: "center", whiteSpace: "nowrap" },
-					})}
-				>
-					<div key="left" {...leftResizeProps} />
-					<span style={{ pointerEvents: "none" }}>
-						{item.group}-{item.id}
-					</span>
-					<div key="right" {...rightResizeProps} />
-				</div>
-			);
-		},
-		[],
-	);
+		return (
+			<div
+				{...getItemProps({
+					style: { textAlign: "center", whiteSpace: "nowrap" },
+				})}
+			>
+				<div key="left" {...leftResizeProps} />
+				<span style={{ pointerEvents: "none" }}>
+					{item.group}-{item.id}
+				</span>
+				<div key="right" {...rightResizeProps} />
+			</div>
+		);
+	}, []);
 
 	const moveResizeValidator = useCallback<
 		Exclude<ComponentProps<typeof RCTimeline>["moveResizeValidator"], undefined>

@@ -54,20 +54,16 @@ import type { FullRequired } from "./utils/typeUtils";
 type ResizeEdge = "left" | "right";
 
 interface TimelineProps<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
 	TItem extends BaseItem<
 		TItemIdKey,
 		TItemGroupKey,
@@ -75,15 +71,8 @@ interface TimelineProps<
 		TItemDivTitleKey,
 		TItemTimeStartKey,
 		TItemTimeEndKey
-	> = BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
 	>,
-	TRowData = undefined,
+	TRowData,
 > {
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
@@ -893,12 +882,12 @@ export interface TimeSteps {
 }
 
 export type BaseItem<
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
 > = {
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
@@ -917,9 +906,9 @@ export type BaseItem<
 };
 
 export type BaseGroup<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
 > = {
 	lineHeight?: number | undefined;
 } & {
@@ -931,15 +920,11 @@ export type BaseGroup<
 };
 
 export type RowRenderer<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
-	TRowData = undefined,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TRowData,
 > = (props: {
 	getLayerRootProps: () => { style: CSSProperties };
 	group: TGroup;
@@ -948,14 +933,10 @@ export type RowRenderer<
 }) => ReactNode;
 
 export type GroupRenderer<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
 > = (props: {
 	group: TGroup;
 	isRightSidebar?: boolean | undefined;
@@ -1017,20 +998,13 @@ export type GetResizeProps = (
 };
 
 export type ItemRenderer<
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
 	TItem extends BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	> = BaseItem<
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -1078,15 +1052,15 @@ export type ItemRenderer<
 }) => ReactNode;
 
 export interface TimelineKeys<
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
 > {
 	groupIdKey: TGroupIdKey;
 	groupTitleKey: TGroupTitleKey;
@@ -1100,20 +1074,16 @@ export interface TimelineKeys<
 }
 
 export const Timeline = <
-	TGroupIdKey extends string = "id",
-	TGroupTitleKey extends string = "title",
-	TGroupRightTitleKey extends string = "rightTitle",
-	TItemIdKey extends string = "id",
-	TItemGroupKey extends string = "group",
-	TItemTitleKey extends string = "title",
-	TItemDivTitleKey extends string = "title",
-	TItemTimeStartKey extends string = "start_time",
-	TItemTimeEndKey extends string = "end_time",
-	TGroup extends BaseGroup<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	> = BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
 	TItem extends BaseItem<
 		TItemIdKey,
 		TItemGroupKey,
@@ -1121,15 +1091,8 @@ export const Timeline = <
 		TItemDivTitleKey,
 		TItemTimeStartKey,
 		TItemTimeEndKey
-	> = BaseItem<
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
 	>,
-	TRowData = undefined,
+	TRowData,
 >({
 	groups,
 	items,
