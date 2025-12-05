@@ -14,7 +14,7 @@ describe("layoutGroupLines", () => {
 
 	test("Random values match reference implementation", () => {
 		const itemCount = 1000;
-		const items: BaseItem[] = [];
+		const items: BaseItem<number, number>[] = [];
 
 		let min = Number.POSITIVE_INFINITY;
 		let max = Number.NEGATIVE_INFINITY;

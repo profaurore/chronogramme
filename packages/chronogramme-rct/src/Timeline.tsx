@@ -864,11 +864,11 @@ const MemoedRenderedTimeline = memo(
 	RenderedTimeline,
 ) as typeof RenderedTimeline;
 
-export interface RctToCoreItem<TItem> extends CoreBaseItem {
+export interface RctToCoreItem<TItem> extends CoreBaseItem<number, number> {
 	originalItem: TItem;
 }
 
-export interface RctToCoreGroup<TGroup> extends CoreBaseGroup {
+export interface RctToCoreGroup<TGroup> extends CoreBaseGroup<number> {
 	originalGroup: TGroup;
 }
 

@@ -5,9 +5,9 @@ import type { BaseGroup, BaseItem } from "./timeline";
 import { yieldToMain } from "./yieldToMain";
 
 interface ItemChangeState<
-	TGroupId = number,
-	TItemId = number,
-	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
+	TGroupId,
+	TItemId,
+	TItem extends BaseItem<TItemId, TGroupId>,
 > {
 	changeType:
 		| typeof ITEM_CHANGE_TYPE_DRAG
@@ -42,17 +42,17 @@ export type ItemResizeValidator<TItem> = (
 	time: number,
 ) => { startTime: number; endTime: number };
 
-// interface ScrollReference<TGroupId = number> {
+// interface ScrollReference<TGroupId> {
 // 	groupId: TGroupId;
 // 	groupIdx: number;
 // 	offset: number;
 // }
 
 export class GroupPositionsState<
-	TGroupId = number,
-	TGroup extends BaseGroup<TGroupId> = BaseGroup<TGroupId>,
-	TItemId = number,
-	TItem extends BaseItem<TItemId, TGroupId> = BaseItem<TItemId, TGroupId>,
+	TGroupId,
+	TGroup extends BaseGroup<TGroupId>,
+	TItemId,
+	TItem extends BaseItem<TItemId, TGroupId>,
 > extends EventTarget {
 	readonly #asyncProcessingSize: number;
 
