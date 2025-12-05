@@ -246,7 +246,7 @@ export function alignWithUnitStep(
 	step: number,
 	time: number,
 ): number {
-	if (step <= 1) {
+	if (step < 1) {
 		return time;
 	}
 
@@ -256,7 +256,8 @@ export function alignWithUnitStep(
 	switch (unit) {
 		case "year": {
 			const year = date.getFullYear();
-			date.setFullYear(year - (year % step));
+			date.setFullYear(year - (year % step), 0, 1);
+			date.setHours(0, 0, 0, 0);
 			break;
 		}
 
@@ -268,8 +269,8 @@ export function alignWithUnitStep(
 			if (step >= MONTHS_PER_YEAR) {
 				const yearsStep = Math.round(step / MONTHS_PER_YEAR);
 				const year = date.getFullYear();
-				date.setFullYear(year - (year % yearsStep));
-				date.setMonth(0);
+				date.setFullYear(year - (year % yearsStep), 0, 1);
+				date.setHours(0, 0, 0, 0);
 				break;
 			}
 
@@ -287,7 +288,8 @@ export function alignWithUnitStep(
 			}
 
 			const month = date.getMonth();
-			date.setMonth(month - (month % monthStep));
+			date.setMonth(month - (month % monthStep), 1);
+			date.setHours(0, 0, 0, 0);
 			break;
 		}
 
