@@ -22,7 +22,7 @@ import type {
 	GetItemProps,
 	GetResizeProps,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 import { composeEvents } from "../utils/reactUtils";
 import { useItemContext } from "./useItemContext";
 import { useItemForHelpersContext } from "./useItemForHelpersContext";

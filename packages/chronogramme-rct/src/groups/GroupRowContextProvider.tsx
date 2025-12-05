@@ -11,7 +11,7 @@ import type {
 	BaseItem,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 import { useGroupForHelpersContext } from "./useGroupForHelpersContext";
 

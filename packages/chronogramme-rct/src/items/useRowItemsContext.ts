@@ -3,7 +3,7 @@ import {
 	RowItemsContext,
 	type RowItemsContextValue,
 } from "../items/RowItemsContext";
-import type { BaseGroup, BaseItem } from "../timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
 
 export function useRowItemsContext<
 	TGroupIdKey extends string = "id",

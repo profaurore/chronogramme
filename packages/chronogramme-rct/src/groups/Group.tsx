@@ -11,7 +11,7 @@ import type {
 	GroupRenderer,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 
 export const Group = <

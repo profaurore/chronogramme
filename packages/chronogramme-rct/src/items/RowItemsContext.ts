@@ -5,7 +5,7 @@ import type {
 	BaseItem,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 
 export interface RowItemsContextValue<
 	TGroupIdKey extends string = "id",

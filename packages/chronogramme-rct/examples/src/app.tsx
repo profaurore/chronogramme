@@ -31,7 +31,7 @@ import type {
 	GroupRenderer,
 	ItemRenderer,
 	RowRenderer,
-} from "../../src/timeline";
+} from "../../src/Timeline";
 
 const timelineClass: LinariaClassName = css`
 	flex: none;

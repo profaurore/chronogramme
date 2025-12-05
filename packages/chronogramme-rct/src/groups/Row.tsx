@@ -7,7 +7,7 @@ import type {
 	RctToCoreGroup,
 	RctToCoreItem,
 	RowRenderer,
-} from "../timeline";
+} from "../Timeline";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 import { GroupRowContextProvider } from "./GroupRowContextProvider";
 

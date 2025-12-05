@@ -1,5 +1,5 @@
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
-import type { BaseGroup, BaseItem } from "../timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
 import { HeadersContext, type HeadersContextValue } from "./HeadersContext";
 
 export const HeadersContextProvider = <

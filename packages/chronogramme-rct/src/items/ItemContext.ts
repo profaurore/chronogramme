@@ -11,7 +11,7 @@ import type {
 	RctToCoreGroup,
 	RctToCoreItem,
 	TimelineKeys,
-} from "../timeline";
+} from "../Timeline";
 
 export interface ItemContextVariable<
 	TGroupIdKey extends string = "id",

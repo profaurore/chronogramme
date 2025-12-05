@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import type { BaseGroup, BaseItem } from "../timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
 import { ItemContext, type ItemContextVariable } from "./ItemContext";
 
 export function useItemContext<

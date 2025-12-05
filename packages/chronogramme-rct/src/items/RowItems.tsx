@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Item } from "../items/Item";
 import { ItemForHelpersContextProvider } from "../items/ItemForHelpersContextProvider";
-import type { BaseGroup, BaseItem } from "../timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
 import { useRowItemsContext } from "./useRowItemsContext";
 
 export const RowItems = <

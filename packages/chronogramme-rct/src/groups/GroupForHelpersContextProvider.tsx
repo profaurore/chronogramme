@@ -5,7 +5,7 @@ import type {
 	BaseItem,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 import {
 	GroupForHelpersContext,
 	type GroupForHelpersContextValue,

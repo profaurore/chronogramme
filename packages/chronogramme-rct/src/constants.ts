@@ -1,4 +1,4 @@
-import type { TimeSteps } from "./timeline";
+import type { TimeSteps } from "./Timeline";
 
 export const RIGHT_VARIANT = "right";
 

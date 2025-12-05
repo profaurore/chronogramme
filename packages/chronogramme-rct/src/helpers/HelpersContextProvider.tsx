@@ -7,7 +7,7 @@ import type {
 	BaseItem,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
 interface HelpersProviderProps<

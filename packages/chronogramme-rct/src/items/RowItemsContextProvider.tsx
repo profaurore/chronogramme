@@ -10,7 +10,7 @@ import type {
 	BaseItem,
 	RctToCoreGroup,
 	RctToCoreItem,
-} from "../timeline";
+} from "../Timeline";
 
 interface RowItemsContextProviderProps<
 	TGroupIdKey extends string = "id",

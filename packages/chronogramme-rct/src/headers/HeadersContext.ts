@@ -6,7 +6,7 @@ import type {
 	RctToCoreGroup,
 	RctToCoreItem,
 	TimeSteps,
-} from "../timeline";
+} from "../Timeline";
 import type { Unit } from "./DateHeader";
 
 export type ShowPeriod = (from: number, to: number) => void;
