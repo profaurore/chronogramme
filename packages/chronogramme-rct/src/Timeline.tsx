@@ -41,8 +41,9 @@ import type { ShowPeriod } from "./headers/HeadersContext";
 import { HeadersContextProvider } from "./headers/HeadersContextProvider";
 import { TimelineHeaders } from "./headers/TimelineHeaders";
 import { HelpersContextProvider } from "./helpers/HelpersContextProvider";
+import { TimelineContextProvider } from "./helpers/TimelineContextProvider";
 import { ItemContextProvider } from "./items/ItemContextProvider";
-import { TimelineMarkers } from "./TimelineMarkers";
+import { TimelineMarkers } from "./markers/TimelineMarkers";
 import {
 	MILLISECONDS_PER_FIFTEEN_MINUTES,
 	MILLISECONDS_PER_HOUR,
@@ -761,22 +762,8 @@ function RenderedTimeline<
 			ref={timelineRef}
 		>
 			{timeline !== null && (
-				<HelpersContextProvider<
-					TGroupIdKey,
-					TGroupTitleKey,
-					TGroupRightTitleKey,
-					TItemIdKey,
-					TItemGroupKey,
-					TItemTitleKey,
-					TItemDivTitleKey,
-					TItemTimeStartKey,
-					TItemTimeEndKey,
-					TGroup,
-					TItem
-				>
-					timeline={timeline}
-				>
-					<HeadersContextProvider<
+				<TimelineContextProvider timeline={timeline}>
+					<HelpersContextProvider<
 						TGroupIdKey,
 						TGroupTitleKey,
 						TGroupRightTitleKey,
@@ -789,28 +776,9 @@ function RenderedTimeline<
 						TGroup,
 						TItem
 					>
-						leftSidebarWidth={sidebarWidth}
-						rightSidebarWidth={rightSidebarWidth}
-						showPeriod={showPeriod}
-						timeSteps={timeSteps}
 						timeline={timeline}
-						timelineUnit={timelineUnit}
 					>
-						{!hideHeaders && renderedHeader}
-					</HeadersContextProvider>
-
-					{renderedLeftGroups !== undefined && (
-						<div
-							className="rct-sidebar"
-							slot="bar-h-start"
-							style={{ height: "100%", width: "100%" }}
-						>
-							<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
-						</div>
-					)}
-
-					<div className="rct-horizontal-lines" slot="center">
-						<ItemContextProvider<
+						<HeadersContextProvider<
 							TGroupIdKey,
 							TGroupTitleKey,
 							TGroupRightTitleKey,
@@ -823,38 +791,73 @@ function RenderedTimeline<
 							TGroup,
 							TItem
 						>
-							canMove={canMove}
-							canResizeLeft={canResizeLeft}
-							canResizeRight={canResizeRight}
-							canSelect={canSelect}
-							itemDragState={itemDragStateRef.current}
-							itemRenderer={itemRenderer}
-							itemResizeState={itemResizeStateRef.current}
-							keys={resolvedKeys}
-							minResizeWidth={minResizeWidth}
-							onClick={onItemClick}
-							onContextMenu={onItemContextMenu}
-							onDoubleClick={onItemDoubleClick}
-							onSelect={onItemSelect}
-							selected={selected}
-							selectedItemId={selectedItemId}
-							setSelectedItemId={setSelectedItemId}
+							leftSidebarWidth={sidebarWidth}
+							rightSidebarWidth={rightSidebarWidth}
+							showPeriod={showPeriod}
+							timeSteps={timeSteps}
 							timeline={timeline}
+							timelineUnit={timelineUnit}
 						>
-							{renderedGroupRows}
-						</ItemContextProvider>
-					</div>
+							{!hideHeaders && renderedHeader}
+						</HeadersContextProvider>
 
-					{renderedRightGroups !== undefined && (
-						<div
-							className="rct-sidebar rct-sidebar-right"
-							slot="bar-h-end"
-							style={{ height: "100%", width: "100%" }}
-						>
-							<div style={{ height: "100%" }}>{renderedRightGroups}</div>
+						{renderedLeftGroups !== undefined && (
+							<div
+								className="rct-sidebar"
+								slot="bar-h-start"
+								style={{ height: "100%", width: "100%" }}
+							>
+								<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+							</div>
+						)}
+
+						<div className="rct-horizontal-lines" slot="center">
+							<ItemContextProvider<
+								TGroupIdKey,
+								TGroupTitleKey,
+								TGroupRightTitleKey,
+								TItemIdKey,
+								TItemGroupKey,
+								TItemTitleKey,
+								TItemDivTitleKey,
+								TItemTimeStartKey,
+								TItemTimeEndKey,
+								TGroup,
+								TItem
+							>
+								canMove={canMove}
+								canResizeLeft={canResizeLeft}
+								canResizeRight={canResizeRight}
+								canSelect={canSelect}
+								itemDragState={itemDragStateRef.current}
+								itemRenderer={itemRenderer}
+								itemResizeState={itemResizeStateRef.current}
+								keys={resolvedKeys}
+								minResizeWidth={minResizeWidth}
+								onClick={onItemClick}
+								onContextMenu={onItemContextMenu}
+								onDoubleClick={onItemDoubleClick}
+								onSelect={onItemSelect}
+								selected={selected}
+								selectedItemId={selectedItemId}
+								setSelectedItemId={setSelectedItemId}
+								timeline={timeline}
+							>
+								{renderedGroupRows}
+							</ItemContextProvider>
 						</div>
-					)}
-				</HelpersContextProvider>
+
+						{renderedRightGroups !== undefined && (
+							<div
+								className="rct-sidebar rct-sidebar-right"
+								slot="bar-h-end"
+								style={{ height: "100%", width: "100%" }}
+							>
+								<div style={{ height: "100%" }}>{renderedRightGroups}</div>
+							</div>
+						)}
+					</HelpersContextProvider>
+				</TimelineContextProvider>
 			)}
 		</cg-timeline>
 	);

@@ -20,14 +20,17 @@ interface GroupDimensions {
 	top: number;
 }
 
+export type GetLeftOffsetFromDate = (date: number) => number;
+export type GetDateFromLeftOffsetPosition = (date: number) => number;
+
 export interface HelpersContextValue {
-	getDateFromLeftOffsetPosition: (offset: number) => number;
+	getDateFromLeftOffsetPosition: GetDateFromLeftOffsetPosition;
 	getGroupDimensions: (groupId: number) => GroupDimensions | undefined;
 	getItemAbsoluteDimensions: (
 		itemId: number,
 	) => ItemAbsoluteDimensions | undefined;
 	getItemDimensions: (itemId: number) => ItemDimensions | undefined;
-	getLeftOffsetFromDate: (date: number) => number;
+	getLeftOffsetFromDate: GetLeftOffsetFromDate;
 }
 
 export const HelpersContext: Context<HelpersContextValue | undefined> =
