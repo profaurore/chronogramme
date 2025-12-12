@@ -10,10 +10,12 @@ import {
 } from "@chronogramme/chronogramme";
 import {
 	Children,
+	type Component,
 	type CSSProperties,
 	type HTMLAttributes,
 	memo,
 	type ReactNode,
+	type Ref,
 	type RefObject,
 	type SyntheticEvent,
 	useCallback,
@@ -29,8 +31,8 @@ import {
 	WindowChangeEventDetail,
 } from "../../chronogramme/src/events";
 import {
+	DEFAULT_TIME_STEPS,
 	defaultKeys,
-	defaultTimeSteps,
 	minCellWidth,
 	timeFactors,
 } from "./constants";
@@ -51,6 +53,7 @@ import {
 } from "./utils/dateUtils";
 import { getReactChildSecretKey, useRender } from "./utils/reactUtils";
 import type { FullRequired } from "./utils/typeUtils";
+import { validateComponentProperties } from "./utils/unsupportedUtils";
 
 type ResizeEdge = "left" | "right";
 
@@ -75,11 +78,15 @@ interface TimelineProps<
 	>,
 	TRowData,
 > {
+	canChangeGroup?: boolean | undefined;
 	canMove?: boolean | undefined;
 	canResize?: false | "left" | "right" | "both" | undefined;
 	canSelect?: boolean | undefined;
 	children?: ReactNode | undefined;
 	className?: string | undefined;
+	clickTolerance?: number | undefined;
+	defaultTimeEnd?: number | undefined;
+	defaultTimeStart?: number | undefined;
 	dragSnap?: number | undefined;
 	groupRenderer: GroupRenderer<
 		TGroupIdKey,
@@ -89,7 +96,9 @@ interface TimelineProps<
 	>;
 	groups: TGroup[];
 	headerHeight?: number | undefined;
+	headerRef?: Ref<HTMLDivElement>;
 	hideHeaders?: boolean | undefined;
+	hideHorizontalLines?: boolean | undefined;
 	horizontalLineClassNamesForGroup?: ((group: TGroup) => string[]) | undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
@@ -102,6 +111,7 @@ interface TimelineProps<
 		TItemTimeEndKey,
 		TItem
 	>;
+	itemTouchSendsClick?: boolean | undefined;
 	items: TItem[];
 	keys?:
 		| TimelineKeys<
@@ -117,7 +127,9 @@ interface TimelineProps<
 		  >
 		| undefined;
 	lineHeight?: number | undefined;
+	maxZoom?: number | undefined;
 	minResizeWidth?: number | undefined;
+	minZoom?: number | undefined;
 	moveResizeValidator?(action: "move", itemId: number, time: number): number;
 	moveResizeValidator?(
 		action: "resize",
@@ -180,6 +192,17 @@ interface TimelineProps<
 				updateScrollCanvas: (start: number, end: number) => void,
 		  ) => void)
 		| undefined;
+	onZoom?: (timelineContext: {
+		canvasTimeEnd: number;
+		canvasTimeStart: number;
+		timelineWidth: number;
+		visibleTimeEnd: number;
+		visibleTimeStart: number;
+	}) => void;
+	resizeDetector?: {
+		addListener: Component;
+		removeListener: Component;
+	};
 	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
@@ -189,12 +212,39 @@ interface TimelineProps<
 		TGroup,
 		TRowData
 	>;
+	scrollRef?: Ref<HTMLDivElement>;
 	selected?: number[] | undefined;
 	sidebarWidth?: number | undefined;
+	stackItems?: boolean | undefined;
+	style?: CSSProperties | undefined;
 	timeSteps?: TimeSteps | undefined;
+	traditionalZoom?: boolean | undefined;
+	useResizeHandle?: boolean | undefined;
+	verticalLineClassNameForTime?: (
+		startTime: number,
+		endTime: number,
+	) => string[];
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
 }
+
+const UNSUPPORTED_PROPERTIES = [
+	"canChangeGroup",
+	"clickTolerance",
+	"defaultTimeEnd",
+	"defaultTimeStart",
+	"headerRef",
+	"hideHorizontalLines",
+	"itemTouchSendsClick",
+	"maxZoom",
+	"minZoom",
+	"onZoom",
+	"resizeDetector",
+	"scrollRef",
+	"stackItems",
+	"traditionalZoom",
+	"useResizeHandle",
+] as const;
 
 function RenderedTimeline<
 	TGroupIdKey extends string,
@@ -246,13 +296,18 @@ function RenderedTimeline<
 	onItemMove,
 	onItemResize,
 	onItemSelect,
-	onTimeChange,
+	onTimeChange = (
+		newVisibleTimeStart: number,
+		newVisibleTimeEnd: number,
+		updateScrollCanvas: (start: number, end: number) => void,
+	): void => updateScrollCanvas(newVisibleTimeStart, newVisibleTimeEnd),
 	rightSidebarWidth = 0,
 	rowData,
 	rowRenderer,
 	selected,
 	sidebarWidth = 150,
-	timeSteps = defaultTimeSteps,
+	style,
+	timeSteps = DEFAULT_TIME_STEPS,
 	timelineRef,
 	visibleTimeEnd,
 	visibleTimeStart,
@@ -746,20 +801,21 @@ function RenderedTimeline<
 			class={className}
 			h-end-extrema={[rightSidebarWidth, rightSidebarWidth]}
 			h-end-size={rightSidebarWidth}
+			h-extrema={[TIME_MIN, TIME_MAX]}
 			h-start-extrema={[sidebarWidth, sidebarWidth]}
 			h-start-size={sidebarWidth}
 			h-window={[visibleTimeStart, visibleTimeEnd]}
-			h-extrema={[TIME_MIN, TIME_MAX]}
-			v-start-extrema={[headerHeight, headerHeight]}
-			v-start-size={headerHeight}
 			id={id}
 			item-time-snap={dragSnap}
 			items-draggable={canMove}
 			items-end-resizable={canResize === "right" || canResize === "both"}
 			items-start-resizable={canResize === "left" || canResize === "both"}
 			line-size={lineHeight}
-			timezone-offset={timezoneOffset}
 			ref={timelineRef}
+			style={style}
+			timezone-offset={timezoneOffset}
+			v-start-extrema={[headerHeight, headerHeight]}
+			v-start-size={headerHeight}
 		>
 			{timeline !== null && (
 				<TimelineContextProvider timeline={timeline}>
@@ -1096,24 +1152,26 @@ export const Timeline = <
 		TItemTimeEndKey
 	>,
 	TRowData,
->({
-	groups,
-	items,
-	...properties
-}: TimelineProps<
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem,
-	TRowData
->): ReactNode => {
+>(
+	props: TimelineProps<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TGroup,
+		TItem,
+		TRowData
+	>,
+): ReactNode => {
+	validateComponentProperties(props, UNSUPPORTED_PROPERTIES);
+
+	const { groups, items, ...properties } = props;
+
 	const timelineRef =
 		useRef<
 			InstanceType<

@@ -5,37 +5,41 @@ import {
 	type PropsWithChildren,
 	type ReactNode,
 } from "react";
-import { RIGHT_VARIANT } from "../constants";
 import { getReactChildProp, getReactChildSecretKey } from "../utils/reactUtils";
+import { validateComponentProperties } from "../utils/unsupportedUtils";
 import { SidebarHeader } from "./SidebarHeader";
 
-export const TimelineHeaders = ({
-	calendarHeaderClassName,
-	calendarHeaderStyle,
-	children,
-}: PropsWithChildren<{
-	calendarHeaderClassName?: string | undefined;
-	calendarHeaderStyle?: CSSProperties | undefined;
+const UNSUPPORTED_PROPERTIES = ["className", "style"] as const;
 
-	/**
-	 * @deprecated This property cannot be supported with this library's
-	 * structure.
-	 */
-	className?: string | undefined;
+export const TimelineHeaders = (
+	props: PropsWithChildren<{
+		calendarHeaderClassName?: string | undefined;
+		calendarHeaderStyle?: CSSProperties | undefined;
 
-	/**
-	 * @deprecated This property cannot be supported with this library's
-	 * structure.
-	 */
-	style?: CSSProperties | undefined;
-}>): ReactNode => {
+		/**
+		 * @deprecated This property cannot be supported with this library's
+		 * structure.
+		 */
+		className?: string | undefined;
+
+		/**
+		 * @deprecated This property cannot be supported with this library's
+		 * structure.
+		 */
+		style?: CSSProperties | undefined;
+	}>,
+): ReactNode => {
+	validateComponentProperties(props, UNSUPPORTED_PROPERTIES);
+
+	const { calendarHeaderClassName, calendarHeaderStyle, children } = props;
+
 	const rightSidebarHeaders: ReactNode[] = [];
 	const leftSidebarHeaders: ReactNode[] = [];
 	const calendarHeaders: ReactNode[] = [];
 
 	Children.map(children, (child) => {
 		if (getReactChildSecretKey(child) === SidebarHeader.secretKey) {
-			if (getReactChildProp(child, "variant") === RIGHT_VARIANT) {
+			if (getReactChildProp(child, "variant") === "right") {
 				rightSidebarHeaders.push(child);
 			} else {
 				leftSidebarHeaders.push(child);
@@ -66,9 +70,7 @@ export const TimelineHeaders = ({
 		<>
 			<div slot="corner-h-start-v-start">{renderedLeftSidebarHeader}</div>
 			<div
-				style={{
-					...calendarHeaderStyle,
-				}}
+				style={calendarHeaderStyle}
 				slot="bar-v-start"
 				className={`rct-calendar-header${calendarHeaderClassName ?? ""}`}
 				data-testid="headerContainer"

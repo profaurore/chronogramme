@@ -1,5 +1,4 @@
 import { type CSSProperties, type ReactNode, useCallback } from "react";
-import { RIGHT_VARIANT } from "../constants";
 import { useHeadersContext } from "./useHeadersContext";
 
 type GetRootProps = (
@@ -8,18 +7,52 @@ type GetRootProps = (
 	style: CSSProperties;
 };
 
-export const SidebarHeader = <THeaderData,>({
+interface SidebarHeaderBaseProps {
+	variant?: "left" | "right" | undefined;
+}
+
+interface SidebarHeaderChildBaseProps {
+	getRootProps: GetRootProps;
+}
+
+interface SidebarHeaderComponent {
+	(
+		props: SidebarHeaderBaseProps & {
+			children?:
+				| ((props: SidebarHeaderChildBaseProps) => ReactNode)
+				| undefined;
+			variant?: "left" | "right" | undefined;
+		},
+	): ReactNode;
+
+	<THeaderData>(
+		props: SidebarHeaderBaseProps & {
+			children?:
+				| ((
+						props: SidebarHeaderChildBaseProps & {
+							data: THeaderData | undefined;
+						},
+				  ) => ReactNode)
+				| undefined;
+			headerData: THeaderData | undefined;
+			variant?: "left" | "right" | undefined;
+		},
+	): ReactNode;
+
+	secretKey: string;
+}
+
+export const SidebarHeader: SidebarHeaderComponent = <THeaderData,>({
 	children: ChildrenComponent,
 	headerData,
 	variant,
 }: {
 	children?:
-		| ((props: {
-				getRootProps: GetRootProps;
-				data?: THeaderData | undefined;
-		  }) => ReactNode)
+		| ((
+				props: SidebarHeaderChildBaseProps & { data: THeaderData },
+		  ) => ReactNode)
 		| undefined;
-	headerData?: THeaderData | undefined;
+	headerData?: THeaderData;
 	variant?: "left" | "right" | undefined;
 }): ReactNode => {
 	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
@@ -28,7 +61,7 @@ export const SidebarHeader = <THeaderData,>({
 		(props) => ({
 			style: {
 				...props?.style,
-				width: variant === RIGHT_VARIANT ? rightSidebarWidth : leftSidebarWidth,
+				width: variant === "right" ? rightSidebarWidth : leftSidebarWidth,
 			},
 		}),
 		[leftSidebarWidth, rightSidebarWidth, variant],
@@ -36,6 +69,14 @@ export const SidebarHeader = <THeaderData,>({
 
 	if (ChildrenComponent === undefined) {
 		return <div data-testid="sidebarHeader" {...getRootProps()} />;
+	}
+
+	if (headerData === undefined) {
+		const ChildrenComponentWithoutData = ChildrenComponent as (
+			props: SidebarHeaderChildBaseProps,
+		) => ReactNode;
+
+		return <ChildrenComponentWithoutData getRootProps={getRootProps} />;
 	}
 
 	return <ChildrenComponent getRootProps={getRootProps} data={headerData} />;

@@ -1,7 +1,5 @@
 import type { TimeSteps } from "./Timeline";
 
-export const RIGHT_VARIANT = "right";
-
 export const leftResizeStyle = {
 	position: "absolute",
 	width: 24,
@@ -84,7 +82,7 @@ export const defaultKeys = {
 	itemTitleKey: "title",
 } as const;
 
-export const defaultTimeSteps = {
+export const DEFAULT_TIME_STEPS = {
 	second: 1,
 	minute: 1,
 	hour: 1,

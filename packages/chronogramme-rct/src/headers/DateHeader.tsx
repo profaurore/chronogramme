@@ -1,6 +1,7 @@
 import { type CSSProperties, type ReactNode, useMemo } from "react";
 import { DEFAULT_HEADER_HEIGHT, nextTimeUnits } from "../constants";
 import { defaultLabelFormat } from "../utils/dateUtils";
+import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
 import { CustomDateHeader } from "./CustomDateHeader";
 import { CustomHeader } from "./CustomHeader";
 import { useHeadersContext } from "./useHeadersContext";
@@ -20,7 +21,24 @@ export type LabelFormatFn = (
 	labelWidth: number,
 ) => string;
 
-export const DateHeader = <THeaderData,>({
+interface DateHeaderBaseProps {
+	className?: string | undefined;
+	height?: number | undefined;
+	intervalRenderer?: (() => ReactNode) | undefined;
+	labelFormat?: (LabelFormatFn | string) | undefined;
+	style?: CSSProperties | undefined;
+	unit?: Unit | "primaryHeader" | undefined;
+}
+
+interface DateHeaderComponent {
+	(props: DateHeaderBaseProps): ReactNode;
+
+	<THeaderData>(
+		props: DateHeaderBaseProps & { headerData: THeaderData },
+	): ReactNode;
+}
+
+export const DateHeader: DateHeaderComponent = <THeaderData,>({
 	className,
 	headerData,
 	height = DEFAULT_HEADER_HEIGHT,
@@ -30,7 +48,6 @@ export const DateHeader = <THeaderData,>({
 	unit,
 }: {
 	className?: string | undefined;
-	// TODO: Only make optional if THeaderData is undefined (or never?)
 	headerData?: THeaderData;
 	height?: number | undefined;
 	intervalRenderer?: (() => ReactNode) | undefined;
@@ -49,8 +66,10 @@ export const DateHeader = <THeaderData,>({
 				labelWidth: number,
 			) => {
 				if (typeof labelFormat === "string") {
-					throw new Error(
-						"Format strings are not supported. Implement a formatting function or use the default formatter.",
+					throw new UnsupportedPropertyValueError(
+						"Format strings are unsupported. Implement a formatting function or use the default formatter.",
+						"labelFormat",
+						labelFormat,
 					);
 				}
 

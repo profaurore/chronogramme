@@ -8,6 +8,7 @@ import type {
 	RctToCoreGroup,
 	RctToCoreItem,
 } from "../Timeline";
+import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
 interface HelpersProviderProps<
@@ -84,8 +85,10 @@ export const HelpersContextProvider = <
 			getDateFromLeftOffsetPosition: timeline.getHValue,
 			getGroupDimensions: (groupId: number) => {
 				if (groupId !== groupForHelpersContext?.id) {
-					throw new Error(
+					throw new UnsupportedPropertyValueError(
 						"getGroupDimensions() must be used within the group renderer for the provided identifier",
+						"groupId",
+						groupId,
 					);
 				}
 
@@ -96,8 +99,10 @@ export const HelpersContextProvider = <
 			},
 			getItemAbsoluteDimensions: (itemId: number) => {
 				if (itemId !== itemForHelpersContext?.id) {
-					throw new Error(
+					throw new UnsupportedPropertyValueError(
 						"getItemAbsoluteDimensions() must be used within the item renderer for the provided identifier",
+						"itemId",
+						itemId,
 					);
 				}
 
@@ -109,8 +114,10 @@ export const HelpersContextProvider = <
 			},
 			getItemDimensions: (itemId: number) => {
 				if (itemId !== itemForHelpersContext?.id) {
-					throw new Error(
+					throw new UnsupportedPropertyValueError(
 						"getItemDimensions() must be used within the item renderer for the provided identifier",
+						"itemId",
+						itemId,
 					);
 				}
 

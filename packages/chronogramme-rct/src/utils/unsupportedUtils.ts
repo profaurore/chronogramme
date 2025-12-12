@@ -1,3 +1,16 @@
+export class UnsupportedPropertyValueError extends Error {
+	public readonly property: string | number | symbol;
+
+	public readonly value: unknown;
+
+	public constructor(error: string, property: string, value: unknown) {
+		super(error);
+		this.name = this.constructor.name;
+		this.property = property;
+		this.value = value;
+	}
+}
+
 export class UnsupportedPropertyError extends Error {
 	public readonly property: string | number | symbol;
 
@@ -50,4 +63,24 @@ export const buildUnsupportedFunction = <TReturn>(
 	functionName: string,
 ): (() => TReturn) => {
 	throw new UnsupportedFunctionError(functionName);
+};
+
+export const validateComponentProperties: <
+	TObject extends object,
+	TUnsupportedKeys extends readonly (keyof TObject)[],
+>(
+	properties: TObject,
+	unsupportedProperties: TUnsupportedKeys,
+) => asserts properties is TObject & Record<TUnsupportedKeys[number], never> = <
+	TObject extends object,
+	TUnsupportedKeys extends readonly (keyof TObject)[],
+>(
+	properties: TObject,
+	unsupportedProperties: TUnsupportedKeys,
+): asserts properties is TObject & Record<TUnsupportedKeys[number], never> => {
+	for (const property of unsupportedProperties) {
+		if (property in properties) {
+			throw new UnsupportedPropertyError(property);
+		}
+	}
 };

@@ -3,7 +3,29 @@ import type { CustomHeaderChildProps } from "./CustomHeader";
 import type { Unit } from "./DateHeader";
 import { Interval } from "./Interval";
 
-export const CustomDateHeader = <THeaderData,>({
+interface CustomDateHeaderBaseProps {
+	className: string | undefined;
+	getLabelFormat: (
+		interval: [number, number],
+		labelUnit: Unit,
+		labelWidth: number,
+	) => string;
+	intervalRenderer: (() => ReactNode) | undefined;
+	style: CSSProperties | undefined;
+	unitProp: Unit | "primaryHeader" | undefined;
+}
+
+interface CustomDateHeaderComponent {
+	(props: CustomHeaderChildProps<CustomDateHeaderBaseProps>): ReactNode;
+
+	<THeaderData>(
+		props: CustomHeaderChildProps<
+			CustomDateHeaderBaseProps & { headerData: THeaderData }
+		>,
+	): ReactNode;
+}
+
+export const CustomDateHeader: CustomDateHeaderComponent = <THeaderData,>({
 	headerContext: { intervals, unit },
 	getRootProps,
 	getIntervalProps,
@@ -23,7 +45,7 @@ export const CustomDateHeader = <THeaderData,>({
 		labelUnit: Unit,
 		labelWidth: number,
 	) => string;
-	headerData: THeaderData | undefined;
+	headerData?: THeaderData;
 	intervalRenderer: (() => ReactNode) | undefined;
 	style: CSSProperties | undefined;
 	unitProp: Unit | "primaryHeader" | undefined;
