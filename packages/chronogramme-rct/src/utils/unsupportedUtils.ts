@@ -35,3 +35,19 @@ export const buildUnsupportedPropertiesProxy = <
 		}),
 	);
 };
+
+export class UnsupportedFunctionError extends Error {
+	public readonly functionName: string;
+
+	public constructor(functionName: string) {
+		super("Unsupported function.");
+		this.name = this.constructor.name;
+		this.functionName = functionName;
+	}
+}
+
+export const buildUnsupportedFunction = <TReturn>(
+	functionName: string,
+): (() => TReturn) => {
+	throw new UnsupportedFunctionError(functionName);
+};

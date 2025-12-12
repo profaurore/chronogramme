@@ -9,4 +9,7 @@ export { useTimelineContext as useTimelineState } from "./helpers/useTimelineCon
 export { RowItems } from "./items/RowItems";
 export { TimelineMarkers } from "./markers/TimelineMarkers";
 export { Timeline, type TimelineKeys } from "./Timeline";
-export { UnsupportedPropertyError } from "./utils/proxyUtils";
+export {
+	UnsupportedFunctionError,
+	UnsupportedPropertyError,
+} from "./utils/unsupportedUtils";

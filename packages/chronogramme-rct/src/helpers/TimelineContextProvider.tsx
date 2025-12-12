@@ -9,7 +9,10 @@ import type {
 	RctToCoreGroup,
 	RctToCoreItem,
 } from "../Timeline";
-import { buildUnsupportedPropertiesProxy } from "../utils/proxyUtils";
+import {
+	buildUnsupportedFunction,
+	buildUnsupportedPropertiesProxy,
+} from "../utils/unsupportedUtils";
 import {
 	TimelineContext,
 	type TimelineContextValue,
@@ -56,11 +59,7 @@ const UNSUPPORTED_GET_TIMELINE_STATE_PROPERTIES = [
 	"keys",
 ] as const;
 
-const UNSUPPORTED_TIMELINE_CONTEXT_VALUE_PROPERTIES = [
-	"getDateFromLeftOffsetPosition",
-	"getLeftOffsetFromDate",
-	"showPeriod",
-] as const;
+const UNSUPPORTED_TIMELINE_CONTEXT_VALUE_PROPERTIES = ["showPeriod"] as const;
 
 export const TimelineContextProvider = <
 	TGroupIdKey extends string,
@@ -144,6 +143,12 @@ export const TimelineContextProvider = <
 
 		return buildUnsupportedPropertiesProxy(
 			{
+				getDateFromLeftOffsetPosition: buildUnsupportedFunction(
+					"getDateFromLeftOffsetPosition",
+				),
+				getLeftOffsetFromDate: buildUnsupportedFunction(
+					"getLeftOffsetFromDate",
+				),
 				getTimelineState: () => timelineState,
 			},
 			UNSUPPORTED_TIMELINE_CONTEXT_VALUE_PROPERTIES,
