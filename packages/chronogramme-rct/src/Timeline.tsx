@@ -53,9 +53,10 @@ import { getReactChildSecretKey, useRender } from "./utils/reactUtils";
 import type { FullRequired } from "./utils/typeUtils";
 import { validateComponentProperties } from "./utils/unsupportedUtils";
 
-type ResizeEdge = "left" | "right";
+export type ResizeEdge = "left" | "right";
+type ResizableEdges = false | ResizeEdge | "both";
 
-interface TimelineProps<
+export interface TimelineProps<
 	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
@@ -87,7 +88,7 @@ interface TimelineProps<
 > {
 	canChangeGroup?: boolean | undefined;
 	canMove?: boolean | undefined;
-	canResize?: false | "left" | "right" | "both" | undefined;
+	canResize?: ResizableEdges | undefined;
 	canSelect?: boolean | undefined;
 	children?: ReactNode | undefined;
 	className?: string | undefined;
@@ -145,7 +146,7 @@ interface TimelineProps<
 		action: "resize",
 		itemId: TItemId,
 		time: number,
-		resizeEdge: "left" | "right",
+		resizeEdge: ResizeEdge,
 	): number;
 	onBoundsChange?:
 		| ((canvasTimeStart: number, canvasTimeEnd: number) => void)
@@ -182,7 +183,7 @@ interface TimelineProps<
 							eventType: "resize";
 							itemId: TItemId;
 							time: number;
-							edge: "left" | "right";
+							edge: ResizeEdge;
 					  },
 		  ) => void)
 		| undefined;
@@ -210,8 +211,8 @@ interface TimelineProps<
 		visibleTimeStart: number;
 	}) => void;
 	resizeDetector?: {
-		addListener: Component;
-		removeListener: Component;
+		addListener?: Component;
+		removeListener?: Component;
 	};
 	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
@@ -987,13 +988,18 @@ export type BaseItem<
 	TItemTimeEndKey extends string,
 > = {
 	canMove?: boolean | undefined;
-	canResize?: false | "left" | "right" | "both" | undefined;
+	canResize?: ResizableEdges | undefined;
+	className?: string | undefined;
+	itemProps?: (HTMLAttributes<HTMLDivElement> | undefined) &
+		"This property is unsupported because DefaultItemRenderer is unsupported." & {
+			__brand: "Error";
+		};
 } & {
 	[K in TItemIdKey]: TItemId;
 } & {
-	[K in TItemTitleKey]?: string | undefined;
+	[K in TItemTitleKey]?: ReactNode | undefined;
 } & {
-	[K in TItemDivTitleKey]?: string | undefined;
+	[K in TItemDivTitleKey]?: ReactNode | undefined;
 } & {
 	[K in TItemGroupKey]: TGroupId;
 } & {
@@ -1009,6 +1015,8 @@ export type BaseGroup<
 	TGroupRightTitleKey extends string,
 > = {
 	lineHeight?: number | undefined;
+	stackItems?: (boolean | undefined) &
+		"This property is unsupported." & { __brand: "Error" };
 } & {
 	[K in TGroupIdKey]: TGroupId;
 } & {
@@ -1036,6 +1044,22 @@ export type RowRenderer<
 	rowData: TRowData;
 }) => ReactNode;
 
+export interface GroupRendererProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+> {
+	group: TGroup;
+	isRightSidebar?: boolean | undefined;
+}
+
 export type GroupRenderer<
 	TGroupId,
 	TGroupIdKey extends string,
@@ -1047,10 +1071,15 @@ export type GroupRenderer<
 		TGroupTitleKey,
 		TGroupRightTitleKey
 	>,
-> = (props: {
-	group: TGroup;
-	isRightSidebar?: boolean | undefined;
-}) => ReactNode;
+> = (
+	props: GroupRendererProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup
+	>,
+) => ReactNode;
 
 export type GetItemProps = (
 	params: Pick<
@@ -1083,16 +1112,7 @@ export type GetItemProps = (
 		| "onContextMenu"
 	>;
 
-export type GetResizeProps = (
-	params?:
-		| {
-				leftClassName?: string | undefined;
-				leftStyle?: CSSProperties | undefined;
-				rightClassName?: string | undefined;
-				rightStyle?: CSSProperties | undefined;
-		  }
-		| undefined,
-) => {
+export interface ItemRendererGetResizePropsReturnType {
 	left: FullRequired<
 		Pick<
 			HTMLAttributes<HTMLDivElement>,
@@ -1105,7 +1125,78 @@ export type GetResizeProps = (
 			"className" | "onPointerDownCapture" | "style"
 		>
 	>;
-};
+}
+
+export type ItemRendererGetResizeProps = (
+	params?:
+		| {
+				leftClassName?: string | undefined;
+				leftStyle?: CSSProperties | undefined;
+				rightClassName?: string | undefined;
+				rightStyle?: CSSProperties | undefined;
+		  }
+		| undefined,
+) => ItemRendererGetResizePropsReturnType;
+
+export interface ItemRendererItemContext<TGroupId> {
+	canMove: boolean;
+	canResizeLeft: boolean;
+	canResizeRight: boolean;
+	dimensions: {
+		collisionLeft: number;
+		collisionWidth: number;
+		height: number;
+		left: number;
+		stack: boolean;
+		top: number;
+		width: number;
+	};
+	dragging: boolean;
+	dragOffset: number | undefined;
+	dragTime: number | undefined;
+	newGroupId: TGroupId | undefined;
+	resizeEdge: ResizeEdge | undefined;
+	resizeOffset: number | undefined;
+	resizeTime: number | undefined;
+	resizing: boolean;
+	selected: boolean;
+	title: ReactNode | undefined;
+	useResizeHandle: boolean;
+	width: number;
+}
+
+export interface ItemRendererProps<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> {
+	getItemProps: GetItemProps;
+	getResizeProps: ItemRendererGetResizeProps;
+	item: TItem;
+	itemContext: ItemRendererItemContext<TGroupId>;
+	timelineContext: {
+		canvasTimeEnd: number;
+		canvasTimeStart: number;
+		timelineWidth: number;
+		visibleTimeEnd: number;
+		visibleTimeStart: number;
+	};
+}
 
 export type ItemRenderer<
 	TGroupId,
@@ -1126,44 +1217,19 @@ export type ItemRenderer<
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>,
-> = (props: {
-	getItemProps: GetItemProps;
-	getResizeProps: GetResizeProps;
-	item: TItem;
-	itemContext: {
-		canMove: boolean;
-		canResizeLeft: boolean;
-		canResizeRight: boolean;
-		dimensions: {
-			collisionLeft: number;
-			collisionWidth: number;
-			height: number;
-			left: number;
-			stack: boolean;
-			top: number;
-			width: number;
-		};
-		dragging: boolean;
-		dragOffset: number | undefined;
-		dragTime: number | undefined;
-		newGroupId: TGroupId | undefined;
-		resizeEdge: "left" | "right" | undefined;
-		resizeOffset: number | undefined;
-		resizeTime: number | undefined;
-		resizing: boolean;
-		selected: boolean;
-		title: string | undefined;
-		useResizeHandle: boolean;
-		width: number;
-	};
-	timelineContext: {
-		canvasTimeEnd: number;
-		canvasTimeStart: number;
-		timelineWidth: number;
-		visibleTimeEnd: number;
-		visibleTimeStart: number;
-	};
-}) => ReactNode;
+> = (
+	props: ItemRendererProps<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem
+	>,
+) => ReactNode;
 
 export interface TimelineKeys<
 	TGroupIdKey extends string,

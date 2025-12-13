@@ -21,8 +21,8 @@ import {
 	ZERO,
 } from "@chronogramme/chronogramme";
 import {
-	type BaseGroup,
-	type BaseItem,
+	type TimelineGroupBase as BaseGroup,
+	type TimelineItemBase as BaseItem,
 	type GroupRenderer,
 	GroupRow,
 	type ItemRenderer,

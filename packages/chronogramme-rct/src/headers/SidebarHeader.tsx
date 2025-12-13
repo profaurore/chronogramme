@@ -1,4 +1,5 @@
 import { type CSSProperties, type ReactNode, useCallback } from "react";
+import type { ResizeEdge } from "../Timeline";
 import { useHeadersContext } from "./useHeadersContext";
 
 type GetRootProps = (
@@ -8,7 +9,7 @@ type GetRootProps = (
 };
 
 interface SidebarHeaderBaseProps {
-	variant?: "left" | "right" | undefined;
+	variant?: ResizeEdge | undefined;
 }
 
 interface SidebarHeaderChildBaseProps {
@@ -21,7 +22,7 @@ interface SidebarHeaderComponent {
 			children?:
 				| ((props: SidebarHeaderChildBaseProps) => ReactNode)
 				| undefined;
-			variant?: "left" | "right" | undefined;
+			variant?: ResizeEdge | undefined;
 		},
 	): ReactNode;
 
@@ -30,17 +31,23 @@ interface SidebarHeaderComponent {
 			children?:
 				| ((
 						props: SidebarHeaderChildBaseProps & {
-							data: THeaderData | undefined;
+							data: THeaderData;
 						},
 				  ) => ReactNode)
 				| undefined;
 			headerData: THeaderData | undefined;
-			variant?: "left" | "right" | undefined;
+			variant?: ResizeEdge | undefined;
 		},
 	): ReactNode;
 
 	secretKey: string;
 }
+
+export type SidebarHeaderChildProps<THeaderData> = THeaderData extends never
+	? SidebarHeaderChildBaseProps
+	: SidebarHeaderChildBaseProps & {
+			data: THeaderData | undefined;
+		};
 
 export const SidebarHeader: SidebarHeaderComponent = <THeaderData,>({
 	children: ChildrenComponent,
@@ -53,7 +60,7 @@ export const SidebarHeader: SidebarHeaderComponent = <THeaderData,>({
 		  ) => ReactNode)
 		| undefined;
 	headerData?: THeaderData;
-	variant?: "left" | "right" | undefined;
+	variant?: ResizeEdge | undefined;
 }): ReactNode => {
 	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
 

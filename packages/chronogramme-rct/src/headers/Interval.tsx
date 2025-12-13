@@ -25,7 +25,7 @@ type GetIntervalProps = (
 		| undefined,
 ) => { style: CSSProperties };
 
-type IntervalRenderer<THeaderData> = (props: {
+export type IntervalRenderer<THeaderData> = (props: {
 	getIntervalProps: GetIntervalProps;
 	intervalContext: {
 		interval: TimeInterval;

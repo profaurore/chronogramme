@@ -20,8 +20,9 @@ import type {
 	BaseGroup,
 	BaseItem,
 	GetItemProps,
-	GetResizeProps,
+	ItemRendererGetResizeProps,
 	RctToCoreItem,
+	ResizeEdge,
 } from "../Timeline";
 import { composeEvents } from "../utils/reactUtils";
 import { useItemContext } from "./useItemContext";
@@ -104,6 +105,8 @@ export const Item = <
 	} = useItemForHelpersContext();
 
 	const id = item.id;
+	const originalItem = item.originalItem;
+	const className = originalItem.className;
 	const isDraggable = item.isDraggable;
 	const isEndResizable = item.isEndResizable;
 	const isStartResizable = item.isStartResizable;
@@ -124,7 +127,7 @@ export const Item = <
 		(isStartResizable ?? timelineCanResizeLeft) && width >= minResizeWidth;
 	const canResizeRight =
 		(isEndResizable ?? timelineCanResizeRight) && width >= minResizeWidth;
-	let resizeEdge: "left" | "right" | undefined;
+	let resizeEdge: ResizeEdge | undefined;
 
 	if (resizeIsStart !== undefined) {
 		if (resizeIsStart) {
@@ -141,7 +144,6 @@ export const Item = <
 
 	const endTime = item.endTime;
 	const itemId = item.id;
-	const originalItem = item.originalItem;
 	const collisionLeft = item.startTime;
 	const collisionWidth = endTime - collisionLeft;
 	const title = originalItem[keys.itemTitleKey];
@@ -254,7 +256,7 @@ export const Item = <
 
 	const getItemPropsHandler = useCallback<GetItemProps>(
 		(params) => ({
-			className: "rct-item",
+			className: `rct-item ${className ?? ""}`,
 			onClick: composeEvents(onClickHandler, params.onClick),
 			onMouseDown: params.onMouseDown,
 			onPointerDownCapture: onPointerDownCaptureHandler,
@@ -291,6 +293,7 @@ export const Item = <
 			canMove,
 			canResizeLeft,
 			canResizeRight,
+			className,
 			dragging,
 			height,
 			left,
@@ -336,7 +339,7 @@ export const Item = <
 			[canResizeRight, itemDragState, itemId, itemResizeState, timeline],
 		);
 
-	const getResizePropsHandler = useCallback<GetResizeProps>(
+	const getResizePropsHandler = useCallback<ItemRendererGetResizeProps>(
 		({ leftClassName, leftStyle, rightClassName, rightStyle } = {}) => ({
 			left: {
 				className:
