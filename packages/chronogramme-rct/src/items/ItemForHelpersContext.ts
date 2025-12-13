@@ -1,7 +1,7 @@
 import { type Context, createContext } from "react";
 
-export interface ItemForHelpersContextValue {
-	id: number;
+export interface ItemForHelpersContextValue<TItemId> {
+	id: TItemId;
 	range: number;
 	renderedHSize: number;
 	renderedHStartPos: number;
@@ -12,5 +12,5 @@ export interface ItemForHelpersContextValue {
 }
 
 export const ItemForHelpersContext: Context<
-	ItemForHelpersContextValue | undefined
-> = createContext<ItemForHelpersContextValue | undefined>(undefined);
+	ItemForHelpersContextValue<number> | undefined
+> = createContext<ItemForHelpersContextValue<number> | undefined>(undefined);

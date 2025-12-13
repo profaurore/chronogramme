@@ -16,17 +16,26 @@ const getRowLayerRootProps = (): { style: Record<string, never> } => ({
 });
 
 export const Row = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -47,21 +56,22 @@ export const Row = <
 	rowRenderer: RowComponent,
 	timeline,
 }: {
-	group: RctToCoreGroup<TGroup>;
+	group: RctToCoreGroup<TGroupId, TGroup>;
 	groupIndex: number;
 	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
 	itemHeightRatio: number;
 	onClick?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onContextMenu?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onDoubleClick?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
@@ -70,17 +80,19 @@ export const Row = <
 	>;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }): ReactNode => (
 	<GroupForHelpersContextProvider<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -95,9 +107,11 @@ export const Row = <
 		timeline={timeline}
 	>
 		<GroupRowContextProvider<
+			TGroupId,
 			TGroupIdKey,
 			TGroupTitleKey,
 			TGroupRightTitleKey,
+			TItemId,
 			TItemIdKey,
 			TItemGroupKey,
 			TItemTitleKey,
@@ -117,9 +131,11 @@ export const Row = <
 			timeline={timeline}
 		>
 			<RowItemsContextProvider<
+				TGroupId,
 				TGroupIdKey,
 				TGroupTitleKey,
 				TGroupRightTitleKey,
+				TItemId,
 				TItemIdKey,
 				TItemGroupKey,
 				TItemTitleKey,

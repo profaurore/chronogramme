@@ -7,7 +7,7 @@ import { yieldToMain } from "./yieldToMain";
 interface ItemChangeState<
 	TGroupId,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 > {
 	changeType:
 		| typeof ITEM_CHANGE_TYPE_DRAG
@@ -52,7 +52,7 @@ export class GroupPositionsState<
 	TGroupId,
 	TGroup extends BaseGroup<TGroupId>,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 > extends EventTarget {
 	readonly #asyncProcessingSize: number;
 

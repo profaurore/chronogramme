@@ -15,17 +15,26 @@ import type {
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 
 export const Group = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -40,9 +49,10 @@ export const Group = <
 	isRightSidebar,
 	timeline,
 }: {
-	group: RctToCoreGroup<TGroup>;
+	group: RctToCoreGroup<TGroupId, TGroup>;
 	groupIndex: number;
 	groupRenderer: GroupRenderer<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
@@ -51,10 +61,10 @@ export const Group = <
 	isRightSidebar?: boolean | undefined;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }): ReactNode => {
@@ -63,7 +73,7 @@ export const Group = <
 
 	return (
 		<div
-			key={group.id}
+			key={String(group.id)}
 			className={
 				"rct-sidebar-row rct-sidebar-row-" +
 				(groupIndex % EVEN_MULTIPLE === ZERO ? "even" : "odd")
@@ -78,9 +88,11 @@ export const Group = <
 			}}
 		>
 			<GroupForHelpersContextProvider<
+				TGroupId,
 				TGroupIdKey,
 				TGroupTitleKey,
 				TGroupRightTitleKey,
+				TItemId,
 				TItemIdKey,
 				TItemGroupKey,
 				TItemTitleKey,

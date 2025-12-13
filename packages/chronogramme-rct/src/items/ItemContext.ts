@@ -14,17 +14,26 @@ import type {
 } from "../Timeline";
 
 export interface ItemContextVariable<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -39,6 +48,8 @@ export interface ItemContextVariable<
 	canSelect: boolean;
 	itemDragState: DragState<undefined>;
 	itemRenderer: ItemRenderer<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -61,58 +72,80 @@ export interface ItemContextVariable<
 	>;
 	minResizeWidth: number;
 	onClick:
-		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
 		| undefined;
 	onContextMenu:
-		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
 		| undefined;
 	onDoubleClick:
-		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
 		| undefined;
 	onSelect:
-		| ((itemId: number, e: SyntheticEvent, time: number) => void)
+		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
 		| undefined;
-	selected: number[] | undefined;
-	selectedItemId: number | undefined;
-	setSelectedItemId: (itemId: number) => void;
+	selected: TItemId[] | undefined;
+	selectedItemId: TItemId | undefined;
+	setSelectedItemId: (itemId: TItemId) => void;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }
 
 export const ItemContext: Context<
 	| ItemContextVariable<
+			number,
 			"id",
 			"title",
 			"rightTitle",
+			number,
 			"id",
 			"group",
 			"title",
 			"title",
 			"start_time",
 			"end_time",
-			BaseGroup<"id", "title", "rightTitle">,
-			BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+			BaseGroup<number, "id", "title", "rightTitle">,
+			BaseItem<
+				number,
+				number,
+				"id",
+				"group",
+				"title",
+				"title",
+				"start_time",
+				"end_time"
+			>
 	  >
 	| undefined
 > = createContext<
 	| ItemContextVariable<
+			number,
 			"id",
 			"title",
 			"rightTitle",
+			number,
 			"id",
 			"group",
 			"title",
 			"title",
 			"start_time",
 			"end_time",
-			BaseGroup<"id", "title", "rightTitle">,
-			BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+			BaseGroup<number, "id", "title", "rightTitle">,
+			BaseItem<
+				number,
+				number,
+				"id",
+				"group",
+				"title",
+				"title",
+				"start_time",
+				"end_time"
+			>
 	  >
 	| undefined
 >(undefined);

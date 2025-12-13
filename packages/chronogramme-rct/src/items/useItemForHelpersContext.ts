@@ -4,8 +4,14 @@ import {
 	type ItemForHelpersContextValue,
 } from "./ItemForHelpersContext";
 
-export function useItemForHelpersContext(): ItemForHelpersContextValue {
-	const context = useContext(ItemForHelpersContext);
+export function useItemForHelpersContext<
+	TItemId,
+>(): ItemForHelpersContextValue<TItemId> {
+	// Unfortunate type cast to handle the trickiness of creating context
+	// providers with generics.
+	const context = useContext(
+		ItemForHelpersContext,
+	) as unknown as ItemForHelpersContextValue<TItemId>;
 
 	if (!context) {
 		throw new Error(

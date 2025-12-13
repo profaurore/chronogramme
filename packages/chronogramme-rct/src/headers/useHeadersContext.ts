@@ -3,17 +3,26 @@ import type { BaseGroup, BaseItem } from "../Timeline";
 import { HeadersContext, type HeadersContextValue } from "./HeadersContext";
 
 export function useHeadersContext<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -22,9 +31,11 @@ export function useHeadersContext<
 		TItemTimeEndKey
 	>,
 >(): HeadersContextValue<
+	TGroupId,
 	TGroupIdKey,
 	TGroupTitleKey,
 	TGroupRightTitleKey,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -37,9 +48,11 @@ export function useHeadersContext<
 	// Unfortunate type cast to handle the trickiness of creating context
 	// providers with generics.
 	const context = useContext(HeadersContext) as unknown as HeadersContextValue<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,

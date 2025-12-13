@@ -3,17 +3,26 @@ import type { BaseGroup, BaseItem } from "../Timeline";
 import { HeadersContext, type HeadersContextValue } from "./HeadersContext";
 
 export const HeadersContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -31,9 +40,11 @@ export const HeadersContextProvider = <
 	timelineUnit,
 }: PropsWithChildren<
 	HeadersContextValue<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -46,9 +57,11 @@ export const HeadersContextProvider = <
 >): ReactNode => {
 	const contextValue = useMemo<
 		HeadersContextValue<
+			TGroupId,
 			TGroupIdKey,
 			TGroupTitleKey,
 			TGroupRightTitleKey,
+			TItemId,
 			TItemIdKey,
 			TItemGroupKey,
 			TItemTitleKey,
@@ -81,17 +94,28 @@ export const HeadersContextProvider = <
 		<HeadersContext.Provider
 			value={
 				contextValue as unknown as HeadersContextValue<
+					number,
 					"id",
 					"title",
 					"rightTitle",
+					number,
 					"id",
 					"group",
 					"title",
 					"title",
 					"start_time",
 					"end_time",
-					BaseGroup<"id", "title", "rightTitle">,
-					BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+					BaseGroup<number, "id", "title", "rightTitle">,
+					BaseItem<
+						number,
+						number,
+						"id",
+						"group",
+						"title",
+						"title",
+						"start_time",
+						"end_time"
+					>
 				>
 			}
 		>

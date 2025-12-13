@@ -19,7 +19,7 @@ const TIMELINE_OBSERVED_ATTRIBUTES = [
 	"timezone-offset",
 ] as const;
 
-export interface BaseItem<TItemId, TGroupId> {
+export interface BaseItem<TGroupId, TItemId> {
 	endTime: EpochTimeStamp;
 	groupId: TGroupId;
 	id: TItemId;
@@ -38,7 +38,7 @@ export class Timeline<
 	TGroupId,
 	TGroup extends BaseGroup<TGroupId>,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 > extends Scroller {
 	protected static override observedAttributes = TIMELINE_OBSERVED_ATTRIBUTES;
 

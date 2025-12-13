@@ -8,6 +8,8 @@ import {
 import { useItemContext } from "./useItemContext";
 
 interface ItemForHelpersContextProviderProps<
+	TGroupId,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
@@ -15,6 +17,8 @@ interface ItemForHelpersContextProviderProps<
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -25,23 +29,32 @@ interface ItemForHelpersContextProviderProps<
 > {
 	children?: ReactNode | undefined;
 	groupPosition: number;
-	item: RctToCoreItem<TItem>;
+	item: RctToCoreItem<TGroupId, TItemId, TItem>;
 	vOffsetInGroup: number;
 	vSize: number;
 }
 
 export const ItemForHelpersContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -56,6 +69,8 @@ export const ItemForHelpersContextProvider = <
 	vOffsetInGroup: renderedVStartPos,
 	vSize: renderedVSize,
 }: ItemForHelpersContextProviderProps<
+	TGroupId,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -65,9 +80,11 @@ export const ItemForHelpersContextProvider = <
 	TItem
 >): ReactNode => {
 	const { timeline } = useItemContext<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -92,7 +109,7 @@ export const ItemForHelpersContextProvider = <
 	const renderedHSize = renderedHEndPos - renderedHStartPos;
 	const renderedVStartPosInGroup = groupPosition + renderedVStartPos;
 
-	const contextValue = useMemo<ItemForHelpersContextValue>(
+	const contextValue = useMemo<ItemForHelpersContextValue<TItemId>>(
 		() => ({
 			id,
 			range,
@@ -119,7 +136,7 @@ export const ItemForHelpersContextProvider = <
 	// providers with generics.
 	return (
 		<ItemForHelpersContext.Provider
-			value={contextValue as unknown as ItemForHelpersContextValue}
+			value={contextValue as unknown as ItemForHelpersContextValue<number>}
 		>
 			{children}
 		</ItemForHelpersContext.Provider>

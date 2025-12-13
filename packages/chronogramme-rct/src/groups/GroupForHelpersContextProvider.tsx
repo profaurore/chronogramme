@@ -12,17 +12,26 @@ import {
 } from "./GroupForHelpersContext";
 
 interface GroupForHelpersProviderProps<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -32,30 +41,39 @@ interface GroupForHelpersProviderProps<
 	>,
 > {
 	children?: ReactNode | undefined;
-	group: RctToCoreGroup<TGroup>;
+	group: RctToCoreGroup<TGroupId, TGroup>;
 	index: number;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }
 
 export const GroupForHelpersContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -69,9 +87,11 @@ export const GroupForHelpersContextProvider = <
 	index,
 	timeline,
 }: GroupForHelpersProviderProps<
+	TGroupId,
 	TGroupIdKey,
 	TGroupTitleKey,
 	TGroupRightTitleKey,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -86,7 +106,7 @@ export const GroupForHelpersContextProvider = <
 
 	const id = group.id;
 
-	const contextValue = useMemo<GroupForHelpersContextValue>(
+	const contextValue = useMemo<GroupForHelpersContextValue<TGroupId>>(
 		() => ({
 			id,
 			position,
@@ -95,8 +115,12 @@ export const GroupForHelpersContextProvider = <
 		[id, position, size],
 	);
 
+	// Unfortunate type cast to handle the trickiness of creating context
+	// providers with generics.
 	return (
-		<GroupForHelpersContext.Provider value={contextValue}>
+		<GroupForHelpersContext.Provider
+			value={contextValue as unknown as GroupForHelpersContextValue<number>}
+		>
 			{children}
 		</GroupForHelpersContext.Provider>
 	);

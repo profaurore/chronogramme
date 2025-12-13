@@ -13,17 +13,26 @@ import type {
 } from "../Timeline";
 
 interface RowItemsContextProviderProps<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -37,25 +46,34 @@ interface RowItemsContextProviderProps<
 	itemHeightRatio: number;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }
 export const RowItemsContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -69,9 +87,11 @@ export const RowItemsContextProvider = <
 	itemHeightRatio,
 	timeline,
 }: RowItemsContextProviderProps<
+	TGroupId,
 	TGroupIdKey,
 	TGroupTitleKey,
 	TGroupRightTitleKey,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -88,9 +108,11 @@ export const RowItemsContextProvider = <
 
 	const contextValue = useMemo<
 		RowItemsContextValue<
+			TGroupId,
 			TGroupIdKey,
 			TGroupTitleKey,
 			TGroupRightTitleKey,
+			TItemId,
 			TItemIdKey,
 			TItemGroupKey,
 			TItemTitleKey,
@@ -117,17 +139,28 @@ export const RowItemsContextProvider = <
 		<RowItemsContext.Provider
 			value={
 				contextValue as unknown as RowItemsContextValue<
+					number,
 					"id",
 					"title",
 					"rightTitle",
+					number,
 					"id",
 					"group",
 					"title",
 					"title",
 					"start_time",
 					"end_time",
-					BaseGroup<"id", "title", "rightTitle">,
-					BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+					BaseGroup<number, "id", "title", "rightTitle">,
+					BaseItem<
+						number,
+						number,
+						"id",
+						"group",
+						"title",
+						"title",
+						"start_time",
+						"end_time"
+					>
 				>
 			}
 		>

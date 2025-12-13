@@ -3,7 +3,10 @@ export { CustomHeader } from "./headers/CustomHeader";
 export { DateHeader } from "./headers/DateHeader";
 export { SidebarHeader } from "./headers/SidebarHeader";
 export { TimelineHeaders } from "./headers/TimelineHeaders";
-export { HelpersContext } from "./helpers/HelpersContext";
+export {
+	HelpersContext,
+	type HelpersContextValue as HelpersContextValues,
+} from "./helpers/HelpersContext";
 export { useHelpersContext } from "./helpers/useHelpersContext";
 export { useTimelineContext as useTimelineState } from "./helpers/useTimelineContext";
 export { RowItems } from "./items/RowItems";

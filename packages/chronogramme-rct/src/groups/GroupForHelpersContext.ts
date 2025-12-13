@@ -1,11 +1,11 @@
 import { type Context, createContext } from "react";
 
-export interface GroupForHelpersContextValue {
-	id: number;
+export interface GroupForHelpersContextValue<TGroupId> {
+	id: TGroupId;
 	position: number;
 	size: number;
 }
 
 export const GroupForHelpersContext: Context<
-	GroupForHelpersContextValue | undefined
-> = createContext<GroupForHelpersContextValue | undefined>(undefined);
+	GroupForHelpersContextValue<number> | undefined
+> = createContext<GroupForHelpersContextValue<number> | undefined>(undefined);

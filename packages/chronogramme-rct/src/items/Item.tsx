@@ -28,17 +28,26 @@ import { useItemContext } from "./useItemContext";
 import { useItemForHelpersContext } from "./useItemForHelpersContext";
 
 export const Item = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -50,7 +59,7 @@ export const Item = <
 	item,
 	vOffsetInGroup,
 }: {
-	item: RctToCoreItem<TItem>;
+	item: RctToCoreItem<TGroupId, TItemId, TItem>;
 	vOffsetInGroup: number;
 }): ReactNode => {
 	const {
@@ -72,9 +81,11 @@ export const Item = <
 		setSelectedItemId,
 		timeline,
 	} = useItemContext<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,

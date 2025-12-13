@@ -12,17 +12,26 @@ import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
 interface HelpersProviderProps<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -34,26 +43,35 @@ interface HelpersProviderProps<
 	children?: ReactNode | undefined;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }
 
 export const HelpersContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -65,9 +83,11 @@ export const HelpersContextProvider = <
 	children,
 	timeline,
 }: HelpersProviderProps<
+	TGroupId,
 	TGroupIdKey,
 	TGroupTitleKey,
 	TGroupRightTitleKey,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -80,10 +100,10 @@ export const HelpersContextProvider = <
 	const groupForHelpersContext = useContext(GroupForHelpersContext);
 	const itemForHelpersContext = useContext(ItemForHelpersContext);
 
-	const contextValue = useMemo<HelpersContextValue>(
+	const contextValue = useMemo<HelpersContextValue<TGroupId, TItemId>>(
 		() => ({
 			getDateFromLeftOffsetPosition: timeline.getHValue,
-			getGroupDimensions: (groupId: number) => {
+			getGroupDimensions: (groupId: TGroupId) => {
 				if (groupId !== groupForHelpersContext?.id) {
 					throw new UnsupportedPropertyValueError(
 						"getGroupDimensions() must be used within the group renderer for the provided identifier",
@@ -97,7 +117,7 @@ export const HelpersContextProvider = <
 					height: groupForHelpersContext.size,
 				};
 			},
-			getItemAbsoluteDimensions: (itemId: number) => {
+			getItemAbsoluteDimensions: (itemId: TItemId) => {
 				if (itemId !== itemForHelpersContext?.id) {
 					throw new UnsupportedPropertyValueError(
 						"getItemAbsoluteDimensions() must be used within the item renderer for the provided identifier",
@@ -112,7 +132,7 @@ export const HelpersContextProvider = <
 					width: itemForHelpersContext.renderedHSize,
 				};
 			},
-			getItemDimensions: (itemId: number) => {
+			getItemDimensions: (itemId: TItemId) => {
 				if (itemId !== itemForHelpersContext?.id) {
 					throw new UnsupportedPropertyValueError(
 						"getItemDimensions() must be used within the item renderer for the provided identifier",
@@ -140,8 +160,12 @@ export const HelpersContextProvider = <
 		],
 	);
 
+	// Unfortunate type cast to handle the trickiness of creating context
+	// providers with generics.
 	return (
-		<HelpersContext.Provider value={contextValue}>
+		<HelpersContext.Provider
+			value={contextValue as unknown as HelpersContextValue<number, number>}
+		>
 			{children}
 		</HelpersContext.Provider>
 	);

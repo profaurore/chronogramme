@@ -16,17 +16,26 @@ import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 import { useGroupForHelpersContext } from "./useGroupForHelpersContext";
 
 interface GroupRowProviderProps<
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -36,40 +45,49 @@ interface GroupRowProviderProps<
 	>,
 > {
 	children?: ReactNode | undefined;
-	group: RctToCoreGroup<TGroup>;
+	group: RctToCoreGroup<TGroupId, TGroup>;
 	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
 	index: number;
 	onClick?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onContextMenu?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onDoubleClick?:
-		| ((groupId: number, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
-			number,
-			RctToCoreGroup<TGroup>,
-			number,
-			RctToCoreItem<TItem>
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
 		>
 	>;
 }
 
 export const GroupRowContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -87,9 +105,11 @@ export const GroupRowContextProvider = <
 	onDoubleClick,
 	timeline,
 }: GroupRowProviderProps<
+	TGroupId,
 	TGroupIdKey,
 	TGroupTitleKey,
 	TGroupRightTitleKey,
+	TItemId,
 	TItemIdKey,
 	TItemGroupKey,
 	TItemTitleKey,
@@ -108,7 +128,7 @@ export const GroupRowContextProvider = <
 		(index % EVEN_MULTIPLE === ZERO ? "rct-hl-even " : "rct-hl-odd ") +
 		horizontalLineClassNamesForGroup?.(originalGroup)?.join(" ");
 
-	const contextValue = useMemo<GroupRowContextValue>(
+	const contextValue = useMemo<GroupRowContextValue<TGroupId>>(
 		() => ({
 			className,
 			id,
@@ -136,8 +156,12 @@ export const GroupRowContextProvider = <
 		],
 	);
 
+	// Unfortunate type cast to handle the trickiness of creating context
+	// providers with generics.
 	return (
-		<GroupRowContext.Provider value={contextValue}>
+		<GroupRowContext.Provider
+			value={contextValue as unknown as GroupRowContextValue<number>}
+		>
 			{children}
 		</GroupRowContext.Provider>
 	);

@@ -3,17 +3,26 @@ import type { BaseGroup, BaseItem } from "../Timeline";
 import { ItemContext, type ItemContextVariable } from "./ItemContext";
 
 export const ItemContextProvider = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -42,9 +51,11 @@ export const ItemContextProvider = <
 	timeline,
 }: PropsWithChildren<
 	ItemContextVariable<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -57,9 +68,11 @@ export const ItemContextProvider = <
 >): ReactNode => {
 	const contextValue = useMemo<
 		ItemContextVariable<
+			TGroupId,
 			TGroupIdKey,
 			TGroupTitleKey,
 			TGroupRightTitleKey,
+			TItemId,
 			TItemIdKey,
 			TItemGroupKey,
 			TItemTitleKey,
@@ -116,17 +129,28 @@ export const ItemContextProvider = <
 		<ItemContext.Provider
 			value={
 				contextValue as unknown as ItemContextVariable<
+					number,
 					"id",
 					"title",
 					"rightTitle",
+					number,
 					"id",
 					"group",
 					"title",
 					"title",
 					"start_time",
 					"end_time",
-					BaseGroup<"id", "title", "rightTitle">,
-					BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+					BaseGroup<number, "id", "title", "rightTitle">,
+					BaseItem<
+						number,
+						number,
+						"id",
+						"group",
+						"title",
+						"title",
+						"start_time",
+						"end_time"
+					>
 				>
 			}
 		>

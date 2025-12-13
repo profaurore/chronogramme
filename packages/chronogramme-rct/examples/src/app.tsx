@@ -128,10 +128,19 @@ export function App(): ReactNode {
 	};
 
 	const [items, setItems] = useState<
-		BaseItem<"id", "group", "title", "title", "start_time", "end_time">[]
+		BaseItem<
+			number,
+			number,
+			"id",
+			"group",
+			"title",
+			"title",
+			"start_time",
+			"end_time"
+		>[]
 	>([]);
 	const [groups, setGroups] = useState<
-		BaseGroup<"id", "title", "rightTitle">[]
+		BaseGroup<number, "id", "title", "rightTitle">[]
 	>([]);
 
 	const onAddClickHandler =
@@ -184,7 +193,36 @@ export function App(): ReactNode {
 	}, []);
 
 	const onItemMoveHandler = useCallback<
-		Exclude<ComponentProps<typeof RCTimeline>["onItemMove"], undefined>
+		Exclude<
+			ComponentProps<
+				typeof RCTimeline<
+					number,
+					"id",
+					"title",
+					"rightTitle",
+					number,
+					"id",
+					"group",
+					"title",
+					"title",
+					"start_time",
+					"end_time",
+					BaseGroup<number, "id", "title", "rightTitle">,
+					BaseItem<
+						number,
+						number,
+						"id",
+						"group",
+						"title",
+						"title",
+						"start_time",
+						"end_time"
+					>,
+					undefined
+				>
+			>["onItemMove"],
+			undefined
+		>
 	>((itemId, dragTime, newGroupOrder) => {
 		setItems((prev) =>
 			prev.map((item) => {
@@ -231,10 +269,11 @@ export function App(): ReactNode {
 
 	const groupRenderer = useCallback<
 		GroupRenderer<
+			number,
 			"id",
 			"title",
 			"rightTitle",
-			BaseGroup<"id", "title", "rightTitle">
+			BaseGroup<number, "id", "title", "rightTitle">
 		>
 	>(
 		({ group }) => (
@@ -250,10 +289,11 @@ export function App(): ReactNode {
 
 	const rowRenderer = useCallback<
 		RowRenderer<
+			number,
 			"id",
 			"title",
 			"rightTitle",
-			BaseGroup<"id", "title", "rightTitle">,
+			BaseGroup<number, "id", "title", "rightTitle">,
 			undefined
 		>
 	>(
@@ -277,13 +317,24 @@ export function App(): ReactNode {
 
 	const itemRenderer = useCallback<
 		ItemRenderer<
+			number,
+			number,
 			"id",
 			"group",
 			"title",
 			"title",
 			"start_time",
 			"end_time",
-			BaseItem<"id", "group", "title", "title", "start_time", "end_time">
+			BaseItem<
+				number,
+				number,
+				"id",
+				"group",
+				"title",
+				"title",
+				"start_time",
+				"end_time"
+			>
 		>
 	>(({ getItemProps, getResizeProps, item }) => {
 		const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
@@ -435,7 +486,31 @@ export function App(): ReactNode {
 				</div>
 			</div>
 
-			<RCTimeline
+			<RCTimeline<
+				number,
+				"id",
+				"title",
+				"rightTitle",
+				number,
+				"id",
+				"group",
+				"title",
+				"title",
+				"start_time",
+				"end_time",
+				BaseGroup<number, "id", "title", "rightTitle">,
+				BaseItem<
+					number,
+					number,
+					"id",
+					"group",
+					"title",
+					"title",
+					"start_time",
+					"end_time"
+				>,
+				undefined
+			>
 				id={rctId}
 				canResize="both"
 				className={timelineClass}

@@ -10,7 +10,7 @@ function paperFoldingSequenceTerm(n: number): boolean {
 export function layoutGroupLines<
 	TGroupId,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 >(
 	items: readonly Readonly<TItem>[],
 	draggedItemInit: TItem | undefined,
@@ -138,7 +138,7 @@ export function layoutGroupLines<
 export function layoutGroupLinesReference<
 	TGroupId,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 >(items: readonly Readonly<TItem>[], min: number, max: number): TItem[][] {
 	const lines: TItem[][] = [];
 
@@ -170,7 +170,7 @@ export function layoutGroupLinesReference<
 export function groupOrderedItems<
 	TGroupId,
 	TItemId,
-	TItem extends BaseItem<TItemId, TGroupId>,
+	TItem extends BaseItem<TGroupId, TItemId>,
 >(items: readonly Readonly<TItem>[]): Map<TGroupId, TItem[]> {
 	const orderedItemsByGroup = Map.groupBy(items, (item) => item.groupId);
 

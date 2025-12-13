@@ -5,17 +5,26 @@ import type { BaseGroup, BaseItem } from "../Timeline";
 import { useRowItemsContext } from "./useRowItemsContext";
 
 export const RowItems = <
+	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
+	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
 	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -31,9 +40,11 @@ export const RowItems = <
 		position: groupPosition,
 		timeline,
 	} = useRowItemsContext<
+		TGroupId,
 		TGroupIdKey,
 		TGroupTitleKey,
 		TGroupRightTitleKey,
+		TItemId,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -60,9 +71,11 @@ export const RowItems = <
 			if (item !== undefined) {
 				renderedItems.push(
 					<ItemForHelpersContextProvider<
+						TGroupId,
 						TGroupIdKey,
 						TGroupTitleKey,
 						TGroupRightTitleKey,
+						TItemId,
 						TItemIdKey,
 						TItemGroupKey,
 						TItemTitleKey,
@@ -79,9 +92,11 @@ export const RowItems = <
 						vSize={itemVSize}
 					>
 						<Item<
+							TGroupId,
 							TGroupIdKey,
 							TGroupTitleKey,
 							TGroupRightTitleKey,
+							TItemId,
 							TItemIdKey,
 							TItemGroupKey,
 							TItemTitleKey,
