@@ -2,7 +2,11 @@
 
 export { NotABooleanError } from "./boolean";
 export { DragState } from "./dragState";
-export { WindowChangeEventDetail } from "./events";
+export {
+	DragMoveEventDetail,
+	ScrollBoundsChangeEventDetail,
+	WindowChangeEventDetail,
+} from "./events";
 export { NotAFunctionError } from "./function";
 export {
 	EVEN_MULTIPLE,

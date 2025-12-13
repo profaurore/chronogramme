@@ -1,11 +1,14 @@
 import {
 	type BaseGroup as CoreBaseGroup,
 	type BaseItem as CoreBaseItem,
+	DragMoveEventDetail,
 	DragState,
 	type Timeline as HTMLTimeline,
+	ScrollBoundsChangeEventDetail,
 	TIME_MAX,
 	TIME_MIN,
 	UNIT,
+	WindowChangeEventDetail,
 	ZERO,
 } from "@chronogramme/chronogramme";
 import {
@@ -25,11 +28,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-import {
-	DragMoveEventDetail,
-	ScrollBoundsChangeEventDetail,
-	WindowChangeEventDetail,
-} from "../../chronogramme/src/events";
 import {
 	DEFAULT_TIME_STEPS,
 	defaultKeys,

@@ -21,17 +21,15 @@ import {
 	ZERO,
 } from "@chronogramme/chronogramme";
 import {
+	type BaseGroup,
+	type BaseItem,
+	type GroupRenderer,
 	GroupRow,
+	type ItemRenderer,
 	Timeline as RCTimeline,
 	RowItems,
+	type RowRenderer,
 } from "@chronogramme/chronogramme-rct";
-import type {
-	BaseGroup,
-	BaseItem,
-	GroupRenderer,
-	ItemRenderer,
-	RowRenderer,
-} from "../../src/Timeline";
 
 const timelineClass: LinariaClassName = css`
 	flex: none;
