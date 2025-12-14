@@ -28,6 +28,30 @@ import { composeEvents } from "../utils/reactUtils";
 import { useItemContext } from "./useItemContext";
 import { useItemForHelpersContext } from "./useItemForHelpersContext";
 
+interface ItemProps<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> {
+	item: RctToCoreItem<TGroupId, TItemId, TItem>;
+	vOffsetInGroup: number;
+}
+
 export const Item = <
 	TGroupId,
 	TGroupIdKey extends string,
@@ -59,17 +83,24 @@ export const Item = <
 >({
 	item,
 	vOffsetInGroup,
-}: {
-	item: RctToCoreItem<TGroupId, TItemId, TItem>;
-	vOffsetInGroup: number;
-}): ReactNode => {
+}: ItemProps<
+	TGroupId,
+	TItemId,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TItem
+>): ReactNode => {
 	const {
 		canMove: timelineCanDrag,
 		canResizeLeft: timelineCanResizeLeft,
 		canResizeRight: timelineCanResizeRight,
 		canSelect,
 		itemDragState,
-		itemRenderer: ItemComponent,
+		itemRenderer: ItemRendererComponent,
 		itemResizeState,
 		keys,
 		minResizeWidth,
@@ -427,7 +458,7 @@ export const Item = <
 	);
 
 	return (
-		<ItemComponent
+		<ItemRendererComponent
 			getItemProps={getItemPropsHandler}
 			getResizeProps={getResizePropsHandler}
 			item={originalItem}

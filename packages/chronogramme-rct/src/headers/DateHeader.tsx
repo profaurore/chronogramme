@@ -2,8 +2,18 @@ import { type CSSProperties, type ReactNode, useMemo } from "react";
 import { DEFAULT_HEADER_HEIGHT, nextTimeUnits } from "../constants";
 import { defaultLabelFormat } from "../utils/dateUtils";
 import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
-import { CustomDateHeader } from "./CustomDateHeader";
+import {
+	CustomDateHeader,
+	type CustomDateHeaderDataWithData,
+	type CustomDateHeaderDataWithoutData,
+	type CustomDateHeaderWithDataProps,
+	type CustomDateHeaderWithoutDataProps,
+} from "./CustomDateHeader";
 import { CustomHeader } from "./CustomHeader";
+import type {
+	IntervalRendererWithData,
+	IntervalRendererWithoutData,
+} from "./Interval";
 import { useHeadersContext } from "./useHeadersContext";
 
 export type Unit =
@@ -24,21 +34,25 @@ export type LabelFormatFn = (
 interface DateHeaderBaseProps {
 	className?: string | undefined;
 	height?: number | undefined;
-	intervalRenderer?: (() => ReactNode) | undefined;
 	labelFormat?: (LabelFormatFn | string) | undefined;
 	style?: CSSProperties | undefined;
 	unit?: Unit | "primaryHeader" | undefined;
 }
 
-interface DateHeaderComponent {
-	(props: DateHeaderBaseProps): ReactNode;
-
-	<THeaderData>(
-		props: DateHeaderBaseProps & { headerData: THeaderData },
-	): ReactNode;
+interface DateHeaderPropsWithoutData extends DateHeaderBaseProps {
+	intervalRenderer?: IntervalRendererWithoutData | undefined;
 }
 
-export const DateHeader: DateHeaderComponent = <THeaderData,>({
+interface DateHeaderPropsWithData<THeaderData> extends DateHeaderBaseProps {
+	headerData: THeaderData;
+	intervalRenderer?: IntervalRendererWithData<THeaderData> | undefined;
+}
+
+export function DateHeader(props: DateHeaderPropsWithoutData): ReactNode;
+export function DateHeader<THeaderData>(
+	props: DateHeaderPropsWithData<THeaderData>,
+): ReactNode;
+export function DateHeader<THeaderData>({
 	className,
 	headerData,
 	height = DEFAULT_HEADER_HEIGHT,
@@ -46,15 +60,10 @@ export const DateHeader: DateHeaderComponent = <THeaderData,>({
 	labelFormat = defaultLabelFormat,
 	style,
 	unit,
-}: {
-	className?: string | undefined;
+}: DateHeaderBaseProps & {
 	headerData?: THeaderData;
-	height?: number | undefined;
-	intervalRenderer?: (() => ReactNode) | undefined;
-	labelFormat?: (LabelFormatFn | string) | undefined;
-	style?: CSSProperties | undefined;
-	unit?: Unit | "primaryHeader" | undefined;
-}): ReactNode => {
+	intervalRenderer?: IntervalRendererWithData<THeaderData> | undefined;
+}): ReactNode {
 	const { timelineUnit } = useHeadersContext();
 
 	const innerHeaderData = useMemo(
@@ -75,13 +84,41 @@ export const DateHeader: DateHeaderComponent = <THeaderData,>({
 
 				return labelFormat(interval, labelUnit, labelWidth);
 			},
-			headerData,
+			...(headerData === undefined ? {} : { headerData }),
 			intervalRenderer,
 			style,
 			unitProp: unit,
 		}),
 		[className, headerData, intervalRenderer, labelFormat, style, unit],
 	);
+
+	if (headerData === undefined) {
+		const CustomDateHeaderWithoutData = CustomDateHeader as (
+			props: CustomDateHeaderWithoutDataProps,
+		) => ReactNode;
+		const innerHeaderDataWithoutData =
+			innerHeaderData as CustomDateHeaderDataWithoutData;
+
+		return (
+			<CustomHeader
+				unit={
+					unit === "primaryHeader"
+						? nextTimeUnits[timelineUnit]
+						: (unit ?? timelineUnit)
+				}
+				height={height}
+				headerData={innerHeaderDataWithoutData}
+			>
+				{CustomDateHeaderWithoutData}
+			</CustomHeader>
+		);
+	}
+
+	const CustomDateHeaderWithData = CustomDateHeader as (
+		props: CustomDateHeaderWithDataProps<THeaderData>,
+	) => ReactNode;
+	const innerHeaderDataWithData =
+		innerHeaderData as CustomDateHeaderDataWithData<THeaderData>;
 
 	return (
 		<CustomHeader
@@ -91,9 +128,9 @@ export const DateHeader: DateHeaderComponent = <THeaderData,>({
 					: (unit ?? timelineUnit)
 			}
 			height={height}
-			headerData={innerHeaderData}
+			headerData={innerHeaderDataWithData}
 		>
-			{CustomDateHeader}
+			{CustomDateHeaderWithData}
 		</CustomHeader>
 	);
-};
+}

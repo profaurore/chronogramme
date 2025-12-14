@@ -16,43 +16,76 @@ import type {
 import type { Unit } from "./DateHeader";
 import type { ShowPeriod } from "./HeadersContext";
 
-type GetIntervalProps = (
-	args?:
-		| {
-				onClick?: MouseEventHandler | undefined;
-				style?: CSSProperties | undefined;
-		  }
-		| undefined,
-) => { style: CSSProperties };
+interface GetIntervalPropsArguments {
+	onClick?: MouseEventHandler | undefined;
+	style?: CSSProperties | undefined;
+}
 
-export type IntervalRenderer<THeaderData> = (props: {
-	getIntervalProps: GetIntervalProps;
-	intervalContext: {
-		interval: TimeInterval;
-		intervalText: string;
-	};
-	data: THeaderData;
-}) => ReactNode;
+type GetIntervalProps = (args?: GetIntervalPropsArguments | undefined) => {
+	style: CSSProperties;
+};
 
-export const Interval = <THeaderData,>({
-	getIntervalProps,
-	headerData,
-	interval,
-	intervalRenderer: IntervalComponent,
-	intervalText,
-	primaryHeader,
-	showPeriod,
-	unit,
-}: {
-	getIntervalProps: CustomHeaderGetIntervalProps;
-	headerData: THeaderData;
+interface IntervalContext {
 	interval: TimeInterval;
-	intervalRenderer: IntervalRenderer<THeaderData> | undefined;
+	intervalText: string;
+}
+
+interface IntervalRendererWithoutDataProps {
+	getIntervalProps: GetIntervalProps;
+	intervalContext: IntervalContext;
+}
+
+interface IntervalRendererWithDataProps<THeaderData>
+	extends IntervalRendererWithoutDataProps {
+	data: THeaderData;
+}
+
+export type IntervalRendererWithoutData = (
+	props: IntervalRendererWithoutDataProps,
+) => ReactNode;
+
+export type IntervalRendererWithData<THeaderData> = (
+	props: IntervalRendererWithDataProps<THeaderData>,
+) => ReactNode;
+
+interface IntervalBaseProps {
+	getIntervalProps: CustomHeaderGetIntervalProps;
+	interval: TimeInterval;
 	intervalText: string;
 	primaryHeader: boolean;
 	showPeriod: ShowPeriod;
 	unit: Unit;
-}): ReactNode => {
+}
+
+interface IntervalWithoutDataProps extends IntervalBaseProps {
+	intervalRenderer?: IntervalRendererWithoutData | undefined;
+}
+
+interface IntervalWithDataProps<THeaderData> extends IntervalBaseProps {
+	headerData: THeaderData;
+	intervalRenderer?: IntervalRendererWithData<THeaderData> | undefined;
+}
+
+export function Interval(props: IntervalWithoutDataProps): ReactNode;
+export function Interval<THeaderData>(
+	props: IntervalWithDataProps<THeaderData>,
+): ReactNode;
+export function Interval<THeaderData>({
+	getIntervalProps,
+	headerData,
+	interval,
+	intervalRenderer: IntervalRendererComponent,
+	intervalText,
+	primaryHeader,
+	showPeriod,
+	unit,
+}: IntervalBaseProps & {
+	headerData?: THeaderData;
+	intervalRenderer?:
+		| IntervalRendererWithoutData
+		| IntervalRendererWithData<THeaderData>
+		| undefined;
+}): ReactNode {
 	const endTime = interval.endTime;
 	const startTime = interval.startTime;
 
@@ -86,23 +119,40 @@ export const Interval = <THeaderData,>({
 		[interval, intervalText],
 	);
 
-	if (IntervalComponent !== undefined) {
+	if (IntervalRendererComponent === undefined) {
 		return (
-			<IntervalComponent
+			<div
+				data-testid="dateHeaderInterval"
+				{...getIntervalProps({ interval })}
+				className={`rct-dateHeader ${primaryHeader ? "rct-dateHeader-primary" : ""}`}
+			>
+				<span>{intervalText}</span>
+			</div>
+		);
+	}
+
+	if (headerData === undefined) {
+		const IntervalComponentWithoutData = IntervalRendererComponent as (props: {
+			getIntervalProps: GetIntervalProps;
+			intervalContext: {
+				interval: TimeInterval;
+				intervalText: string;
+			};
+		}) => ReactNode;
+
+		return (
+			<IntervalComponentWithoutData
 				getIntervalProps={getIntervalPropsHandler}
 				intervalContext={intervalContext}
-				data={headerData}
 			/>
 		);
 	}
 
 	return (
-		<div
-			data-testid="dateHeaderInterval"
-			{...getIntervalProps({ interval })}
-			className={`rct-dateHeader ${primaryHeader ? "rct-dateHeader-primary" : ""}`}
-		>
-			<span>{intervalText}</span>
-		</div>
+		<IntervalRendererComponent
+			getIntervalProps={getIntervalPropsHandler}
+			intervalContext={intervalContext}
+			data={headerData}
+		/>
 	);
-};
+}

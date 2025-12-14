@@ -14,6 +14,55 @@ import type {
 } from "../Timeline";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 
+interface GroupProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> {
+	group: RctToCoreGroup<TGroupId, TGroup>;
+	groupIndex: number;
+	groupRenderer: GroupRenderer<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup
+	>;
+	isRightSidebar?: boolean | undefined;
+	timeline: InstanceType<
+		typeof HTMLTimeline<
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
+		>
+	>;
+}
+
 export const Group = <
 	TGroupId,
 	TGroupIdKey extends string,
@@ -45,29 +94,24 @@ export const Group = <
 >({
 	group,
 	groupIndex,
-	groupRenderer: GroupComponent,
+	groupRenderer: GroupRendererComponent,
 	isRightSidebar,
 	timeline,
-}: {
-	group: RctToCoreGroup<TGroupId, TGroup>;
-	groupIndex: number;
-	groupRenderer: GroupRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>;
-	isRightSidebar?: boolean | undefined;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
-}): ReactNode => {
+}: GroupProps<
+	TGroupId,
+	TGroupIdKey,
+	TGroupTitleKey,
+	TGroupRightTitleKey,
+	TItemId,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TGroup,
+	TItem
+>): ReactNode => {
 	const groupPosition = timeline.getGroupPosition(groupIndex);
 	const groupSize = timeline.getGroupSize(groupIndex);
 
@@ -106,7 +150,7 @@ export const Group = <
 				index={groupIndex}
 				timeline={timeline}
 			>
-				<GroupComponent
+				<GroupRendererComponent
 					group={group.originalGroup}
 					isRightSidebar={isRightSidebar}
 				/>

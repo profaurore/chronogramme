@@ -2,66 +2,64 @@ import { type CSSProperties, type ReactNode, useCallback } from "react";
 import type { ResizeEdge } from "../Timeline";
 import { useHeadersContext } from "./useHeadersContext";
 
-type GetRootProps = (
-	args?: { style?: CSSProperties | undefined } | undefined,
-) => {
+interface GetRootPropsArguments {
+	style?: CSSProperties | undefined;
+}
+
+interface GetRootPropsReturnType {
 	style: CSSProperties;
-};
+}
+
+type GetRootProps = (
+	args?: GetRootPropsArguments | undefined,
+) => GetRootPropsReturnType;
 
 interface SidebarHeaderBaseProps {
 	variant?: ResizeEdge | undefined;
 }
 
-interface SidebarHeaderChildBaseProps {
+interface SidebarHeaderChildWithoutDataProps {
 	getRootProps: GetRootProps;
 }
 
-interface SidebarHeaderComponent {
-	(
-		props: SidebarHeaderBaseProps & {
-			children?:
-				| ((props: SidebarHeaderChildBaseProps) => ReactNode)
-				| undefined;
-			variant?: ResizeEdge | undefined;
-		},
-	): ReactNode;
-
-	<THeaderData>(
-		props: SidebarHeaderBaseProps & {
-			children?:
-				| ((
-						props: SidebarHeaderChildBaseProps & {
-							data: THeaderData;
-						},
-				  ) => ReactNode)
-				| undefined;
-			headerData: THeaderData | undefined;
-			variant?: ResizeEdge | undefined;
-		},
-	): ReactNode;
-
-	secretKey: string;
+export interface SidebarHeaderChildWithDataProps<THeaderData>
+	extends SidebarHeaderChildWithoutDataProps {
+	data: THeaderData;
 }
 
-export type SidebarHeaderChildProps<THeaderData> = THeaderData extends never
-	? SidebarHeaderChildBaseProps
-	: SidebarHeaderChildBaseProps & {
-			data: THeaderData | undefined;
-		};
+type SidebarHeaderChildWithoutData = (
+	props: SidebarHeaderChildWithoutDataProps,
+) => ReactNode;
 
-export const SidebarHeader: SidebarHeaderComponent = <THeaderData,>({
+type SidebarHeaderChildWithData<THeaderData> = (
+	props: SidebarHeaderChildWithDataProps<THeaderData>,
+) => ReactNode;
+
+interface SidebarHeaderWithoutDataProps extends SidebarHeaderBaseProps {
+	children?: SidebarHeaderChildWithoutData | undefined;
+}
+
+interface SidebarHeaderWithDataProps<THeaderData>
+	extends SidebarHeaderBaseProps {
+	children?: SidebarHeaderChildWithData<THeaderData> | undefined;
+	headerData: THeaderData;
+}
+
+export function SidebarHeader(props: SidebarHeaderWithoutDataProps): ReactNode;
+export function SidebarHeader<THeaderData>(
+	props: SidebarHeaderWithDataProps<THeaderData>,
+): ReactNode;
+export function SidebarHeader<THeaderData>({
 	children: ChildrenComponent,
 	headerData,
 	variant,
-}: {
+}: SidebarHeaderBaseProps & {
 	children?:
-		| ((
-				props: SidebarHeaderChildBaseProps & { data: THeaderData },
-		  ) => ReactNode)
+		| SidebarHeaderChildWithoutData
+		| SidebarHeaderChildWithData<THeaderData>
 		| undefined;
 	headerData?: THeaderData;
-	variant?: ResizeEdge | undefined;
-}): ReactNode => {
+}): ReactNode {
 	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
 
 	const getRootProps: GetRootProps = useCallback(
@@ -79,14 +77,13 @@ export const SidebarHeader: SidebarHeaderComponent = <THeaderData,>({
 	}
 
 	if (headerData === undefined) {
-		const ChildrenComponentWithoutData = ChildrenComponent as (
-			props: SidebarHeaderChildBaseProps,
-		) => ReactNode;
+		const ChildrenComponentWithoutData =
+			ChildrenComponent as SidebarHeaderChildWithoutData;
 
 		return <ChildrenComponentWithoutData getRootProps={getRootProps} />;
 	}
 
 	return <ChildrenComponent getRootProps={getRootProps} data={headerData} />;
-};
+}
 
 SidebarHeader.secretKey = "Chronogramme-SidebarHeader";

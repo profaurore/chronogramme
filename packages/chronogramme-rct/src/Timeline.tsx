@@ -56,6 +56,132 @@ import { validateComponentProperties } from "./utils/unsupportedUtils";
 export type ResizeEdge = "left" | "right";
 type ResizableEdges = false | ResizeEdge | "both";
 
+type HorizontalClassNamesForGroup<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+> = (group: TGroup) => string[];
+
+type MoveValidator<TItemId> = (
+	action: "move",
+	itemId: TItemId,
+	time: number,
+) => number;
+
+type ResizeValidator<TItemId> = (
+	action: "resize",
+	itemId: TItemId,
+	time: number,
+	resizeEdge: ResizeEdge,
+) => number;
+
+type OnBoundsChange = (canvasTimeStart: number, canvasTimeEnd: number) => void;
+
+type OnCanvasClick<TGroupId> = (
+	groupId: TGroupId,
+	time: number,
+	e: SyntheticEvent,
+) => void;
+
+type OnCanvasContextMenu<TGroupId> = (
+	groupId: TGroupId,
+	time: number,
+	e: SyntheticEvent,
+) => void;
+
+type OnCanvasDoubleClick<TGroupId> = (
+	groupId: TGroupId,
+	time: number,
+	e: SyntheticEvent,
+) => void;
+
+type OnItemClick<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnItemContextMenu<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnItemDeselect = (e: SyntheticEvent) => void;
+
+type OnItemDoubleClick<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnItemDrag<TGroupId, TItemId> = (
+	itemDragObject:
+		| {
+				eventType: "move";
+				itemId: TItemId;
+				time: number;
+				newGroupId: TGroupId;
+		  }
+		| {
+				eventType: "resize";
+				itemId: TItemId;
+				time: number;
+				edge: ResizeEdge;
+		  },
+) => void;
+
+type OnItemMove<TGroupId, TItemId> = (
+	itemId: TItemId,
+	dragTime: number,
+	newGroupOrder: TGroupId,
+) => void;
+
+type OnItemResize<TItemId> = (
+	itemId: TItemId,
+	endTimeOrStartTime: number,
+	edge: ResizeEdge,
+) => void;
+
+type OnItemSelect<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnTimeChange = (
+	newVisibleTimeStart: number,
+	newVisibleTimeEnd: number,
+	updateScrollCanvas: (start: number, end: number) => void,
+) => void;
+
+export interface TimelineContext {
+	canvasTimeEnd: number;
+	canvasTimeStart: number;
+	timelineWidth: number;
+	visibleTimeEnd: number;
+	visibleTimeStart: number;
+}
+
+type OnZoom = (timelineContext: TimelineContext) => void;
+
+interface ResizeDetector {
+	addListener?: Component;
+	removeListener?: Component;
+}
+
+type VerticalLineClassNameForTime = (
+	startTime: number,
+	endTime: number,
+) => string[];
+
 export interface TimelineProps<
 	TGroupId,
 	TGroupIdKey extends string,
@@ -108,7 +234,15 @@ export interface TimelineProps<
 	headerRef?: Ref<HTMLDivElement>;
 	hideHeaders?: boolean | undefined;
 	hideHorizontalLines?: boolean | undefined;
-	horizontalLineClassNamesForGroup?: ((group: TGroup) => string[]) | undefined;
+	horizontalLineClassNamesForGroup?:
+		| HorizontalClassNamesForGroup<
+				TGroupId,
+				TGroupIdKey,
+				TGroupTitleKey,
+				TGroupRightTitleKey,
+				TGroup
+		  >
+		| undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
 	itemRenderer: ItemRenderer<
@@ -141,79 +275,27 @@ export interface TimelineProps<
 	maxZoom?: number | undefined;
 	minResizeWidth?: number | undefined;
 	minZoom?: number | undefined;
-	moveResizeValidator?(action: "move", itemId: TItemId, time: number): number;
 	moveResizeValidator?(
-		action: "resize",
-		itemId: TItemId,
-		time: number,
-		resizeEdge: ResizeEdge,
-	): number;
-	onBoundsChange?:
-		| ((canvasTimeStart: number, canvasTimeEnd: number) => void)
-		| undefined;
-	onCanvasClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	onCanvasContextMenu?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	onCanvasDoubleClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	onItemClick?:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onItemContextMenu?:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onItemDeselect?: ((e: SyntheticEvent) => void) | undefined;
-	onItemDoubleClick?:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onItemDrag?:
-		| ((
-				itemDragObject:
-					| {
-							eventType: "move";
-							itemId: TItemId;
-							time: number;
-							newGroupId: TGroupId;
-					  }
-					| {
-							eventType: "resize";
-							itemId: TItemId;
-							time: number;
-							edge: ResizeEdge;
-					  },
-		  ) => void)
-		| undefined;
-	onItemMove?:
-		| ((itemId: TItemId, dragTime: number, newGroupOrder: TGroupId) => void)
-		| undefined;
-	onItemResize?:
-		| ((itemId: TItemId, endTimeOrStartTime: number, edge: ResizeEdge) => void)
-		| undefined;
-	onItemSelect?:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onTimeChange?:
-		| ((
-				newVisibleTimeStart: number,
-				newVisibleTimeEnd: number,
-				updateScrollCanvas: (start: number, end: number) => void,
-		  ) => void)
-		| undefined;
-	onZoom?: (timelineContext: {
-		canvasTimeEnd: number;
-		canvasTimeStart: number;
-		timelineWidth: number;
-		visibleTimeEnd: number;
-		visibleTimeStart: number;
-	}) => void;
-	resizeDetector?: {
-		addListener?: Component;
-		removeListener?: Component;
-	};
+		...args: Parameters<MoveValidator<TItemId>>
+	): ReturnType<MoveValidator<TItemId>>;
+	moveResizeValidator?(
+		...args: Parameters<ResizeValidator<TItemId>>
+	): ReturnType<ResizeValidator<TItemId>>;
+	onBoundsChange?: OnBoundsChange | undefined;
+	onCanvasClick?: OnCanvasClick<TGroupId> | undefined;
+	onCanvasContextMenu?: OnCanvasContextMenu<TGroupId> | undefined;
+	onCanvasDoubleClick?: OnCanvasDoubleClick<TGroupId> | undefined;
+	onItemClick?: OnItemClick<TItemId> | undefined;
+	onItemContextMenu?: OnItemContextMenu<TItemId> | undefined;
+	onItemDeselect?: OnItemDeselect | undefined;
+	onItemDoubleClick?: OnItemDoubleClick<TItemId> | undefined;
+	onItemDrag?: OnItemDrag<TGroupId, TItemId> | undefined;
+	onItemMove?: OnItemMove<TGroupId, TItemId> | undefined;
+	onItemResize?: OnItemResize<TItemId> | undefined;
+	onItemSelect?: OnItemSelect<TItemId> | undefined;
+	onTimeChange?: OnTimeChange | undefined;
+	onZoom?: OnZoom | undefined;
+	resizeDetector?: ResizeDetector | undefined;
 	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
@@ -224,7 +306,7 @@ export interface TimelineProps<
 		TGroup,
 		TRowData
 	>;
-	scrollRef?: Ref<HTMLDivElement>;
+	scrollRef?: Ref<HTMLDivElement> | undefined;
 	selected?: TItemId[] | undefined;
 	sidebarWidth?: number | undefined;
 	stackItems?: boolean | undefined;
@@ -232,10 +314,7 @@ export interface TimelineProps<
 	timeSteps?: TimeSteps | undefined;
 	traditionalZoom?: boolean | undefined;
 	useResizeHandle?: boolean | undefined;
-	verticalLineClassNameForTime?: (
-		startTime: number,
-		endTime: number,
-	) => string[];
+	verticalLineClassNameForTime?: VerticalLineClassNameForTime | undefined;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
 }
@@ -1025,6 +1104,31 @@ export type BaseGroup<
 	[K in TGroupRightTitleKey]?: string | undefined;
 };
 
+interface GetLayerRootPropsReturnType {
+	style: CSSProperties;
+}
+
+type GetLayerRootProps = () => GetLayerRootPropsReturnType;
+
+interface RowRendererProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TRowData,
+> {
+	getLayerRootProps: GetLayerRootProps;
+	group: TGroup;
+	// itemsWithInteractions: TItem[]; // TODO: Implement
+	rowData: TRowData;
+}
+
 export type RowRenderer<
 	TGroupId,
 	TGroupIdKey extends string,
@@ -1037,12 +1141,16 @@ export type RowRenderer<
 		TGroupRightTitleKey
 	>,
 	TRowData,
-> = (props: {
-	getLayerRootProps: () => { style: CSSProperties };
-	group: TGroup;
-	// itemsWithInteractions: TItem[]; // TODO: Implement
-	rowData: TRowData;
-}) => ReactNode;
+> = (
+	props: RowRendererProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup,
+		TRowData
+	>,
+) => ReactNode;
 
 export interface GroupRendererProps<
 	TGroupId,
@@ -1127,30 +1235,32 @@ export interface ItemRendererGetResizePropsReturnType {
 	>;
 }
 
+interface ItemRendererGetResizePropsParameters {
+	leftClassName?: string | undefined;
+	leftStyle?: CSSProperties | undefined;
+	rightClassName?: string | undefined;
+	rightStyle?: CSSProperties | undefined;
+}
+
 export type ItemRendererGetResizeProps = (
-	params?:
-		| {
-				leftClassName?: string | undefined;
-				leftStyle?: CSSProperties | undefined;
-				rightClassName?: string | undefined;
-				rightStyle?: CSSProperties | undefined;
-		  }
-		| undefined,
+	params?: ItemRendererGetResizePropsParameters | undefined,
 ) => ItemRendererGetResizePropsReturnType;
+
+interface Dimensions {
+	collisionLeft: number;
+	collisionWidth: number;
+	height: number;
+	left: number;
+	stack: boolean;
+	top: number;
+	width: number;
+}
 
 export interface ItemRendererItemContext<TGroupId> {
 	canMove: boolean;
 	canResizeLeft: boolean;
 	canResizeRight: boolean;
-	dimensions: {
-		collisionLeft: number;
-		collisionWidth: number;
-		height: number;
-		left: number;
-		stack: boolean;
-		top: number;
-		width: number;
-	};
+	dimensions: Dimensions;
 	dragging: boolean;
 	dragOffset: number | undefined;
 	dragTime: number | undefined;
@@ -1189,13 +1299,7 @@ export interface ItemRendererProps<
 	getResizeProps: ItemRendererGetResizeProps;
 	item: TItem;
 	itemContext: ItemRendererItemContext<TGroupId>;
-	timelineContext: {
-		canvasTimeEnd: number;
-		canvasTimeStart: number;
-		timelineWidth: number;
-		visibleTimeEnd: number;
-		visibleTimeStart: number;
-	};
+	timelineContext: TimelineContext;
 }
 
 export type ItemRenderer<

@@ -15,6 +15,68 @@ const getRowLayerRootProps = (): { style: Record<string, never> } => ({
 	style: {},
 });
 
+interface RowProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	TRowData,
+> {
+	group: RctToCoreGroup<TGroupId, TGroup>;
+	groupIndex: number;
+	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
+	itemHeightRatio: number;
+	onClick?:
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| undefined;
+	onContextMenu?:
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| undefined;
+	onDoubleClick?:
+		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| undefined;
+	rowData: TRowData;
+	rowRenderer: RowRenderer<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup,
+		TRowData
+	>;
+	timeline: InstanceType<
+		typeof HTMLTimeline<
+			TGroupId,
+			RctToCoreGroup<TGroupId, TGroup>,
+			TItemId,
+			RctToCoreItem<TGroupId, TItemId, TItem>
+		>
+	>;
+}
+
 export const Row = <
 	TGroupId,
 	TGroupIdKey extends string,
@@ -53,40 +115,24 @@ export const Row = <
 	onContextMenu,
 	onDoubleClick,
 	rowData,
-	rowRenderer: RowComponent,
+	rowRenderer: RowRendererComponent,
 	timeline,
-}: {
-	group: RctToCoreGroup<TGroupId, TGroup>;
-	groupIndex: number;
-	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
-	itemHeightRatio: number;
-	onClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	onContextMenu?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	onDoubleClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
-		| undefined;
-	rowData: TRowData;
-	rowRenderer: RowRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup,
-		TRowData
-	>;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
-}): ReactNode => (
+}: RowProps<
+	TGroupId,
+	TGroupIdKey,
+	TGroupTitleKey,
+	TGroupRightTitleKey,
+	TItemId,
+	TItemIdKey,
+	TItemGroupKey,
+	TItemTitleKey,
+	TItemDivTitleKey,
+	TItemTimeStartKey,
+	TItemTimeEndKey,
+	TGroup,
+	TItem,
+	TRowData
+>): ReactNode => (
 	<GroupForHelpersContextProvider<
 		TGroupId,
 		TGroupIdKey,
@@ -149,7 +195,7 @@ export const Row = <
 				itemHeightRatio={itemHeightRatio}
 				timeline={timeline}
 			>
-				<RowComponent
+				<RowRendererComponent
 					getLayerRootProps={getRowLayerRootProps}
 					group={group.originalGroup}
 					rowData={rowData}

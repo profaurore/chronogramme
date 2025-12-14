@@ -1,34 +1,30 @@
 import { UNIT } from "@chronogramme/chronogramme";
-import {
-	Children,
-	type CSSProperties,
-	type PropsWithChildren,
-	type ReactNode,
-} from "react";
+import { Children, type CSSProperties, type ReactNode } from "react";
 import { getReactChildProp, getReactChildSecretKey } from "../utils/reactUtils";
 import { validateComponentProperties } from "../utils/unsupportedUtils";
 import { SidebarHeader } from "./SidebarHeader";
 
 const UNSUPPORTED_PROPERTIES = ["className", "style"] as const;
 
-export const TimelineHeaders = (
-	props: PropsWithChildren<{
-		calendarHeaderClassName?: string | undefined;
-		calendarHeaderStyle?: CSSProperties | undefined;
+interface TimelineHeadersProps {
+	calendarHeaderClassName?: string | undefined;
+	calendarHeaderStyle?: CSSProperties | undefined;
+	children?: ReactNode | undefined;
 
-		/**
-		 * @deprecated This property cannot be supported with this library's
-		 * structure.
-		 */
-		className?: string | undefined;
+	/**
+	 * @deprecated This property cannot be supported with this library's
+	 * structure.
+	 */
+	className?: string | undefined;
 
-		/**
-		 * @deprecated This property cannot be supported with this library's
-		 * structure.
-		 */
-		style?: CSSProperties | undefined;
-	}>,
-): ReactNode => {
+	/**
+	 * @deprecated This property cannot be supported with this library's
+	 * structure.
+	 */
+	style?: CSSProperties | undefined;
+}
+
+export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 	validateComponentProperties(props, UNSUPPORTED_PROPERTIES);
 
 	const { calendarHeaderClassName, calendarHeaderStyle, children } = props;

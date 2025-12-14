@@ -13,6 +13,32 @@ import type {
 	TimelineKeys,
 } from "../Timeline";
 
+type ItemOnClick<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnContextMenu<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnDoubleClick<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type OnSelect<TItemId> = (
+	itemId: TItemId,
+	e: SyntheticEvent,
+	time: number,
+) => void;
+
+type SetSelectedItemId<TItemId> = (itemId: TItemId) => void;
+
 export interface ItemContextVariable<
 	TGroupId,
 	TGroupIdKey extends string,
@@ -71,21 +97,13 @@ export interface ItemContextVariable<
 		TItemTimeEndKey
 	>;
 	minResizeWidth: number;
-	onClick:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onContextMenu:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onDoubleClick:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
-	onSelect:
-		| ((itemId: TItemId, e: SyntheticEvent, time: number) => void)
-		| undefined;
+	onClick: ItemOnClick<TItemId> | undefined;
+	onContextMenu: OnContextMenu<TItemId> | undefined;
+	onDoubleClick: OnDoubleClick<TItemId> | undefined;
+	onSelect: OnSelect<TItemId> | undefined;
 	selected: TItemId[] | undefined;
 	selectedItemId: TItemId | undefined;
-	setSelectedItemId: (itemId: TItemId) => void;
+	setSelectedItemId: SetSelectedItemId<TItemId>;
 	timeline: InstanceType<
 		typeof HTMLTimeline<
 			TGroupId,

@@ -1,6 +1,11 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import type { ReactNode } from "react";
 
-export const TimelineMarkers = ({ children }: PropsWithChildren): ReactNode =>
-	children;
+interface TimelineMarkersProps {
+	children?: ReactNode | undefined;
+}
+
+export const TimelineMarkers = ({
+	children,
+}: TimelineMarkersProps): ReactNode => children;
 
 TimelineMarkers.secretKey = "Chronogramme-TimelineMarkers";

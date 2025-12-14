@@ -21,15 +21,26 @@ interface GroupDimensions {
 }
 
 export type GetLeftOffsetFromDate = (date: number) => number;
+
 export type GetDateFromLeftOffsetPosition = (date: number) => number;
+
+type GetGroupDimensions<TGroupId> = (
+	groupId: TGroupId,
+) => GroupDimensions | undefined;
+
+type GetItemAbsoluteDimensions<TItemId> = (
+	itemId: TItemId,
+) => ItemAbsoluteDimensions | undefined;
+
+type GetItemDimensions<TItemId> = (
+	itemId: TItemId,
+) => ItemDimensions | undefined;
 
 export interface HelpersContextValue<TGroupId, TItemId> {
 	getDateFromLeftOffsetPosition: GetDateFromLeftOffsetPosition;
-	getGroupDimensions: (groupId: TGroupId) => GroupDimensions | undefined;
-	getItemAbsoluteDimensions: (
-		itemId: TItemId,
-	) => ItemAbsoluteDimensions | undefined;
-	getItemDimensions: (itemId: TItemId) => ItemDimensions | undefined;
+	getGroupDimensions: GetGroupDimensions<TGroupId>;
+	getItemAbsoluteDimensions: GetItemAbsoluteDimensions<TItemId>;
+	getItemDimensions: GetItemDimensions<TItemId>;
 	getLeftOffsetFromDate: GetLeftOffsetFromDate;
 }
 

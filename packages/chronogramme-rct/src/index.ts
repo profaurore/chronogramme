@@ -1,10 +1,10 @@
 export { GroupRow } from "./groups/GroupRow";
 export { CustomHeader } from "./headers/CustomHeader";
 export { DateHeader } from "./headers/DateHeader";
-export type { IntervalRenderer } from "./headers/Interval";
+export type { IntervalRendererWithData as IntervalRenderer } from "./headers/Interval";
 export {
 	SidebarHeader,
-	type SidebarHeaderChildProps as SidebarHeaderChildrenFnProps,
+	type SidebarHeaderChildWithDataProps as SidebarHeaderChildrenFnProps,
 } from "./headers/SidebarHeader";
 export { TimelineHeaders } from "./headers/TimelineHeaders";
 export {

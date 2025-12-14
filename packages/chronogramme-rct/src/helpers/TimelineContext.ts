@@ -40,6 +40,30 @@ export interface TimelineState<
 	>;
 }
 
+type GetTimelineState<
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+> = () => Readonly<
+	TimelineState<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>
+>;
+
 export interface TimelineContextValue<
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
@@ -53,18 +77,16 @@ export interface TimelineContextValue<
 > {
 	getDateFromLeftOffsetPosition: GetDateFromLeftOffsetPosition;
 	getLeftOffsetFromDate: GetLeftOffsetFromDate;
-	getTimelineState: () => Readonly<
-		TimelineState<
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey
-		>
+	getTimelineState: GetTimelineState<
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
 	>;
 	showPeriod: ShowPeriod;
 }
