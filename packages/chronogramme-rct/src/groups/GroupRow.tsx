@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { STYLE_SIZE_PRECISION } from "../constants";
 import { useGroupRowContext } from "./useGroupRowContext";
 
-interface GroupRowProps {
+export interface GroupRowProps {
 	children: ReactNode | undefined;
 }
 

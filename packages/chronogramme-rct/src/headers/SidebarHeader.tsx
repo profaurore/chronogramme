@@ -1,24 +1,25 @@
 import { type CSSProperties, type ReactNode, useCallback } from "react";
 import type { ResizeEdge } from "../Timeline";
+import type { UnsupportedType } from "../utils/unsupportedUtils";
 import { useHeadersContext } from "./useHeadersContext";
 
-interface GetRootPropsArguments {
+export interface GetRootPropsArguments {
 	style?: CSSProperties | undefined;
 }
 
-interface GetRootPropsReturnType {
+export interface GetRootPropsReturnType {
 	style: CSSProperties;
 }
 
-type GetRootProps = (
+export type GetRootProps = (
 	args?: GetRootPropsArguments | undefined,
 ) => GetRootPropsReturnType;
 
-interface SidebarHeaderBaseProps {
+export interface SidebarHeaderBaseProps {
 	variant?: ResizeEdge | undefined;
 }
 
-interface SidebarHeaderChildWithoutDataProps {
+export interface SidebarHeaderChildWithoutDataProps {
 	getRootProps: GetRootProps;
 }
 
@@ -27,23 +28,44 @@ export interface SidebarHeaderChildWithDataProps<THeaderData>
 	data: THeaderData;
 }
 
-type SidebarHeaderChildWithoutData = (
+export type SidebarHeaderChildProps<THeaderData> =
+	| SidebarHeaderChildWithoutDataProps
+	| SidebarHeaderChildWithDataProps<THeaderData>;
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `SidebarHeaderChildProps` instead.
+ */
+export type SidebarHeaderChildrenFnProps<THeaderData> = UnsupportedType<
+	SidebarHeaderChildProps<THeaderData>,
+	"Use `SidebarHeaderChildProps` instead."
+>;
+
+export type SidebarHeaderChildWithoutData = (
 	props: SidebarHeaderChildWithoutDataProps,
 ) => ReactNode;
 
-type SidebarHeaderChildWithData<THeaderData> = (
+export type SidebarHeaderChildWithData<THeaderData> = (
 	props: SidebarHeaderChildWithDataProps<THeaderData>,
 ) => ReactNode;
 
-interface SidebarHeaderWithoutDataProps extends SidebarHeaderBaseProps {
+export type SidebarHeaderChild<THeaderData> =
+	| SidebarHeaderChildWithoutData
+	| SidebarHeaderChildWithData<THeaderData>;
+
+export interface SidebarHeaderWithoutDataProps extends SidebarHeaderBaseProps {
 	children?: SidebarHeaderChildWithoutData | undefined;
 }
 
-interface SidebarHeaderWithDataProps<THeaderData>
+export interface SidebarHeaderWithDataProps<THeaderData>
 	extends SidebarHeaderBaseProps {
 	children?: SidebarHeaderChildWithData<THeaderData> | undefined;
 	headerData: THeaderData;
 }
+
+export type SidebarHeaderProps<THeaderData> =
+	| SidebarHeaderWithoutDataProps
+	| SidebarHeaderWithDataProps<THeaderData>;
 
 export function SidebarHeader(props: SidebarHeaderWithoutDataProps): ReactNode;
 export function SidebarHeader<THeaderData>(

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-interface TimelineMarkersProps {
+export interface TimelineMarkersProps {
 	children?: ReactNode | undefined;
 }
 

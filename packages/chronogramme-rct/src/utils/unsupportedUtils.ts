@@ -1,23 +1,21 @@
+export type UnsupportedType<
+	_TOriginal,
+	TMessage extends string,
+> = `This value is unsupported. ${TMessage}`;
+
 export class UnsupportedPropertyValueError extends Error {
-	public readonly property: string | number | symbol;
-
-	public readonly value: unknown;
-
-	public constructor(error: string, property: string, value: unknown) {
-		super(error);
+	public constructor(message: string, property: string, value: unknown) {
+		super(
+			`Unsupported property value: \`${property}: ${String(value)}\`. ${message}`,
+		);
 		this.name = this.constructor.name;
-		this.property = property;
-		this.value = value;
 	}
 }
 
-export class UnsupportedPropertyError extends Error {
-	public readonly property: string | number | symbol;
-
-	public constructor(property: string | number | symbol) {
-		super("Unsupported property.");
+class UnsupportedPropertyError extends Error {
+	public constructor(objectName: string, property: string | number | symbol) {
+		super(`Unsupported property: \`${objectName}.${String(property)}\`.`);
 		this.name = this.constructor.name;
-		this.property = property;
 	}
 }
 
@@ -25,6 +23,7 @@ export const buildUnsupportedPropertiesProxy = <
 	TObject extends object,
 	TUnsupportedKeys extends readonly (keyof TObject)[],
 >(
+	objectName: string,
 	target: Omit<TObject, TUnsupportedKeys[number]>,
 	unsupportedProperties: TUnsupportedKeys,
 ): TObject => {
@@ -39,8 +38,11 @@ export const buildUnsupportedPropertiesProxy = <
 				property: string | number | symbol,
 				receiver: unknown,
 			): unknown {
-				if (unsupportedPropertiesWidened.includes(property)) {
-					throw new UnsupportedPropertyError(property);
+				if (
+					unsupportedPropertiesWidened.includes(property) &&
+					!Reflect.has(getTarget, property)
+				) {
+					throw new UnsupportedPropertyError(objectName, property);
 				}
 
 				return Reflect.get(getTarget, property, receiver);
@@ -50,37 +52,30 @@ export const buildUnsupportedPropertiesProxy = <
 };
 
 export class UnsupportedFunctionError extends Error {
-	public readonly functionName: string;
-
-	public constructor(functionName: string) {
-		super("Unsupported function.");
+	public constructor(functionName: string, message: string) {
+		super(`Unsupported function: \`${functionName}\`. ${message}`);
 		this.name = this.constructor.name;
-		this.functionName = functionName;
 	}
 }
-
-export const buildUnsupportedFunction = <TReturn>(
-	functionName: string,
-): (() => TReturn) => {
-	throw new UnsupportedFunctionError(functionName);
-};
 
 export const validateComponentProperties: <
 	TObject extends object,
 	TUnsupportedKeys extends readonly (keyof TObject)[],
 >(
+	componentName: string,
 	properties: TObject,
 	unsupportedProperties: TUnsupportedKeys,
 ) => asserts properties is TObject & Record<TUnsupportedKeys[number], never> = <
 	TObject extends object,
 	TUnsupportedKeys extends readonly (keyof TObject)[],
 >(
+	componentName: string,
 	properties: TObject,
 	unsupportedProperties: TUnsupportedKeys,
 ): asserts properties is TObject & Record<TUnsupportedKeys[number], never> => {
 	for (const property of unsupportedProperties) {
 		if (property in properties) {
-			throw new UnsupportedPropertyError(property);
+			throw new UnsupportedPropertyError(componentName, property);
 		}
 	}
 };

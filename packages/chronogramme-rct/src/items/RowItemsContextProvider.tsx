@@ -5,12 +5,8 @@ import {
 	RowItemsContext,
 	type RowItemsContextValue,
 } from "../items/RowItemsContext";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 
 interface RowItemsContextProviderProps<
 	TGroupId,

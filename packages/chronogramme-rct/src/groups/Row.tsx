@@ -1,13 +1,8 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import type { ReactNode, SyntheticEvent } from "react";
 import { RowItemsContextProvider } from "../items/RowItemsContextProvider";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-	RowRenderer,
-} from "../Timeline";
+import type { BaseGroup, BaseItem, RowRenderer } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 import { GroupRowContextProvider } from "./GroupRowContextProvider";
 

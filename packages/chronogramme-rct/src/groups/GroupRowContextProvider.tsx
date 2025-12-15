@@ -6,12 +6,8 @@ import {
 	type SyntheticEvent,
 	useMemo,
 } from "react";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 import { useGroupForHelpersContext } from "./useGroupForHelpersContext";
 

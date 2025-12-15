@@ -1,15 +1,9 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { type Context, createContext } from "react";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-	TimeSteps,
-} from "../Timeline";
+import type { BaseGroup, BaseItem, TimeSteps } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+import type { ShowPeriod } from "./CustomHeader";
 import type { Unit } from "./DateHeader";
-
-export type ShowPeriod = (from: number, to: number) => void;
 
 export interface HeadersContextValue<
 	TGroupId,

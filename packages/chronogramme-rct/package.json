@@ -16,22 +16,67 @@
 	"license": "SEE LICENSE IN LICENSE.md",
 	"type": "module",
 	"engines": {
-		"node": ">=22.12",
+		"node": ">=24.12",
 		"pnpm": ">=8"
 	},
 	"main": "./dist/chronogramme-rct.js",
 	"module": "./dist/chronogramme-rct.js",
 	"exports": {
-		".": {
-			"import": "./dist/chronogramme-rct.js",
-			"types": "./dist/types/index.d.ts"
+		"./GroupRow": {
+			"import": "./dist/groups/GroupRow.js",
+			"types": "./dist/types/groups/GroupRow.d.ts"
+		},
+		"./CustomHeader": {
+			"import": "./dist/headers/CustomHeader.js",
+			"types": "./dist/types/headers/GroupRow.d.ts"
+		},
+		"./DateHeader": {
+			"import": "./dist/headers/DateHeader.js",
+			"types": "./dist/types/headers/DateHeader.d.ts"
+		},
+		"./SidebarHeader": {
+			"import": "./dist/headers/SidebarHeader.js",
+			"types": "./dist/types/headers/SidebarHeader.d.ts"
+		},
+		"./TimelineHeaders": {
+			"import": "./dist/headers/TimelineHeaders.js",
+			"types": "./dist/types/headers/TimelineHeaders.d.ts"
+		},
+		"./HelpersContext": {
+			"import": "./dist/helpers/HelpersContext.js",
+			"types": "./dist/types/helpers/HelpersContext.d.ts"
+		},
+		"./useHelpersContext": {
+			"import": "./dist/helpers/useHelpersContext.js",
+			"types": "./dist/types/helpers/useHelpersContext.d.ts"
+		},
+		"./TimelineState": {
+			"import": "./dist/helpers/TimelineContext.js",
+			"types": "./dist/types/helpers/TimelineContext.d.ts"
+		},
+		"./useTimelineState": {
+			"import": "./dist/helpers/useTimelineContext.js",
+			"types": "./dist/types/helpers/useTimelineContext.d.ts"
+		},
+		"./RowItems": {
+			"import": "./dist/items/RowItems.js",
+			"types": "./dist/types/items/RowItems.d.ts"
+		},
+		"./TimelineMarkers": {
+			"import": "./dist/markers/TimelineMarkers.js",
+			"types": "./dist/types/markers/TimelineMarkers.d.ts"
+		},
+		"./Timeline": {
+			"import": "./dist/Timeline.js",
+			"types": "./dist/types/Timeline.d.ts"
 		}
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
-		"build": "vite build && tsc --p ./tsconfig.json",
+		"build": "vite build && tsc --project ./tsconfig.json",
+		"dev": "concurrently \"pnpm --filter @chronogramme/chronogramme dev\" \"vite build --watch\" \"tsc --project tsconfig.json --watch\"",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
@@ -41,6 +86,7 @@
 		"@types/node": "^24.10.1",
 		"@types/react": "^19.2.6",
 		"@vitejs/plugin-react-swc": "4.0.1",
+		"concurrently": "^9.2.1",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.4",
 		"vitest": "^4.0.13"

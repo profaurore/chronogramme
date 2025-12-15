@@ -5,5 +5,6 @@ import { baseViteConfig } from "../../../vite-base.config";
 
 export default defineConfig({
 	...baseViteConfig,
+
 	plugins: [wyw(), react()],
 });

@@ -5,13 +5,8 @@ import {
 } from "@chronogramme/chronogramme";
 import type { ReactNode } from "react";
 import { STYLE_SIZE_PRECISION } from "../constants";
-import type {
-	BaseGroup,
-	BaseItem,
-	GroupRenderer,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem, GroupRenderer } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 
 interface GroupProps<

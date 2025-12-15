@@ -1,11 +1,7 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { type Context, createContext } from "react";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 
 export interface RowItemsContextValue<
 	TGroupId,

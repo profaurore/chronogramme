@@ -3,16 +3,17 @@ import {
 	type Timeline as HTMLTimeline,
 } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import {
-	buildUnsupportedFunction,
 	buildUnsupportedPropertiesProxy,
+	UnsupportedFunctionError,
+	type UnsupportedType,
 } from "../utils/unsupportedUtils";
+import type {
+	GetDateFromLeftOffsetPosition,
+	GetLeftOffsetFromDate,
+} from "./HelpersContext";
 import {
 	TimelineContext,
 	type TimelineContextValue,
@@ -154,6 +155,7 @@ export const TimelineContextProvider = <
 			TItemTimeStartKey,
 			TItemTimeEndKey
 		> = buildUnsupportedPropertiesProxy(
+			"TimelineState",
 			{
 				canvasTimeEnd,
 				canvasTimeStart,
@@ -162,13 +164,26 @@ export const TimelineContextProvider = <
 		);
 
 		return buildUnsupportedPropertiesProxy(
+			"TimelineContextValue",
 			{
-				getDateFromLeftOffsetPosition: buildUnsupportedFunction(
-					"getDateFromLeftOffsetPosition",
-				),
-				getLeftOffsetFromDate: buildUnsupportedFunction(
-					"getLeftOffsetFromDate",
-				),
+				getDateFromLeftOffsetPosition: (() => {
+					throw new UnsupportedFunctionError(
+						"getDateFromLeftOffsetPosition",
+						"Use `useHelpersContext().getDateFromLeftOffsetPosition` instead.",
+					);
+				}) as unknown as UnsupportedType<
+					GetDateFromLeftOffsetPosition,
+					"Use `useHelpersContext().getDateFromLeftOffsetPosition` instead."
+				>,
+				getLeftOffsetFromDate: (() => {
+					throw new UnsupportedFunctionError(
+						"getLeftOffsetFromDate",
+						"Use `useHelpersContext().getLeftOffsetFromDate` instead.",
+					);
+				}) as unknown as UnsupportedType<
+					GetLeftOffsetFromDate,
+					"Use `useHelpersContext().getLeftOffsetFromDate` instead."
+				>,
 				getTimelineState: () => timelineState,
 			},
 			UNSUPPORTED_TIMELINE_CONTEXT_VALUE_PROPERTIES,

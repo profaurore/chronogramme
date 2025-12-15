@@ -21,10 +21,10 @@ import type {
 	BaseItem,
 	GetItemProps,
 	ItemRendererGetResizeProps,
-	RctToCoreItem,
 	ResizeEdge,
 } from "../Timeline";
 import { composeEvents } from "../utils/reactUtils";
+import type { RctToCoreItem } from "../utils/typeUtils";
 import { useItemContext } from "./useItemContext";
 import { useItemForHelpersContext } from "./useItemForHelpersContext";
 

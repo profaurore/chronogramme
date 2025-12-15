@@ -1,11 +1,7 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import {
 	GroupForHelpersContext,
 	type GroupForHelpersContextValue,

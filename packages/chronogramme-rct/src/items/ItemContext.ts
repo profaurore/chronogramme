@@ -8,10 +8,9 @@ import type {
 	BaseGroup,
 	BaseItem,
 	ItemRenderer,
-	RctToCoreGroup,
-	RctToCoreItem,
 	TimelineKeys,
 } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 
 type ItemOnClick<TItemId> = (
 	itemId: TItemId,

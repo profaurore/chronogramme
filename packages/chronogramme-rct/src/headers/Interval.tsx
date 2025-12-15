@@ -1,52 +1,19 @@
 import { UNIT } from "@chronogramme/chronogramme";
-import {
-	type CSSProperties,
-	type MouseEventHandler,
-	type ReactNode,
-	useCallback,
-	useMemo,
-} from "react";
+import { type ReactNode, useCallback, useMemo } from "react";
 import { nextTimeUnits } from "../constants";
 import { addUnitStep, startOfUnit } from "../utils/dateUtils";
 import { composeEvents } from "../utils/reactUtils";
 import type {
 	GetIntervalProps as CustomHeaderGetIntervalProps,
-	TimeInterval,
+	ShowPeriod,
 } from "./CustomHeader";
-import type { Unit } from "./DateHeader";
-import type { ShowPeriod } from "./HeadersContext";
-
-interface GetIntervalPropsArguments {
-	onClick?: MouseEventHandler | undefined;
-	style?: CSSProperties | undefined;
-}
-
-type GetIntervalProps = (args?: GetIntervalPropsArguments | undefined) => {
-	style: CSSProperties;
-};
-
-interface IntervalContext {
-	interval: TimeInterval;
-	intervalText: string;
-}
-
-interface IntervalRendererWithoutDataProps {
-	getIntervalProps: GetIntervalProps;
-	intervalContext: IntervalContext;
-}
-
-interface IntervalRendererWithDataProps<THeaderData>
-	extends IntervalRendererWithoutDataProps {
-	data: THeaderData;
-}
-
-export type IntervalRendererWithoutData = (
-	props: IntervalRendererWithoutDataProps,
-) => ReactNode;
-
-export type IntervalRendererWithData<THeaderData> = (
-	props: IntervalRendererWithDataProps<THeaderData>,
-) => ReactNode;
+import type {
+	GetIntervalProps,
+	IntervalRendererWithData,
+	IntervalRendererWithoutData,
+	TimeInterval,
+	Unit,
+} from "./DateHeader";
 
 interface IntervalBaseProps {
 	getIntervalProps: CustomHeaderGetIntervalProps;

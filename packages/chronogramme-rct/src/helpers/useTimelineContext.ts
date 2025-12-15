@@ -1,4 +1,8 @@
 import { useContext } from "react";
+import {
+	UnsupportedFunctionError,
+	type UnsupportedType,
+} from "../utils/unsupportedUtils";
 import { TimelineContext, type TimelineContextValue } from "./TimelineContext";
 
 export function useTimelineContext<
@@ -46,3 +50,20 @@ export function useTimelineContext<
 
 	return context;
 }
+
+/**
+ * @deprecated Unsupported function from React Calendar Timeline's API. Use
+ * `useTimelineState` instead.
+ */
+export const useTimelineState: UnsupportedType<
+	typeof useTimelineContext,
+	"Use `useTimelineContext` instead."
+> = (() => {
+	throw new UnsupportedFunctionError(
+		"useTimelineState",
+		"Use `useTimelineContext` instead.",
+	);
+}) as unknown as UnsupportedType<
+	typeof useTimelineContext,
+	"Use `useTimelineContext` instead."
+>;

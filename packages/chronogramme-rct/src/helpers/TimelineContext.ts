@@ -1,7 +1,8 @@
 import { type Context, createContext } from "react";
+import type { ShowPeriod } from "../headers/CustomHeader";
 import type { Unit } from "../headers/DateHeader";
-import type { ShowPeriod } from "../headers/HeadersContext";
 import type { TimelineKeys } from "../Timeline";
+import type { UnsupportedType } from "../utils/unsupportedUtils";
 import type {
 	GetDateFromLeftOffsetPosition,
 	GetLeftOffsetFromDate,
@@ -20,23 +21,56 @@ export interface TimelineState<
 > {
 	canvasTimeStart: number;
 	canvasTimeEnd: number;
-	visibleTimeStart: number;
-	visibleTimeEnd: number;
-	canvasWidth: number;
-	timelineUnit: Unit;
-	timelineWidth: number;
-	keys: Readonly<
-		TimelineKeys<
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey
-		>
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	visibleTimeStart: UnsupportedType<number, "No alternative available.">;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	visibleTimeEnd: UnsupportedType<number, "No alternative available.">;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	canvasWidth: UnsupportedType<number, "No alternative available.">;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	timelineUnit: UnsupportedType<Unit, "No alternative available.">;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	timelineWidth: UnsupportedType<number, "No alternative available.">;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	keys: UnsupportedType<
+		Readonly<
+			TimelineKeys<
+				TGroupIdKey,
+				TGroupTitleKey,
+				TGroupRightTitleKey,
+				TItemIdKey,
+				TItemGroupKey,
+				TItemTitleKey,
+				TItemDivTitleKey,
+				TItemTimeStartKey,
+				TItemTimeEndKey
+			>
+		>,
+		"No alternative available."
 	>;
 }
 
@@ -75,8 +109,24 @@ export interface TimelineContextValue<
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
 > {
-	getDateFromLeftOffsetPosition: GetDateFromLeftOffsetPosition;
-	getLeftOffsetFromDate: GetLeftOffsetFromDate;
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. Use
+	 * `useHelpersContext().getDateFromLeftOffsetPosition` instead.
+	 */
+	getDateFromLeftOffsetPosition: UnsupportedType<
+		GetDateFromLeftOffsetPosition,
+		"Use `useHelpersContext().getDateFromLeftOffsetPosition` instead."
+	>;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. Use
+	 * `useHelpersContext().getLeftOffsetFromDate` instead.
+	 */
+	getLeftOffsetFromDate: UnsupportedType<
+		GetLeftOffsetFromDate,
+		"Use `useHelpersContext().getLeftOffsetFromDate` instead."
+	>;
+
 	getTimelineState: GetTimelineState<
 		TGroupIdKey,
 		TGroupTitleKey,
@@ -88,7 +138,12 @@ export interface TimelineContextValue<
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>;
-	showPeriod: ShowPeriod;
+
+	/**
+	 * @deprecated Unsupported type from React Calendar Timeline's API. No
+	 * alternative available.
+	 */
+	showPeriod: UnsupportedType<ShowPeriod, "No alternative available.">;
 }
 
 // Unfortunate type cast to handle the trickiness of creating context

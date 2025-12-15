@@ -12,19 +12,8 @@ import {
 	alignWithUnitStep,
 	startOfUnit,
 } from "../utils/dateUtils";
-import type { Unit } from "./DateHeader";
-import type { ShowPeriod } from "./HeadersContext";
+import type { TimeInterval, Unit } from "./DateHeader";
 import { useHeadersContext } from "./useHeadersContext";
-
-interface GetRootPropsArguments {
-	style?: CSSProperties | undefined;
-}
-
-interface GetRootPropsReturnType {
-	style: CSSProperties;
-}
-
-type GetRootProps = (args?: GetRootPropsArguments) => GetRootPropsReturnType;
 
 const getIntervalProps: GetIntervalProps = ({
 	interval,
@@ -42,24 +31,29 @@ const getIntervalProps: GetIntervalProps = ({
 	};
 };
 
-export interface TimeInterval {
-	endTime: number;
-	labelWidth: number;
-	left: number;
-	startTime: number;
+export interface GetRootPropsArguments {
+	style?: CSSProperties | undefined;
 }
 
-interface HeaderContext {
+export interface GetRootPropsReturnType {
+	style: CSSProperties;
+}
+
+export type GetRootProps = (
+	args?: GetRootPropsArguments,
+) => GetRootPropsReturnType;
+
+export interface HeaderContext {
 	unit: Unit;
 	intervals: TimeInterval[];
 }
 
-interface GetIntervalPropsArguments {
+export interface GetIntervalPropsArguments {
 	interval: TimeInterval;
 	style?: CSSProperties | undefined;
 }
 
-interface GetIntervalPropsReturnType {
+export interface GetIntervalPropsReturnType {
 	style: CSSProperties;
 }
 
@@ -67,7 +61,9 @@ export type GetIntervalProps = (
 	args: GetIntervalPropsArguments,
 ) => GetIntervalPropsReturnType;
 
-interface CustomHeaderChildWithoutDataProps {
+export type ShowPeriod = (from: number, to: number) => void;
+
+export interface CustomHeaderChildWithoutDataProps {
 	timelineContext: TimelineContext;
 	headerContext: HeaderContext;
 	getRootProps: GetRootProps;
@@ -80,19 +76,28 @@ export interface CustomHeaderChildWithDataProps<THeaderData>
 	data: THeaderData;
 }
 
-interface CustomHeaderBaseProps {
+export type CustomHeaderChildProps<THeaderData> =
+	| CustomHeaderChildWithoutDataProps
+	| CustomHeaderChildWithDataProps<THeaderData>;
+
+export interface CustomHeaderBaseProps {
 	height?: number | undefined;
 	unit: Unit;
 }
 
-interface CustomHeaderWithoutDataProps extends CustomHeaderBaseProps {
+export interface CustomHeaderWithoutDataProps extends CustomHeaderBaseProps {
 	children: (props: CustomHeaderChildWithoutDataProps) => ReactNode;
 }
 
-interface CustomHeaderWithDataProps<THeaderData> extends CustomHeaderBaseProps {
+export interface CustomHeaderWithDataProps<THeaderData>
+	extends CustomHeaderBaseProps {
 	children: (props: CustomHeaderChildWithDataProps<THeaderData>) => ReactNode;
 	headerData: THeaderData;
 }
+
+export type CustomHeaderProps<THeaderData> =
+	| CustomHeaderWithoutDataProps
+	| CustomHeaderWithDataProps<THeaderData>;
 
 export function CustomHeader(props: CustomHeaderWithoutDataProps): ReactNode;
 export function CustomHeader<THeaderData>(

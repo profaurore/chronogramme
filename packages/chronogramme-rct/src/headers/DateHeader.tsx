@@ -1,7 +1,15 @@
-import { type CSSProperties, type ReactNode, useMemo } from "react";
+import {
+	type CSSProperties,
+	type MouseEventHandler,
+	type ReactNode,
+	useMemo,
+} from "react";
 import { DEFAULT_HEADER_HEIGHT, nextTimeUnits } from "../constants";
 import { defaultLabelFormat } from "../utils/dateUtils";
-import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
+import {
+	UnsupportedPropertyValueError,
+	type UnsupportedType,
+} from "../utils/unsupportedUtils";
 import {
 	CustomDateHeader,
 	type CustomDateHeaderDataWithData,
@@ -10,10 +18,6 @@ import {
 	type CustomDateHeaderWithoutDataProps,
 } from "./CustomDateHeader";
 import { CustomHeader } from "./CustomHeader";
-import type {
-	IntervalRendererWithData,
-	IntervalRendererWithoutData,
-} from "./Interval";
 import { useHeadersContext } from "./useHeadersContext";
 
 export type Unit =
@@ -31,26 +35,92 @@ export type LabelFormatFn = (
 	labelWidth: number,
 ) => string;
 
-interface DateHeaderBaseProps {
+export interface GetIntervalPropsArguments {
+	onClick?: MouseEventHandler | undefined;
+	style?: CSSProperties | undefined;
+}
+
+export type GetIntervalProps = (
+	args?: GetIntervalPropsArguments | undefined,
+) => {
+	style: CSSProperties;
+};
+
+export interface TimeInterval {
+	endTime: number;
+	labelWidth: number;
+	left: number;
+	startTime: number;
+}
+
+export interface IntervalContext {
+	interval: TimeInterval;
+	intervalText: string;
+}
+
+export interface IntervalRendererWithoutDataProps {
+	getIntervalProps: GetIntervalProps;
+	intervalContext: IntervalContext;
+}
+
+export interface IntervalRendererWithDataProps<THeaderData>
+	extends IntervalRendererWithoutDataProps {
+	data: THeaderData;
+}
+
+export type IntervalRendererProps<THeaderData> =
+	| IntervalRendererWithoutDataProps
+	| IntervalRendererWithDataProps<THeaderData>;
+
+export type IntervalRendererWithoutData = (
+	props: IntervalRendererWithoutDataProps,
+) => ReactNode;
+
+export type IntervalRendererWithData<THeaderData> = (
+	props: IntervalRendererWithDataProps<THeaderData>,
+) => ReactNode;
+
+export type IntervalRenderer<THeaderData> =
+	| IntervalRendererWithoutData
+	| IntervalRendererWithData<THeaderData>;
+
+export interface DateHeaderBaseProps {
 	className?: string | undefined;
 	height?: number | undefined;
-	labelFormat?: (LabelFormatFn | string) | undefined;
+	/**
+	 * Strings, from React Calendar Timeline's API, are not a supported type for
+	 * the label format. Use a formatting function or the default formatter.
+	 */
+	labelFormat?:
+		| (
+				| LabelFormatFn
+				| UnsupportedType<
+						string,
+						"Use a formatting function or the default formatter."
+				  >
+		  )
+		| undefined;
 	style?: CSSProperties | undefined;
 	unit?: Unit | "primaryHeader" | undefined;
 }
 
-interface DateHeaderPropsWithoutData extends DateHeaderBaseProps {
+export interface DateHeaderWithoutDataProps extends DateHeaderBaseProps {
 	intervalRenderer?: IntervalRendererWithoutData | undefined;
 }
 
-interface DateHeaderPropsWithData<THeaderData> extends DateHeaderBaseProps {
+export interface DateHeaderWithDataProps<THeaderData>
+	extends DateHeaderBaseProps {
 	headerData: THeaderData;
 	intervalRenderer?: IntervalRendererWithData<THeaderData> | undefined;
 }
 
-export function DateHeader(props: DateHeaderPropsWithoutData): ReactNode;
+export type DateHeaderProps<THeaderData> =
+	| DateHeaderWithoutDataProps
+	| DateHeaderWithDataProps<THeaderData>;
+
+export function DateHeader(props: DateHeaderWithoutDataProps): ReactNode;
 export function DateHeader<THeaderData>(
-	props: DateHeaderPropsWithData<THeaderData>,
+	props: DateHeaderWithDataProps<THeaderData>,
 ): ReactNode;
 export function DateHeader<THeaderData>({
 	className,
@@ -76,7 +146,7 @@ export function DateHeader<THeaderData>({
 			) => {
 				if (typeof labelFormat === "string") {
 					throw new UnsupportedPropertyValueError(
-						"Format strings are unsupported. Implement a formatting function or use the default formatter.",
+						"Format strings are unsupported. Use a formatting function or the default formatter.",
 						"labelFormat",
 						labelFormat,
 					);

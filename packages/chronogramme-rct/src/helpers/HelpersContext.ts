@@ -1,6 +1,7 @@
 import { type Context, createContext } from "react";
+import type { UnsupportedType } from "../utils/unsupportedUtils";
 
-interface ItemDimensions {
+export interface ItemDimensions {
 	collisionLeft: number;
 	collisionWidth: number;
 	height: number;
@@ -9,13 +10,13 @@ interface ItemDimensions {
 	width: number;
 }
 
-interface ItemAbsoluteDimensions {
+export interface ItemAbsoluteDimensions {
 	left: number;
 	top: number;
 	width: number;
 }
 
-interface GroupDimensions {
+export interface GroupDimensions {
 	height: number;
 	top: number;
 }
@@ -24,15 +25,15 @@ export type GetLeftOffsetFromDate = (date: number) => number;
 
 export type GetDateFromLeftOffsetPosition = (date: number) => number;
 
-type GetGroupDimensions<TGroupId> = (
+export type GetGroupDimensions<TGroupId> = (
 	groupId: TGroupId,
 ) => GroupDimensions | undefined;
 
-type GetItemAbsoluteDimensions<TItemId> = (
+export type GetItemAbsoluteDimensions<TItemId> = (
 	itemId: TItemId,
 ) => ItemAbsoluteDimensions | undefined;
 
-type GetItemDimensions<TItemId> = (
+export type GetItemDimensions<TItemId> = (
 	itemId: TItemId,
 ) => ItemDimensions | undefined;
 
@@ -43,6 +44,15 @@ export interface HelpersContextValue<TGroupId, TItemId> {
 	getItemDimensions: GetItemDimensions<TItemId>;
 	getLeftOffsetFromDate: GetLeftOffsetFromDate;
 }
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `SidebarHeaderChildProps` instead.
+ */
+export type HelpersContextValues<TGroupId, TItemId> = UnsupportedType<
+	HelpersContextValue<TGroupId, TItemId>,
+	"Use `HelpersContextValue` instead."
+>;
 
 export const HelpersContext: Context<
 	HelpersContextValue<number, number> | undefined

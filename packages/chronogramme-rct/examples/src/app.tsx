@@ -20,16 +20,16 @@ import {
 	UNIT,
 	ZERO,
 } from "@chronogramme/chronogramme";
+import { GroupRow } from "@chronogramme/chronogramme-rct/GroupRow";
+import { RowItems } from "@chronogramme/chronogramme-rct/RowItems";
 import {
-	type TimelineGroupBase as BaseGroup,
-	type TimelineItemBase as BaseItem,
+	type BaseGroup,
+	type BaseItem,
 	type GroupRenderer,
-	GroupRow,
 	type ItemRenderer,
 	Timeline as RCTimeline,
-	RowItems,
 	type RowRenderer,
-} from "@chronogramme/chronogramme-rct";
+} from "@chronogramme/chronogramme-rct/Timeline";
 
 const timelineClass: LinariaClassName = css`
 	flex: none;
@@ -159,12 +159,12 @@ export function App(): ReactNode {
 							now + Math.random() * indexOffsetFactor + j * indexOffsetFactor;
 
 						newItems.push({
-							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+							// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
 							end_time:
 								startTime + END_BASE_OFFSET + Math.random() * END_RANDOM_FACTOR,
 							group: i,
 							id: prevCount,
-							// biome-ignore lint/style/useNamingConvention: Original react-calendar-timeline API
+							// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
 							start_time: startTime,
 						});
 

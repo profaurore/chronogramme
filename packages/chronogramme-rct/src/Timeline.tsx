@@ -1,6 +1,4 @@
 import {
-	type BaseGroup as CoreBaseGroup,
-	type BaseItem as CoreBaseItem,
 	DragMoveEventDetail,
 	DragState,
 	type Timeline as HTMLTimeline,
@@ -36,8 +34,8 @@ import {
 } from "./constants";
 import { Group } from "./groups/Group";
 import { Row } from "./groups/Row";
+import type { ShowPeriod } from "./headers/CustomHeader";
 import { DateHeader, type Unit } from "./headers/DateHeader";
-import type { ShowPeriod } from "./headers/HeadersContext";
 import { HeadersContextProvider } from "./headers/HeadersContextProvider";
 import { TimelineHeaders } from "./headers/TimelineHeaders";
 import { HelpersContextProvider } from "./helpers/HelpersContextProvider";
@@ -50,13 +48,126 @@ import {
 	MILLISECONDS_PER_MINUTE,
 } from "./utils/dateUtils";
 import { getReactChildSecretKey, useRender } from "./utils/reactUtils";
-import type { FullRequired } from "./utils/typeUtils";
-import { validateComponentProperties } from "./utils/unsupportedUtils";
+import type {
+	FullRequired,
+	RctToCoreGroup,
+	RctToCoreItem,
+} from "./utils/typeUtils";
+import {
+	type UnsupportedType,
+	validateComponentProperties,
+} from "./utils/unsupportedUtils";
+
+/**
+ * @deprecated Unsupported property from React Calendar Timeline's API. Use
+ * the generic `TGroupId` and `TItemId` instead.
+ */
+export type Id = UnsupportedType<
+	number | string,
+	"Use the generic `TGroupId` and `TItemId` instead."
+>;
+
+export type BaseItem<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+> = {
+	canMove?: boolean | undefined;
+	canResize?: ResizableEdges | undefined;
+	className?: string | undefined;
+	itemProps?: (HTMLAttributes<HTMLDivElement> | undefined) &
+		"This property is unsupported because DefaultItemRenderer is unsupported." & {
+			__brand: "Error";
+		};
+} & {
+	[K in TItemIdKey]: TItemId;
+} & {
+	[K in TItemTitleKey]?: ReactNode | undefined;
+} & {
+	[K in TItemDivTitleKey]?: ReactNode | undefined;
+} & {
+	[K in TItemGroupKey]: TGroupId;
+} & {
+	[K in TItemTimeStartKey]: EpochTimeStamp;
+} & {
+	[K in TItemTimeEndKey]: EpochTimeStamp;
+};
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `BaseItem` instead.
+ */
+export type TimelineItemBase<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+> = UnsupportedType<
+	BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	"Use `BaseItem` instead."
+>;
+
+export type BaseGroup<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+> = {
+	lineHeight?: number | undefined;
+
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. Create
+	 * one group per item.
+	 */
+	stackItems?: UnsupportedType<
+		boolean | undefined,
+		"Create one group per item."
+	>;
+} & {
+	[K in TGroupIdKey]: TGroupId;
+} & {
+	[K in TGroupTitleKey]?: string | undefined;
+} & {
+	[K in TGroupRightTitleKey]?: string | undefined;
+};
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `BaseGroup` instead.
+ */
+export type TimelineGroupBase<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+> = UnsupportedType<
+	BaseGroup<TGroupId, TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
+	"Use `BaseGroup` instead."
+>;
 
 export type ResizeEdge = "left" | "right";
-type ResizableEdges = false | ResizeEdge | "both";
 
-type HorizontalClassNamesForGroup<
+export type ResizableEdges = false | ResizeEdge | "both";
+
+export type HorizontalClassNamesForGroup<
 	TGroupId,
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
@@ -69,97 +180,104 @@ type HorizontalClassNamesForGroup<
 	>,
 > = (group: TGroup) => string[];
 
-type MoveValidator<TItemId> = (
+export type MoveValidator<TItemId> = (
 	action: "move",
 	itemId: TItemId,
 	time: number,
 ) => number;
 
-type ResizeValidator<TItemId> = (
+export type ResizeValidator<TItemId> = (
 	action: "resize",
 	itemId: TItemId,
 	time: number,
 	resizeEdge: ResizeEdge,
 ) => number;
 
-type OnBoundsChange = (canvasTimeStart: number, canvasTimeEnd: number) => void;
+export type OnBoundsChange = (
+	canvasTimeStart: number,
+	canvasTimeEnd: number,
+) => void;
 
-type OnCanvasClick<TGroupId> = (
+export type OnCanvasClick<TGroupId> = (
 	groupId: TGroupId,
 	time: number,
 	e: SyntheticEvent,
 ) => void;
 
-type OnCanvasContextMenu<TGroupId> = (
+export type OnCanvasContextMenu<TGroupId> = (
 	groupId: TGroupId,
 	time: number,
 	e: SyntheticEvent,
 ) => void;
 
-type OnCanvasDoubleClick<TGroupId> = (
+export type OnCanvasDoubleClick<TGroupId> = (
 	groupId: TGroupId,
 	time: number,
 	e: SyntheticEvent,
 ) => void;
 
-type OnItemClick<TItemId> = (
+export type OnItemClick<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
 	time: number,
 ) => void;
 
-type OnItemContextMenu<TItemId> = (
+export type OnItemContextMenu<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
 	time: number,
 ) => void;
 
-type OnItemDeselect = (e: SyntheticEvent) => void;
+export type OnItemDeselect = (e: SyntheticEvent) => void;
 
-type OnItemDoubleClick<TItemId> = (
+export type OnItemDoubleClick<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
 	time: number,
 ) => void;
 
-type OnItemDrag<TGroupId, TItemId> = (
-	itemDragObject:
-		| {
-				eventType: "move";
-				itemId: TItemId;
-				time: number;
-				newGroupId: TGroupId;
-		  }
-		| {
-				eventType: "resize";
-				itemId: TItemId;
-				time: number;
-				edge: ResizeEdge;
-		  },
+export interface ItemMoveObject<TGroupId, TItemId> {
+	eventType: "move";
+	itemId: TItemId;
+	time: number;
+	newGroupId: TGroupId;
+}
+
+export interface ItemResizeObject<TItemId> {
+	eventType: "resize";
+	itemId: TItemId;
+	time: number;
+	edge: ResizeEdge;
+}
+
+export type OnItemDrag<TGroupId, TItemId> = (
+	itemDragObject: ItemMoveObject<TGroupId, TItemId> | ItemResizeObject<TItemId>,
 ) => void;
 
-type OnItemMove<TGroupId, TItemId> = (
+export type OnItemMove<TGroupId, TItemId> = (
 	itemId: TItemId,
 	dragTime: number,
 	newGroupOrder: TGroupId,
 ) => void;
 
-type OnItemResize<TItemId> = (
+export type OnItemResize<TItemId> = (
 	itemId: TItemId,
 	endTimeOrStartTime: number,
 	edge: ResizeEdge,
 ) => void;
 
-type OnItemSelect<TItemId> = (
+export type OnItemSelect<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
 	time: number,
 ) => void;
 
-type OnTimeChange = (
+export type UpdateScrollCanvas = (start: number, end: number) => void;
+
+export type OnTimeChange = (
 	newVisibleTimeStart: number,
 	newVisibleTimeEnd: number,
-	updateScrollCanvas: (start: number, end: number) => void,
+	updateScrollCanvas: UpdateScrollCanvas,
 ) => void;
 
 export interface TimelineContext {
@@ -170,17 +288,352 @@ export interface TimelineContext {
 	visibleTimeStart: number;
 }
 
-type OnZoom = (timelineContext: TimelineContext) => void;
+export type OnZoom = (timelineContext: TimelineContext) => void;
 
-interface ResizeDetector {
+export interface ResizeDetector {
 	addListener?: Component;
 	removeListener?: Component;
 }
 
-type VerticalLineClassNameForTime = (
+export type VerticalLineClassNameForTime = (
 	startTime: number,
 	endTime: number,
 ) => string[];
+
+export interface TimeSteps {
+	second: number;
+	minute: number;
+	hour: number;
+	day: number;
+	month: number;
+	year: number;
+}
+
+export interface GetLayerRootPropsReturnType {
+	style: CSSProperties;
+}
+
+export type GetLayerRootProps = () => GetLayerRootPropsReturnType;
+
+export interface RowRendererProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TRowData,
+> {
+	getLayerRootProps: GetLayerRootProps;
+	group: TGroup;
+	// itemsWithInteractions: TItem[]; // TODO: Implement
+	rowData: TRowData;
+}
+
+export type RowRenderer<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TRowData,
+> = (
+	props: RowRendererProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup,
+		TRowData
+	>,
+) => ReactNode;
+
+export interface GroupRendererProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+> {
+	group: TGroup;
+	isRightSidebar?: boolean | undefined;
+}
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `GroupRendererProps` instead.
+ */
+export type ReactCalendarGroupRendererProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+> = UnsupportedType<
+	GroupRendererProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup
+	>,
+	"Use `GroupRendererProps` instead."
+>;
+
+export type GroupRenderer<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+> = (
+	props: GroupRendererProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TGroup
+	>,
+) => ReactNode;
+
+export type GetItemProps = (
+	params: Pick<
+		HTMLAttributes<HTMLDivElement>,
+		| "className"
+		| "onClick"
+		| "onContextMenu"
+		| "onDoubleClick"
+		| "onMouseDown"
+		| "onMouseUp"
+		| "onPointerDownCapture"
+		| "onTouchEnd"
+		| "onTouchStart"
+		| "style"
+	>,
+) => FullRequired<
+	Pick<
+		HTMLAttributes<HTMLDivElement>,
+		"className" | "onPointerDownCapture" | "slot" | "style"
+	>
+> &
+	Pick<
+		HTMLAttributes<HTMLDivElement>,
+		| "onClick"
+		| "onMouseDown"
+		| "onMouseUp"
+		| "onTouchStart"
+		| "onTouchEnd"
+		| "onDoubleClick"
+		| "onContextMenu"
+	>;
+
+export interface ItemRendererGetResizePropsReturnType {
+	left: FullRequired<
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			"className" | "onPointerDownCapture" | "style"
+		>
+	>;
+	right: FullRequired<
+		Pick<
+			HTMLAttributes<HTMLDivElement>,
+			"className" | "onPointerDownCapture" | "style"
+		>
+	>;
+}
+
+export interface ItemRendererGetResizePropsParameters {
+	leftClassName?: string | undefined;
+	leftStyle?: CSSProperties | undefined;
+	rightClassName?: string | undefined;
+	rightStyle?: CSSProperties | undefined;
+}
+
+export type ItemRendererGetResizeProps = (
+	params?: ItemRendererGetResizePropsParameters | undefined,
+) => ItemRendererGetResizePropsReturnType;
+
+export interface Dimensions {
+	collisionLeft: number;
+	collisionWidth: number;
+	height: number;
+	left: number;
+	stack: boolean;
+	top: number;
+	width: number;
+}
+
+export interface ItemRendererItemContext<TGroupId> {
+	canMove: boolean;
+	canResizeLeft: boolean;
+	canResizeRight: boolean;
+	dimensions: Dimensions;
+	dragging: boolean;
+	dragOffset: number | undefined;
+	dragTime: number | undefined;
+	newGroupId: TGroupId | undefined;
+	resizeEdge: ResizeEdge | undefined;
+	resizeOffset: number | undefined;
+	resizeTime: number | undefined;
+	resizing: boolean;
+	selected: boolean;
+	title: ReactNode | undefined;
+	useResizeHandle: boolean;
+	width: number;
+}
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `ItemRendererItemContext` instead.
+ */
+export type ItemContext<TGroupId> = UnsupportedType<
+	ItemRendererItemContext<TGroupId>,
+	"Use `ItemRendererItemContext` instead."
+>;
+
+export interface ItemRendererProps<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> {
+	getItemProps: GetItemProps;
+	getResizeProps: ItemRendererGetResizeProps;
+	item: TItem;
+	itemContext: ItemRendererItemContext<TGroupId>;
+	timelineContext: TimelineContext;
+}
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `ItemRendererProps` instead.
+ */
+export type ReactCalendarItemRendererProps<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> = UnsupportedType<
+	ItemRendererProps<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem
+	>,
+	"Use `ItemRendererProps` instead."
+>;
+
+export type ItemRenderer<
+	TGroupId,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+> = (
+	props: ItemRendererProps<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem
+	>,
+) => ReactNode;
+
+export interface TimelineKeys<
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+> {
+	groupIdKey: TGroupIdKey;
+	groupTitleKey: TGroupTitleKey;
+	groupRightTitleKey: TGroupRightTitleKey;
+	itemIdKey: TItemIdKey;
+	itemGroupKey: TItemGroupKey;
+	itemTitleKey: TItemTitleKey;
+	itemDivTitleKey: TItemDivTitleKey;
+	itemTimeStartKey: TItemTimeStartKey;
+	itemTimeEndKey: TItemTimeEndKey;
+}
 
 export interface TimelineProps<
 	TGroupId,
@@ -212,15 +665,43 @@ export interface TimelineProps<
 	>,
 	TRowData,
 > {
-	canChangeGroup?: boolean | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	canChangeGroup?: UnsupportedType<
+		boolean | undefined,
+		"No alternative available."
+	>;
 	canMove?: boolean | undefined;
 	canResize?: ResizableEdges | undefined;
 	canSelect?: boolean | undefined;
 	children?: ReactNode | undefined;
 	className?: string | undefined;
-	clickTolerance?: number | undefined;
-	defaultTimeEnd?: number | undefined;
-	defaultTimeStart?: number | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	clickTolerance?: UnsupportedType<
+		number | undefined,
+		"No alternative available."
+	>;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	defaultTimeEnd?: UnsupportedType<
+		number | undefined,
+		"No alternative available."
+	>;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	defaultTimeStart?: UnsupportedType<
+		number | undefined,
+		"No alternative available."
+	>;
 	dragSnap?: number | undefined;
 	groupRenderer: GroupRenderer<
 		TGroupId,
@@ -231,9 +712,20 @@ export interface TimelineProps<
 	>;
 	groups: TGroup[];
 	headerHeight?: number | undefined;
-	headerRef?: Ref<HTMLDivElement>;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	headerRef?: UnsupportedType<Ref<HTMLDivElement>, "No alternative available.">;
 	hideHeaders?: boolean | undefined;
-	hideHorizontalLines?: boolean | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	hideHorizontalLines?: UnsupportedType<
+		boolean | undefined,
+		"No alternative available."
+	>;
 	horizontalLineClassNamesForGroup?:
 		| HorizontalClassNamesForGroup<
 				TGroupId,
@@ -256,7 +748,14 @@ export interface TimelineProps<
 		TItemTimeEndKey,
 		TItem
 	>;
-	itemTouchSendsClick?: boolean | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	itemTouchSendsClick?: UnsupportedType<
+		boolean | undefined,
+		"No alternative available."
+	>;
 	items: TItem[];
 	keys?:
 		| TimelineKeys<
@@ -272,9 +771,17 @@ export interface TimelineProps<
 		  >
 		| undefined;
 	lineHeight?: number | undefined;
-	maxZoom?: number | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	maxZoom?: UnsupportedType<number | undefined, "No alternative available.">;
 	minResizeWidth?: number | undefined;
-	minZoom?: number | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	minZoom?: UnsupportedType<number | undefined, "No alternative available.">;
 	moveResizeValidator?(
 		...args: Parameters<MoveValidator<TItemId>>
 	): ReturnType<MoveValidator<TItemId>>;
@@ -294,8 +801,19 @@ export interface TimelineProps<
 	onItemResize?: OnItemResize<TItemId> | undefined;
 	onItemSelect?: OnItemSelect<TItemId> | undefined;
 	onTimeChange?: OnTimeChange | undefined;
-	onZoom?: OnZoom | undefined;
-	resizeDetector?: ResizeDetector | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	onZoom?: UnsupportedType<OnZoom | undefined, "No alternative available.">;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	resizeDetector?: UnsupportedType<
+		ResizeDetector | undefined,
+		"No alternative available."
+	>;
 	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
 	rowRenderer: RowRenderer<
@@ -306,18 +824,99 @@ export interface TimelineProps<
 		TGroup,
 		TRowData
 	>;
-	scrollRef?: Ref<HTMLDivElement> | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	scrollRef?: UnsupportedType<
+		Ref<HTMLDivElement> | undefined,
+		"No alternative available."
+	>;
 	selected?: TItemId[] | undefined;
 	sidebarWidth?: number | undefined;
-	stackItems?: boolean | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. Create
+	 * one group per item.
+	 */
+	stackItems?: UnsupportedType<
+		boolean | undefined,
+		"Create one group per item."
+	>;
 	style?: CSSProperties | undefined;
 	timeSteps?: TimeSteps | undefined;
-	traditionalZoom?: boolean | undefined;
-	useResizeHandle?: boolean | undefined;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	traditionalZoom?: UnsupportedType<
+		boolean | undefined,
+		"No alternative available."
+	>;
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. No
+	 * alternative is available.
+	 */
+	useResizeHandle?: UnsupportedType<
+		boolean | undefined,
+		"No alternative available."
+	>;
 	verticalLineClassNameForTime?: VerticalLineClassNameForTime | undefined;
 	visibleTimeEnd: number;
 	visibleTimeStart: number;
 }
+
+/**
+ * @deprecated Unsupported type from React Calendar Timeline's API. Use
+ * `TimelineProps` instead.
+ */
+export type ReactCalendarTimelineProps<
+	TGroupId,
+	TGroupIdKey extends string,
+	TGroupTitleKey extends string,
+	TGroupRightTitleKey extends string,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TGroup extends BaseGroup<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey
+	>,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
+	TRowData,
+> = UnsupportedType<
+	TimelineProps<
+		TGroupId,
+		TGroupIdKey,
+		TGroupTitleKey,
+		TGroupRightTitleKey,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TGroup,
+		TItem,
+		TRowData
+	>,
+	"Use `TimelineProps` instead."
+>;
 
 const UNSUPPORTED_PROPERTIES = [
 	"canChangeGroup",
@@ -1037,326 +1636,6 @@ const MemoedRenderedTimeline = memo(
 	RenderedTimeline,
 ) as typeof RenderedTimeline;
 
-export interface RctToCoreItem<TGroupId, TItemId, TItem>
-	extends CoreBaseItem<TGroupId, TItemId> {
-	originalItem: TItem;
-}
-
-export interface RctToCoreGroup<TGroupId, TGroup>
-	extends CoreBaseGroup<TGroupId> {
-	originalGroup: TGroup;
-}
-
-export interface TimeSteps {
-	second: number;
-	minute: number;
-	hour: number;
-	day: number;
-	month: number;
-	year: number;
-}
-
-export type BaseItem<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> = {
-	canMove?: boolean | undefined;
-	canResize?: ResizableEdges | undefined;
-	className?: string | undefined;
-	itemProps?: (HTMLAttributes<HTMLDivElement> | undefined) &
-		"This property is unsupported because DefaultItemRenderer is unsupported." & {
-			__brand: "Error";
-		};
-} & {
-	[K in TItemIdKey]: TItemId;
-} & {
-	[K in TItemTitleKey]?: ReactNode | undefined;
-} & {
-	[K in TItemDivTitleKey]?: ReactNode | undefined;
-} & {
-	[K in TItemGroupKey]: TGroupId;
-} & {
-	[K in TItemTimeStartKey]: EpochTimeStamp;
-} & {
-	[K in TItemTimeEndKey]: EpochTimeStamp;
-};
-
-export type BaseGroup<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-> = {
-	lineHeight?: number | undefined;
-	stackItems?: (boolean | undefined) &
-		"This property is unsupported." & { __brand: "Error" };
-} & {
-	[K in TGroupIdKey]: TGroupId;
-} & {
-	[K in TGroupTitleKey]?: string | undefined;
-} & {
-	[K in TGroupRightTitleKey]?: string | undefined;
-};
-
-interface GetLayerRootPropsReturnType {
-	style: CSSProperties;
-}
-
-type GetLayerRootProps = () => GetLayerRootPropsReturnType;
-
-interface RowRendererProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TRowData,
-> {
-	getLayerRootProps: GetLayerRootProps;
-	group: TGroup;
-	// itemsWithInteractions: TItem[]; // TODO: Implement
-	rowData: TRowData;
-}
-
-export type RowRenderer<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TRowData,
-> = (
-	props: RowRendererProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup,
-		TRowData
-	>,
-) => ReactNode;
-
-export interface GroupRendererProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-> {
-	group: TGroup;
-	isRightSidebar?: boolean | undefined;
-}
-
-export type GroupRenderer<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-> = (
-	props: GroupRendererProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>,
-) => ReactNode;
-
-export type GetItemProps = (
-	params: Pick<
-		HTMLAttributes<HTMLDivElement>,
-		| "className"
-		| "onClick"
-		| "onContextMenu"
-		| "onDoubleClick"
-		| "onMouseDown"
-		| "onMouseUp"
-		| "onPointerDownCapture"
-		| "onTouchEnd"
-		| "onTouchStart"
-		| "style"
-	>,
-) => FullRequired<
-	Pick<
-		HTMLAttributes<HTMLDivElement>,
-		"className" | "onPointerDownCapture" | "slot" | "style"
-	>
-> &
-	Pick<
-		HTMLAttributes<HTMLDivElement>,
-		| "onClick"
-		| "onMouseDown"
-		| "onMouseUp"
-		| "onTouchStart"
-		| "onTouchEnd"
-		| "onDoubleClick"
-		| "onContextMenu"
-	>;
-
-export interface ItemRendererGetResizePropsReturnType {
-	left: FullRequired<
-		Pick<
-			HTMLAttributes<HTMLDivElement>,
-			"className" | "onPointerDownCapture" | "style"
-		>
-	>;
-	right: FullRequired<
-		Pick<
-			HTMLAttributes<HTMLDivElement>,
-			"className" | "onPointerDownCapture" | "style"
-		>
-	>;
-}
-
-interface ItemRendererGetResizePropsParameters {
-	leftClassName?: string | undefined;
-	leftStyle?: CSSProperties | undefined;
-	rightClassName?: string | undefined;
-	rightStyle?: CSSProperties | undefined;
-}
-
-export type ItemRendererGetResizeProps = (
-	params?: ItemRendererGetResizePropsParameters | undefined,
-) => ItemRendererGetResizePropsReturnType;
-
-interface Dimensions {
-	collisionLeft: number;
-	collisionWidth: number;
-	height: number;
-	left: number;
-	stack: boolean;
-	top: number;
-	width: number;
-}
-
-export interface ItemRendererItemContext<TGroupId> {
-	canMove: boolean;
-	canResizeLeft: boolean;
-	canResizeRight: boolean;
-	dimensions: Dimensions;
-	dragging: boolean;
-	dragOffset: number | undefined;
-	dragTime: number | undefined;
-	newGroupId: TGroupId | undefined;
-	resizeEdge: ResizeEdge | undefined;
-	resizeOffset: number | undefined;
-	resizeTime: number | undefined;
-	resizing: boolean;
-	selected: boolean;
-	title: ReactNode | undefined;
-	useResizeHandle: boolean;
-	width: number;
-}
-
-export interface ItemRendererProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
-> {
-	getItemProps: GetItemProps;
-	getResizeProps: ItemRendererGetResizeProps;
-	item: TItem;
-	itemContext: ItemRendererItemContext<TGroupId>;
-	timelineContext: TimelineContext;
-}
-
-export type ItemRenderer<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
-> = (
-	props: ItemRendererProps<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem
-	>,
-) => ReactNode;
-
-export interface TimelineKeys<
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> {
-	groupIdKey: TGroupIdKey;
-	groupTitleKey: TGroupTitleKey;
-	groupRightTitleKey: TGroupRightTitleKey;
-	itemIdKey: TItemIdKey;
-	itemGroupKey: TItemGroupKey;
-	itemTitleKey: TItemTitleKey;
-	itemDivTitleKey: TItemDivTitleKey;
-	itemTimeStartKey: TItemTimeStartKey;
-	itemTimeEndKey: TItemTimeEndKey;
-}
-
 export const Timeline = <
 	TGroupId,
 	TGroupIdKey extends string,
@@ -1404,7 +1683,7 @@ export const Timeline = <
 		TRowData
 	>,
 ): ReactNode => {
-	validateComponentProperties(props, UNSUPPORTED_PROPERTIES);
+	validateComponentProperties("Timeline", props, UNSUPPORTED_PROPERTIES);
 
 	const { groups, items, ...remainingProperties } = props;
 

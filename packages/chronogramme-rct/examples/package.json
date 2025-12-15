@@ -3,11 +3,11 @@
 	"version": "0.1.0",
 	"private": true,
 	"engines": {
-		"node": ">=22.12",
+		"node": ">=24.12",
 		"pnpm": ">=8"
 	},
 	"scripts": {
-		"dev": "vite"
+		"dev": "concurrently \"pnpm --filter @chronogramme/chronogramme-rct dev\" \"vite\""
 	},
 	"dependencies": {
 		"@chronogramme/chronogramme": "workspace:^",
@@ -22,6 +22,7 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react-swc": "4.0.1",
 		"@wyw-in-js/vite": "^0.8.0",
+		"concurrently": "^9.2.1",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.4"
 	}

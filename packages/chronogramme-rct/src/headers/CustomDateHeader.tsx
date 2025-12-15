@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { CustomHeaderChildWithDataProps } from "./CustomHeader";
-import type { Unit } from "./DateHeader";
-import {
-	Interval,
-	type IntervalRendererWithData,
-	type IntervalRendererWithoutData,
-} from "./Interval";
+import type {
+	IntervalRendererWithData,
+	IntervalRendererWithoutData,
+	Unit,
+} from "./DateHeader";
+import { Interval } from "./Interval";
 
 type GetLabelFormat = (
 	interval: [number, number],

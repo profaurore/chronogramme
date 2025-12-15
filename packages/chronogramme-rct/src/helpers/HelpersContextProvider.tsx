@@ -2,12 +2,8 @@ import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { type ReactNode, useContext, useMemo } from "react";
 import { GroupForHelpersContext } from "../groups/GroupForHelpersContext";
 import { ItemForHelpersContext } from "../items/ItemForHelpersContext";
-import type {
-	BaseGroup,
-	BaseItem,
-	RctToCoreGroup,
-	RctToCoreItem,
-} from "../Timeline";
+import type { BaseGroup, BaseItem } from "../Timeline";
+import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
