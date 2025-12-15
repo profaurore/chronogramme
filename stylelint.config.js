@@ -21,6 +21,9 @@ export default {
 		{
 			customSyntax: "postcss-styled-syntax",
 			files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.cjs", "**/*.jsx"],
+			rules: {
+				"nesting-selector-no-missing-scoping-root": null,
+			},
 		},
 		{
 			customSyntax: "postcss-html",

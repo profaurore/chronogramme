@@ -126,6 +126,7 @@ export class Scroller extends HTMLElement {
 		const center = document.createElement("div");
 		this.#centerElement = center;
 		center.id = "center";
+		center.part = center.id;
 
 		const centerSlot = document.createElement("slot");
 		centerSlot.name = center.id;
@@ -138,6 +139,7 @@ export class Scroller extends HTMLElement {
 		for (const location of ["v-start", "h-start", "h-end", "v-end"]) {
 			const bar = document.createElement("div");
 			bar.id = `bar-${location}`;
+			bar.part = bar.id;
 
 			const barSlot = document.createElement("slot");
 			barSlot.name = bar.id;
@@ -153,6 +155,7 @@ export class Scroller extends HTMLElement {
 			for (const vLocation of ["start", "end"]) {
 				const corner = document.createElement("div");
 				corner.id = `corner-h-${hLocation}-v-${vLocation}`;
+				corner.part = corner.id;
 
 				const cornerSlot = document.createElement("slot");
 				cornerSlot.name = corner.id;
@@ -176,15 +179,19 @@ export class Scroller extends HTMLElement {
 		// Dividers
 		const dividerHStart = document.createElement("slot");
 		dividerHStart.id = "divider-h-start";
+		dividerHStart.part = dividerHStart.id;
 
 		const dividerHEnd = document.createElement("slot");
 		dividerHEnd.id = "divider-h-end";
+		dividerHEnd.part = dividerHEnd.id;
 
 		const dividerVStart = document.createElement("slot");
 		dividerVStart.id = "divider-v-start";
+		dividerVStart.part = dividerVStart.id;
 
 		const dividerVEnd = document.createElement("slot");
 		dividerVEnd.id = "divider-v-end";
+		dividerVEnd.part = dividerVEnd.id;
 
 		// Container
 		const container = document.createElement("div");

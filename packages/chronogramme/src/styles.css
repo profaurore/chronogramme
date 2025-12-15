@@ -37,7 +37,6 @@
 }
 
 #center {
-	background-image: repeating-linear-gradient(135deg, #00f, #f0f 100px);
 	grid-area: center;
 	isolation: isolate;
 	overflow: hidden;
@@ -47,7 +46,6 @@
 /* Bar Areas */
 
 #bar-h-start {
-	background-color: #0f0;
 	display: var(--h-start-bar-display, unset);
 	left: 0;
 	grid-area: h-start;
@@ -56,7 +54,6 @@
 }
 
 #bar-h-end {
-	background-color: #0f0;
 	display: var(--h-end-bar-display, unset);
 	grid-area: h-end;
 	overflow: hidden;
@@ -65,7 +62,6 @@
 }
 
 #bar-v-start {
-	background-color: #f00;
 	display: var(--v-start-bar-display, unset);
 	grid-area: v-start;
 	overflow: hidden;
@@ -74,7 +70,6 @@
 }
 
 #bar-v-end {
-	background-color: #f00;
 	display: var(--v-end-bar-display, unset);
 	bottom: 0;
 	grid-area: v-end;
@@ -85,7 +80,6 @@
 /* Corner Areas */
 
 #corner-h-start-v-start {
-	background-color: #0ff;
 	display: var(--h-start-bar-display, var(--v-start-bar-display, unset));
 	left: 0;
 	grid-area: h-start-v-start;
@@ -95,7 +89,6 @@
 }
 
 #corner-h-start-v-end {
-	background-color: #0ff;
 	display: var(--h-start-bar-display, var(--v-end-bar-display, unset));
 	bottom: 0;
 	left: 0;
@@ -105,7 +98,6 @@
 }
 
 #corner-h-end-v-start {
-	background-color: #0ff;
 	display: var(--h-end-bar-display, var(--v-start-bar-display, unset));
 	grid-area: h-end-v-start;
 	overflow: hidden;
@@ -115,7 +107,6 @@
 }
 
 #corner-h-end-v-end {
-	background-color: #0ff;
 	display: var(--h-end-bar-display, var(--v-end-bar-display, unset));
 	bottom: 0;
 	grid-area: h-end-v-end;

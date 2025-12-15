@@ -36,6 +36,25 @@ const timelineClass: LinariaClassName = css`
 	font-size: 12px;
 	height: 400px;
 	margin-bottom: 1em;
+
+	&::part(center) {
+		background-image: repeating-linear-gradient(135deg, #00f, #f0f 100px);
+	}
+
+	&::part(bar-h-start), &::part(bar-h-end) {
+		background-color: #0f0;
+	}
+
+	&::part(bar-v-start), &::part(bar-v-end) {
+		background-color: #f00;
+	}
+
+	&::part(corner-h-start-v-start),
+		&::part(corner-h-start-v-end),
+		&::part(corner-h-end-v-start),
+		&::part(corner-h-end-v-end) {
+		background-color: #0ff;
+	}
 `;
 
 const buttonRowClass: LinariaClassName = css`
@@ -45,10 +64,10 @@ const buttonRowClass: LinariaClassName = css`
 `;
 
 const headerClass: LinariaClassName = css`
-display:flex;
-flex-direction: column;
-gap: 5px;
-margin-bottom:5px;
+	display:flex;
+	flex-direction: column;
+	gap: 5px;
+	margin-bottom:5px;
 `;
 
 const DAYS_IN_WEEK = 7;
