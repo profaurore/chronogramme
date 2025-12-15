@@ -228,7 +228,7 @@ export type OnItemContextMenu<TItemId> = (
 	time: number,
 ) => void;
 
-export type OnItemDeselect = (e: SyntheticEvent) => void;
+export type OnItemDeselect = () => void;
 
 export type OnItemDoubleClick<TItemId> = (
 	itemId: TItemId,
@@ -989,7 +989,7 @@ function RenderedTimeline<
 	onCanvasDoubleClick,
 	onItemClick,
 	onItemContextMenu,
-	// onItemDeselect, // TODO: For the row context provider
+	onItemDeselect,
 	onItemDoubleClick,
 	onItemDrag,
 	onItemMove,
@@ -1300,10 +1300,11 @@ function RenderedTimeline<
 		e: SyntheticEvent,
 	) => void = useCallback(
 		(groupId, time, e) => {
+			onItemDeselect?.();
 			setSelectedItemId(undefined);
 			onCanvasClick?.(groupId, time, e);
 		},
-		[onCanvasClick],
+		[onCanvasClick, onItemDeselect],
 	);
 
 	const timezoneOffset = useMemo(
