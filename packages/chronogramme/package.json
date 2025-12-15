@@ -32,12 +32,10 @@
 	],
 	"scripts": {
 		"build": "vite build && tsc --project ./tsconfig.json",
-		"dev": "concurrently \"vite build --watch\" \"tsc --project tsconfig.json --watch\"",
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
 		"@types/node": "^24.10.1",
-		"concurrently": "^9.2.1",
 		"lightningcss": "^1.30.2",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.4",

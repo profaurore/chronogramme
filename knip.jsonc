@@ -1,7 +1,10 @@
 {
 	"ignoreDependencies": [
 		// For Vitest
-		"happy-dom"
+		"happy-dom",
+
+		// For React
+		"scheduler"
 	],
 
 	"workspaces": {

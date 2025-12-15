@@ -7,13 +7,14 @@
 		"pnpm": ">=8"
 	},
 	"scripts": {
-		"dev": "concurrently \"pnpm --filter @chronogramme/chronogramme-rct dev\" \"vite\""
+		"dev": "vite"
 	},
 	"dependencies": {
 		"@chronogramme/chronogramme": "workspace:^",
 		"@chronogramme/chronogramme-rct": "workspace:^",
 		"react": "^19.2.0",
-		"react-dom": "^19.2.0"
+		"react-dom": "^19.2.0",
+		"scheduler": "^0.27.0"
 	},
 	"devDependencies": {
 		"@linaria/core": "^6.3.0",
@@ -22,7 +23,6 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react-swc": "4.0.1",
 		"@wyw-in-js/vite": "^0.8.0",
-		"concurrently": "^9.2.1",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.4"
 	}

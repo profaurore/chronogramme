@@ -20,8 +20,8 @@ import {
 	UNIT,
 	ZERO,
 } from "@chronogramme/chronogramme";
-import { GroupRow } from "@chronogramme/chronogramme-rct/GroupRow";
-import { RowItems } from "@chronogramme/chronogramme-rct/RowItems";
+import { GroupRow } from "@chronogramme/chronogramme-rct/groups/GroupRow";
+import { RowItems } from "@chronogramme/chronogramme-rct/items/RowItems";
 import {
 	type BaseGroup,
 	type BaseItem,
