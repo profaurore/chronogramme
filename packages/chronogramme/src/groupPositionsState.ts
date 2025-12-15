@@ -270,6 +270,10 @@ export class GroupPositionsState<
 		return;
 	}
 
+	public getItems(): readonly Readonly<TItem>[] {
+		return this.#items;
+	}
+
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
 		const lineHeight = this.getGroupLineSize(groupIndex);
 

@@ -326,11 +326,28 @@ export interface RowRendererProps<
 		TGroupTitleKey,
 		TGroupRightTitleKey
 	>,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
 	TRowData,
 > {
 	getLayerRootProps: GetLayerRootProps;
 	group: TGroup;
-	// itemsWithInteractions: TItem[]; // TODO: Implement
+	itemsWithInteractions: readonly Readonly<TItem>[];
 	rowData: TRowData;
 }
 
@@ -345,6 +362,23 @@ export type RowRenderer<
 		TGroupTitleKey,
 		TGroupRightTitleKey
 	>,
+	TItemId,
+	TItemIdKey extends string,
+	TItemGroupKey extends string,
+	TItemTitleKey extends string,
+	TItemDivTitleKey extends string,
+	TItemTimeStartKey extends string,
+	TItemTimeEndKey extends string,
+	TItem extends BaseItem<
+		TGroupId,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey
+	>,
 	TRowData,
 > = (
 	props: RowRendererProps<
@@ -353,6 +387,14 @@ export type RowRenderer<
 		TGroupTitleKey,
 		TGroupRightTitleKey,
 		TGroup,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem,
 		TRowData
 	>,
 ) => ReactNode;
@@ -822,6 +864,14 @@ export interface TimelineProps<
 		TGroupTitleKey,
 		TGroupRightTitleKey,
 		TGroup,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem,
 		TRowData
 	>;
 	/**
@@ -979,6 +1029,7 @@ function RenderedTimeline<
 	id,
 	itemHeightRatio = 0.65,
 	itemRenderer,
+	itemsWithInteractions,
 	keys,
 	lineHeight = 30,
 	moveResizeValidator,
@@ -1029,6 +1080,7 @@ function RenderedTimeline<
 	>,
 	"groups" | "items"
 > & {
+	itemsWithInteractions: readonly Readonly<TItem>[];
 	renderIndicator: number;
 	timelineRef: RefObject<InstanceType<
 		typeof HTMLTimeline<
@@ -1439,6 +1491,7 @@ function RenderedTimeline<
 						groupIndex={groupIndex}
 						horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 						itemHeightRatio={itemHeightRatio}
+						itemsWithInteractions={itemsWithInteractions}
 						key={`group-${group.id}-row`}
 						onClick={onRowClickHandler}
 						onContextMenu={onCanvasContextMenu}
@@ -1776,9 +1829,36 @@ export const Timeline = <
 		return;
 	}, [render]);
 
+	const draggedItem = timelineRef.current?.getDraggedItem();
+	const resizedItem = timelineRef.current?.getDraggedItem();
+
+	const itemsWithInteractions = useMemo(() => {
+		const timelineItems = timelineRef.current?.getItems() ?? [];
+		const itemsWithEdited: TItem[] = [];
+
+		for (const item of timelineItems) {
+			itemsWithEdited.push(item.originalItem);
+		}
+
+		const editedItem = draggedItem ?? resizedItem;
+		if (editedItem) {
+			const editedItemId = editedItem.id;
+
+			for (const [index, item] of timelineItems.entries()) {
+				if (item.id === editedItemId) {
+					itemsWithEdited[index] = editedItem.originalItem;
+					break;
+				}
+			}
+		}
+
+		return itemsWithEdited;
+	}, [draggedItem, resizedItem]);
+
 	return (
 		<MemoedRenderedTimeline
 			{...remainingProperties}
+			itemsWithInteractions={itemsWithInteractions}
 			renderIndicator={renderIndicator}
 			timelineRef={timelineRef}
 		/>

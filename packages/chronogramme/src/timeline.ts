@@ -125,6 +125,10 @@ export class Timeline<
 		return this.#groupPositionsState.getItemIndicesById(itemId);
 	}
 
+	public getItems(): readonly Readonly<TItem>[] {
+		return this.#groupPositionsState.getItems();
+	}
+
 	public getLinePosition(groupIndex: number, lineIndex: number): number {
 		return this.#groupPositionsState.getLinePosition(groupIndex, lineIndex);
 	}

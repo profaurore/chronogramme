@@ -44,6 +44,7 @@ interface RowProps<
 	groupIndex: number;
 	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
 	itemHeightRatio: number;
+	itemsWithInteractions: readonly Readonly<TItem>[];
 	onClick?:
 		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
 		| undefined;
@@ -60,6 +61,14 @@ interface RowProps<
 		TGroupTitleKey,
 		TGroupRightTitleKey,
 		TGroup,
+		TItemId,
+		TItemIdKey,
+		TItemGroupKey,
+		TItemTitleKey,
+		TItemDivTitleKey,
+		TItemTimeStartKey,
+		TItemTimeEndKey,
+		TItem,
 		TRowData
 	>;
 	timeline: InstanceType<
@@ -106,6 +115,7 @@ export const Row = <
 	groupIndex,
 	horizontalLineClassNamesForGroup,
 	itemHeightRatio,
+	itemsWithInteractions,
 	onClick,
 	onContextMenu,
 	onDoubleClick,
@@ -193,6 +203,7 @@ export const Row = <
 				<RowRendererComponent
 					getLayerRootProps={getRowLayerRootProps}
 					group={group.originalGroup}
+					itemsWithInteractions={itemsWithInteractions}
 					rowData={rowData}
 				/>
 			</RowItemsContextProvider>

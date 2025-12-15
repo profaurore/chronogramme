@@ -294,6 +294,23 @@ export function App(): ReactNode {
 			"title",
 			"rightTitle",
 			BaseGroup<number, "id", "title", "rightTitle">,
+			number,
+			"id",
+			"group",
+			"title",
+			"title",
+			"start_time",
+			"end_time",
+			BaseItem<
+				number,
+				number,
+				"id",
+				"group",
+				"title",
+				"title",
+				"start_time",
+				"end_time"
+			>,
 			undefined
 		>
 	>(
