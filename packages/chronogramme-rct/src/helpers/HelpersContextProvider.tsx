@@ -1,7 +1,5 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
-import { type ReactNode, useContext, useMemo } from "react";
-import { GroupForHelpersContext } from "../groups/GroupForHelpersContext";
-import { ItemForHelpersContext } from "../items/ItemForHelpersContext";
+import { type ReactNode, useMemo } from "react";
 import type { BaseGroup, BaseItem } from "../Timeline";
 import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
@@ -93,67 +91,37 @@ export const HelpersContextProvider = <
 	TGroup,
 	TItem
 >): ReactNode => {
-	const groupForHelpersContext = useContext(GroupForHelpersContext);
-	const itemForHelpersContext = useContext(ItemForHelpersContext);
-
 	const contextValue = useMemo<HelpersContextValue<TGroupId, TItemId>>(
 		() => ({
 			getDateFromLeftOffsetPosition: timeline.getHValue,
+
 			getGroupDimensions: (groupId: TGroupId) => {
-				if (groupId !== groupForHelpersContext?.id) {
-					throw new UnsupportedPropertyValueError(
-						"getGroupDimensions() must be used within the group renderer for the provided identifier",
-						"groupId",
-						groupId,
-					);
-				}
-
-				return {
-					top: groupForHelpersContext.position,
-					height: groupForHelpersContext.size,
-				};
+				throw new UnsupportedPropertyValueError(
+					"getGroupDimensions() must be used via useHelpersContext() within the group renderer for the provided identifier",
+					"groupId",
+					groupId,
+				);
 			},
+
 			getItemAbsoluteDimensions: (itemId: TItemId) => {
-				if (itemId !== itemForHelpersContext?.id) {
-					throw new UnsupportedPropertyValueError(
-						"getItemAbsoluteDimensions() must be used within the item renderer for the provided identifier",
-						"itemId",
-						itemId,
-					);
-				}
-
-				return {
-					left: itemForHelpersContext.renderedHStartPos,
-					top: itemForHelpersContext.renderedVStartPos,
-					width: itemForHelpersContext.renderedHSize,
-				};
+				throw new UnsupportedPropertyValueError(
+					"getItemAbsoluteDimensions() must be used via useHelpersContext() within the item renderer for the provided identifier",
+					"itemId",
+					itemId,
+				);
 			},
+
 			getItemDimensions: (itemId: TItemId) => {
-				if (itemId !== itemForHelpersContext?.id) {
-					throw new UnsupportedPropertyValueError(
-						"getItemDimensions() must be used within the item renderer for the provided identifier",
-						"itemId",
-						itemId,
-					);
-				}
-
-				return {
-					collisionLeft: itemForHelpersContext.startTime,
-					collisionWidth: itemForHelpersContext.range,
-					height: itemForHelpersContext.renderedVSize,
-					left: itemForHelpersContext.renderedHStartPos,
-					top: itemForHelpersContext.renderedVStartPosInGroup,
-					width: itemForHelpersContext.renderedHSize,
-				};
+				throw new UnsupportedPropertyValueError(
+					"getItemDimensions() must be used via useHelpersContext() within the item renderer for the provided identifier",
+					"itemId",
+					itemId,
+				);
 			},
+
 			getLeftOffsetFromDate: timeline.getHPos,
 		}),
-		[
-			groupForHelpersContext,
-			itemForHelpersContext,
-			timeline.getHPos,
-			timeline.getHValue,
-		],
+		[timeline.getHPos, timeline.getHValue],
 	);
 
 	// Unfortunate type cast to handle the trickiness of creating context
