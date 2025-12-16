@@ -11,7 +11,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/profaurore/chronogramme"
+		"url": "git+https://github.com/profaurore/chronogramme.git"
 	},
 	"license": "SEE LICENSE IN LICENSE.md",
 	"type": "module",
@@ -19,56 +19,54 @@
 		"node": ">=24.12",
 		"pnpm": ">=8"
 	},
-	"main": "./dist/chronogramme-rct.js",
-	"module": "./dist/chronogramme-rct.js",
 	"exports": {
 		"./groups/GroupRow": {
-			"import": "./dist/groups/GroupRow.js",
-			"types": "./dist/types/groups/GroupRow.d.ts"
+			"types": "./dist/types/groups/GroupRow.d.ts",
+			"import": "./dist/groups/GroupRow.js"
 		},
 		"./headers/CustomHeader": {
-			"import": "./dist/headers/CustomHeader.js",
-			"types": "./dist/types/headers/GroupRow.d.ts"
+			"types": "./dist/types/headers/CustomHeader.d.ts",
+			"import": "./dist/headers/CustomHeader.js"
 		},
 		"./headers/DateHeader": {
-			"import": "./dist/headers/DateHeader.js",
-			"types": "./dist/types/headers/DateHeader.d.ts"
+			"types": "./dist/types/headers/DateHeader.d.ts",
+			"import": "./dist/headers/DateHeader.js"
 		},
 		"./headers/SidebarHeader": {
-			"import": "./dist/headers/SidebarHeader.js",
-			"types": "./dist/types/headers/SidebarHeader.d.ts"
+			"types": "./dist/types/headers/SidebarHeader.d.ts",
+			"import": "./dist/headers/SidebarHeader.js"
 		},
 		"./headers/TimelineHeaders": {
-			"import": "./dist/headers/TimelineHeaders.js",
-			"types": "./dist/types/headers/TimelineHeaders.d.ts"
+			"types": "./dist/types/headers/TimelineHeaders.d.ts",
+			"import": "./dist/headers/TimelineHeaders.js"
 		},
 		"./helpers/HelpersContext": {
-			"import": "./dist/helpers/HelpersContext.js",
-			"types": "./dist/types/helpers/HelpersContext.d.ts"
+			"types": "./dist/types/helpers/HelpersContext.d.ts",
+			"import": "./dist/helpers/HelpersContext.js"
 		},
 		"./helpers/useHelpersContext": {
-			"import": "./dist/helpers/useHelpersContext.js",
-			"types": "./dist/types/helpers/useHelpersContext.d.ts"
+			"types": "./dist/types/helpers/useHelpersContext.d.ts",
+			"import": "./dist/helpers/useHelpersContext.js"
 		},
 		"./helpers/TimelineState": {
-			"import": "./dist/helpers/TimelineContext.js",
-			"types": "./dist/types/helpers/TimelineContext.d.ts"
+			"types": "./dist/types/helpers/TimelineContext.d.ts",
+			"import": "./dist/helpers/TimelineContext.js"
 		},
 		"./helpers/useTimelineState": {
-			"import": "./dist/helpers/useTimelineContext.js",
-			"types": "./dist/types/helpers/useTimelineContext.d.ts"
+			"types": "./dist/types/helpers/useTimelineContext.d.ts",
+			"import": "./dist/helpers/useTimelineContext.js"
 		},
 		"./items/RowItems": {
-			"import": "./dist/items/RowItems.js",
-			"types": "./dist/types/items/RowItems.d.ts"
+			"types": "./dist/types/items/RowItems.d.ts",
+			"import": "./dist/items/RowItems.js"
 		},
 		"./markers/TimelineMarkers": {
-			"import": "./dist/markers/TimelineMarkers.js",
-			"types": "./dist/types/markers/TimelineMarkers.d.ts"
+			"types": "./dist/types/markers/TimelineMarkers.d.ts",
+			"import": "./dist/markers/TimelineMarkers.js"
 		},
 		"./Timeline": {
-			"import": "./dist/Timeline.js",
-			"types": "./dist/types/Timeline.d.ts"
+			"types": "./dist/types/Timeline.d.ts",
+			"import": "./dist/Timeline.js"
 		}
 	},
 	"files": [
@@ -76,7 +74,7 @@
 	],
 	"scripts": {
 		"build": "vite build && tsc --project ./tsconfig.json",
-		"prepublishOnly": "pnpm build"
+		"prepublish": "pnpm build && publint"
 	},
 	"dependencies": {
 		"@chronogramme/chronogramme": "workspace:^"
@@ -85,6 +83,7 @@
 		"@types/node": "^24.10.1",
 		"@types/react": "^19.2.6",
 		"@vitejs/plugin-react-swc": "4.0.1",
+		"publint": "^0.3.16",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.4",
 		"vitest": "^4.0.13"

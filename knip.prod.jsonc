@@ -20,20 +20,6 @@
 		},
 
 		"packages/chronogramme-rct": {
-			"entry": [
-				"./src/groups/GroupRow.tsx",
-				"./src/headers/CustomHeader.tsx",
-				"./src/headers/DateHeader.tsx",
-				"./src/headers/SidebarHeader.tsx",
-				"./src/headers/TimelineHeaders.tsx",
-				"./src/helpers/HelpersContext.ts",
-				"./src/helpers/useHelpersContext.ts",
-				"./src/helpers/TimelineContext.ts",
-				"./src/helpers/useTimelineContext.ts",
-				"./src/items/RowItems.tsx",
-				"./src/markers/TimelineMarkers.tsx",
-				"./src/Timeline.tsx"
-			],
 			"ignoreDependencies": ["@chronogramme/chronogramme"],
 			"project": ["src/**/*.{ts,tsx}"]
 		}

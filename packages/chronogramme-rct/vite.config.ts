@@ -52,8 +52,6 @@ export default defineConfig({
 		},
 
 		sourcemap: true,
-
-		watch: {},
 	},
 
 	plugins: [react()],
