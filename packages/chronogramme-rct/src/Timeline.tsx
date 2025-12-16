@@ -58,6 +58,12 @@ import {
 	validateComponentProperties,
 } from "./utils/unsupportedUtils";
 
+const defaultOnTimeChange: OnTimeChange = (
+	newVisibleTimeStart: number,
+	newVisibleTimeEnd: number,
+	updateScrollCanvas: UpdateScrollCanvas,
+): void => updateScrollCanvas(newVisibleTimeStart, newVisibleTimeEnd);
+
 /**
  * @deprecated Unsupported property from React Calendar Timeline's API. Use
  * the generic `TGroupId` and `TItemId` instead.
@@ -80,10 +86,14 @@ export type BaseItem<
 	canMove?: boolean | undefined;
 	canResize?: ResizableEdges | undefined;
 	className?: string | undefined;
-	itemProps?: (HTMLAttributes<HTMLDivElement> | undefined) &
-		"This property is unsupported because DefaultItemRenderer is unsupported." & {
-			__brand: "Error";
-		};
+	/**
+	 * @deprecated Unsupported property from React Calendar Timeline's API. Provide
+	 * an `itemRenderer` function instead.
+	 */
+	itemProps?: UnsupportedType<
+		HTMLAttributes<HTMLDivElement> | undefined,
+		"Used by `DefaultItemRenderer`, which is unsupported."
+	>;
 } & {
 	[K in TItemIdKey]: TItemId;
 } & {
@@ -519,12 +529,11 @@ export type ItemRendererGetResizeProps = (
 	params?: ItemRendererGetResizePropsParameters | undefined,
 ) => ItemRendererGetResizePropsReturnType;
 
-export interface Dimensions {
+export interface ItemDimensions {
 	collisionLeft: number;
 	collisionWidth: number;
 	height: number;
 	left: number;
-	stack: boolean;
 	top: number;
 	width: number;
 }
@@ -533,7 +542,7 @@ export interface ItemRendererItemContext<TGroupId> {
 	canMove: boolean;
 	canResizeLeft: boolean;
 	canResizeRight: boolean;
-	dimensions: Dimensions;
+	dimensions: ItemDimensions;
 	dragging: boolean;
 	dragOffset: number | undefined;
 	dragTime: number | undefined;
@@ -1046,11 +1055,7 @@ function RenderedTimeline<
 	onItemMove,
 	onItemResize,
 	onItemSelect,
-	onTimeChange = (
-		newVisibleTimeStart: number,
-		newVisibleTimeEnd: number,
-		updateScrollCanvas: (start: number, end: number) => void,
-	): void => updateScrollCanvas(newVisibleTimeStart, newVisibleTimeEnd),
+	onTimeChange = defaultOnTimeChange,
 	rightSidebarWidth = 0,
 	rowData,
 	rowRenderer,

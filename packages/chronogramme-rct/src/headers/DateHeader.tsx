@@ -30,7 +30,7 @@ export type Unit =
 	| "year";
 
 export type LabelFormatFn = (
-	[timeStart, timeEnd]: [number, number],
+	interval: [start: number, end: number],
 	unit: Unit,
 	labelWidth: number,
 ) => string;

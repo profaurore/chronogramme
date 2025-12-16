@@ -1,7 +1,12 @@
 import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import type { ReactNode, SyntheticEvent } from "react";
 import { RowItemsContextProvider } from "../items/RowItemsContextProvider";
-import type { BaseGroup, BaseItem, RowRenderer } from "../Timeline";
+import type {
+	BaseGroup,
+	BaseItem,
+	HorizontalClassNamesForGroup,
+	RowRenderer,
+} from "../Timeline";
 import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 import { GroupRowContextProvider } from "./GroupRowContextProvider";
@@ -42,7 +47,15 @@ interface RowProps<
 > {
 	group: RctToCoreGroup<TGroupId, TGroup>;
 	groupIndex: number;
-	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
+	horizontalLineClassNamesForGroup:
+		| HorizontalClassNamesForGroup<
+				TGroupId,
+				TGroupIdKey,
+				TGroupTitleKey,
+				TGroupRightTitleKey,
+				TGroup
+		  >
+		| undefined;
 	itemHeightRatio: number;
 	itemsWithInteractions: readonly Readonly<TItem>[];
 	onClick?:

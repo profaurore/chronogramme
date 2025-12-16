@@ -85,13 +85,21 @@ export interface CustomHeaderBaseProps {
 	unit: Unit;
 }
 
+export type CustomHeaderChildWithoutData = (
+	props: CustomHeaderChildWithoutDataProps,
+) => ReactNode;
+
+export type CustomHeaderChildWithData<THeaderData> = (
+	props: CustomHeaderChildWithDataProps<THeaderData>,
+) => ReactNode;
+
 export interface CustomHeaderWithoutDataProps extends CustomHeaderBaseProps {
-	children: (props: CustomHeaderChildWithoutDataProps) => ReactNode;
+	children: CustomHeaderChildWithoutData;
 }
 
 export interface CustomHeaderWithDataProps<THeaderData>
 	extends CustomHeaderBaseProps {
-	children: (props: CustomHeaderChildWithDataProps<THeaderData>) => ReactNode;
+	children: CustomHeaderChildWithData<THeaderData>;
 	headerData: THeaderData;
 }
 
@@ -109,7 +117,7 @@ export function CustomHeader<THeaderData>({
 	headerData,
 	height = DEFAULT_HEADER_HEIGHT,
 }: CustomHeaderBaseProps & {
-	children: (props: CustomHeaderChildWithDataProps<THeaderData>) => ReactNode;
+	children: CustomHeaderChildWithData<THeaderData>;
 	headerData?: THeaderData;
 }): ReactNode {
 	const { showPeriod, timeSteps, timeline, timelineUnit } = useHeadersContext();

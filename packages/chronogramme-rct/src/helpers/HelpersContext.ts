@@ -1,14 +1,6 @@
 import { type Context, createContext } from "react";
+import type { ItemDimensions } from "../Timeline";
 import type { UnsupportedType } from "../utils/unsupportedUtils";
-
-export interface ItemDimensions {
-	collisionLeft: number;
-	collisionWidth: number;
-	height: number;
-	left: number;
-	top: number;
-	width: number;
-}
 
 export interface ItemAbsoluteDimensions {
 	left: number;

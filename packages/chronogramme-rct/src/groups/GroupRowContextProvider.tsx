@@ -6,7 +6,11 @@ import {
 	type SyntheticEvent,
 	useMemo,
 } from "react";
-import type { BaseGroup, BaseItem } from "../Timeline";
+import type {
+	BaseGroup,
+	BaseItem,
+	HorizontalClassNamesForGroup,
+} from "../Timeline";
 import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
 import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 import { useGroupForHelpersContext } from "./useGroupForHelpersContext";
@@ -42,7 +46,15 @@ interface GroupRowProviderProps<
 > {
 	children?: ReactNode | undefined;
 	group: RctToCoreGroup<TGroupId, TGroup>;
-	horizontalLineClassNamesForGroup: ((group: TGroup) => string[]) | undefined;
+	horizontalLineClassNamesForGroup:
+		| HorizontalClassNamesForGroup<
+				TGroupId,
+				TGroupIdKey,
+				TGroupTitleKey,
+				TGroupRightTitleKey,
+				TGroup
+		  >
+		| undefined;
 	index: number;
 	onClick?:
 		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)

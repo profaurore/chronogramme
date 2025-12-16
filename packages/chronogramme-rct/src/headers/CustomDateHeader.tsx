@@ -3,19 +3,14 @@ import type { CustomHeaderChildWithDataProps } from "./CustomHeader";
 import type {
 	IntervalRendererWithData,
 	IntervalRendererWithoutData,
+	LabelFormatFn,
 	Unit,
 } from "./DateHeader";
 import { Interval } from "./Interval";
 
-type GetLabelFormat = (
-	interval: [number, number],
-	labelUnit: Unit,
-	labelWidth: number,
-) => string;
-
 interface CustomDateHeaderDataBase {
 	className: string | undefined;
-	getLabelFormat: GetLabelFormat;
+	getLabelFormat: LabelFormatFn;
 	style: CSSProperties | undefined;
 	unitProp: Unit | "primaryHeader" | undefined;
 }
