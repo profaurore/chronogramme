@@ -34,7 +34,7 @@ import {
 import { Group } from "./groups/Group";
 import { Row } from "./groups/Row";
 import type { ShowPeriod } from "./headers/CustomHeader";
-import { DateHeader, type Unit } from "./headers/DateHeader";
+import type { Unit } from "./headers/DateHeader";
 import { HeadersContextProvider } from "./headers/HeadersContextProvider";
 import { TimelineHeaders } from "./headers/TimelineHeaders";
 import { HelpersContextProvider } from "./helpers/HelpersContextProvider";
@@ -723,7 +723,7 @@ function RenderedTimeline<
 	className,
 	dragSnap = MILLISECONDS_PER_FIFTEEN_MINUTES,
 	groupRenderer,
-	headerHeight = 50,
+	headerHeight = 60,
 	hideHeaders,
 	horizontalLineClassNamesForGroup,
 	id,
@@ -1170,16 +1170,11 @@ function RenderedTimeline<
 		renderedHeader = headers[ZERO];
 	}
 
-	renderedHeader ??= (
-		<TimelineHeaders>
-			<DateHeader unit="primaryHeader" />
-			<DateHeader />
-		</TimelineHeaders>
-	);
+	renderedHeader ??= <TimelineHeaders />;
 
 	return (
 		<cg-timeline
-			class={className}
+			class={`react-calendar-timeline ${className ?? ""}`}
 			h-end-extrema={[rightSidebarWidth, rightSidebarWidth]}
 			h-end-size={rightSidebarWidth}
 			h-extrema={[TIME_MIN, TIME_MAX]}
@@ -1214,36 +1209,42 @@ function RenderedTimeline<
 
 						{renderedLeftGroups !== undefined && (
 							<div
-								className="rct-sidebar"
+								className="rct-outer"
 								slot="bar-h-start"
-								style={{ height: "100%", width: "100%" }}
+								style={{ height: "100%" }}
 							>
-								<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+								<div className="rct-sidebar" style={{ height: "100%" }}>
+									<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+								</div>
 							</div>
 						)}
 
-						<div className="rct-horizontal-lines" slot="center">
-							<ItemContextProvider<TKeys, TGroup, TItem>
-								canMove={canMove}
-								canResizeLeft={canResizeLeft}
-								canResizeRight={canResizeRight}
-								canSelect={canSelect}
-								itemDragState={itemDragStateRef.current}
-								itemRenderer={itemRenderer}
-								itemResizeState={itemResizeStateRef.current}
-								keys={resolvedKeys}
-								minResizeWidth={minResizeWidth}
-								onClick={onItemClick}
-								onContextMenu={onItemContextMenu}
-								onDoubleClick={onItemDoubleClick}
-								onSelect={onItemSelect}
-								selected={selected}
-								selectedItemId={selectedItemId}
-								setSelectedItemId={setSelectedItemId}
-								timeline={timeline}
-							>
-								{renderedGroupRows}
-							</ItemContextProvider>
+						<div className="rct-outer" slot="center" style={{ height: "100%" }}>
+							<div className="rct-scroll" style={{ height: "100%" }}>
+								<div className="rct-horizontal-lines">
+									<ItemContextProvider<TKeys, TGroup, TItem>
+										canMove={canMove}
+										canResizeLeft={canResizeLeft}
+										canResizeRight={canResizeRight}
+										canSelect={canSelect}
+										itemDragState={itemDragStateRef.current}
+										itemRenderer={itemRenderer}
+										itemResizeState={itemResizeStateRef.current}
+										keys={resolvedKeys}
+										minResizeWidth={minResizeWidth}
+										onClick={onItemClick}
+										onContextMenu={onItemContextMenu}
+										onDoubleClick={onItemDoubleClick}
+										onSelect={onItemSelect}
+										selected={selected}
+										selectedItemId={selectedItemId}
+										setSelectedItemId={setSelectedItemId}
+										timeline={timeline}
+									>
+										{renderedGroupRows}
+									</ItemContextProvider>
+								</div>
+							</div>
 						</div>
 
 						{renderedRightGroups !== undefined && (

@@ -60,7 +60,7 @@ export const GroupRowContextProvider = <
 	const className =
 		"rct-hl " +
 		(index % EVEN_MULTIPLE === ZERO ? "rct-hl-even " : "rct-hl-odd ") +
-		horizontalLineClassNamesForGroup?.(originalGroup)?.join(" ");
+		(horizontalLineClassNamesForGroup?.(originalGroup)?.join(" ") ?? "");
 
 	const contextValue = useMemo<GroupRowContextValue<TGroup["id"]>>(
 		() => ({

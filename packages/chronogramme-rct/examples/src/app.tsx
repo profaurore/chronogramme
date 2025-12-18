@@ -32,6 +32,7 @@ import {
 	type RowRenderer,
 	type TimelineProps,
 } from "@chronogramme/chronogramme-rct/Timeline";
+import { TimelineMarkers } from "../../src/markers/TimelineMarkers";
 
 const timelineClass: LinariaClassName = css`
 	flex: none;
@@ -469,7 +470,9 @@ export function App(): ReactNode {
 				rowRenderer={rowRenderer}
 				visibleTimeEnd={windowEnd}
 				visibleTimeStart={windowStart}
-			/>
+			>
+				<TimelineMarkers />
+			</RCTimeline>
 		</>
 	);
 }

@@ -1,11 +1,13 @@
-import { UNIT } from "@chronogramme/chronogramme";
+import { UNIT, ZERO } from "@chronogramme/chronogramme";
 import { Children, type CSSProperties, type ReactNode } from "react";
 import { getReactChildProp, getReactChildSecretKey } from "../utils/reactUtils";
 import {
 	type UnsupportedType,
 	validateComponentProperties,
 } from "../utils/unsupportedUtils";
+import { DateHeader } from "./DateHeader";
 import { SidebarHeader } from "./SidebarHeader";
+import { useHeadersContext } from "./useHeadersContext";
 
 const UNSUPPORTED_PROPERTIES = ["className", "style"] as const;
 
@@ -13,15 +15,7 @@ export interface TimelineHeadersProps {
 	calendarHeaderClassName?: string | undefined;
 	calendarHeaderStyle?: CSSProperties | undefined;
 	children?: ReactNode | undefined;
-
-	/**
-	 * @deprecated Unsupported property from React Calendar Timeline's API. No
-	 * alternative is available.
-	 */
-	className?: UnsupportedType<
-		string | undefined,
-		"No alternative is available."
-	>;
+	className?: string | undefined;
 
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
@@ -36,7 +30,10 @@ export interface TimelineHeadersProps {
 export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 	validateComponentProperties("TimelineHeaders", props, UNSUPPORTED_PROPERTIES);
 
-	const { calendarHeaderClassName, calendarHeaderStyle, children } = props;
+	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
+
+	const { calendarHeaderClassName, calendarHeaderStyle, children, className } =
+		props;
 
 	const rightSidebarHeaders: ReactNode[] = [];
 	const leftSidebarHeaders: ReactNode[] = [];
@@ -66,23 +63,45 @@ export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 		);
 	}
 
-	const renderedLeftSidebarHeader = leftSidebarHeaders[0] ?? <SidebarHeader />;
-	const renderedRightSidebarHeader = rightSidebarHeaders[0] ?? (
-		<SidebarHeader variant="right" />
-	);
-
 	return (
 		<>
-			<div slot="corner-h-start-v-start">{renderedLeftSidebarHeader}</div>
+			{leftSidebarWidth > ZERO && (
+				<div
+					className={`rct-header-root ${className ?? ""}`}
+					slot="corner-h-start-v-start"
+					style={{ height: "100%" }}
+				>
+					{leftSidebarHeaders[0] ?? <SidebarHeader />}
+				</div>
+			)}
 			<div
-				style={calendarHeaderStyle}
+				className={`rct-header-root ${className ?? ""}`}
+				style={{ height: "100%" }}
 				slot="bar-v-start"
-				className={`rct-calendar-header${calendarHeaderClassName ?? ""}`}
-				data-testid="headerContainer"
 			>
-				{calendarHeaders}
+				<div
+					className={`rct-calendar-header ${calendarHeaderClassName ?? ""}`}
+					style={calendarHeaderStyle}
+				>
+					{calendarHeaders.length > ZERO ? (
+						calendarHeaders
+					) : (
+						<>
+							<DateHeader unit="primaryHeader" />
+							<DateHeader />
+						</>
+					)}
+				</div>
 			</div>
-			<div slot="corner-h-end-v-start">{renderedRightSidebarHeader}</div>
+			{rightSidebarWidth > ZERO && (
+				<div
+					className={`rct-header-root ${className ?? ""}`}
+					slot="corner-h-end-v-start"
+					style={{ height: "100%" }}
+				>
+					{rightSidebarHeaders[0] ?? <SidebarHeader variant="right" />}
+				</div>
+			)}
 		</>
 	);
 };

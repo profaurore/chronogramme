@@ -89,7 +89,6 @@ export function Interval<THeaderData>({
 	if (IntervalRendererComponent === undefined) {
 		return (
 			<div
-				data-testid="dateHeaderInterval"
 				{...getIntervalProps({ interval })}
 				className={`rct-dateHeader ${primaryHeader ? "rct-dateHeader-primary" : ""}`}
 			>

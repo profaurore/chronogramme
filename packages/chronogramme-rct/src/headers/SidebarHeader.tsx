@@ -1,7 +1,6 @@
 import { type CSSProperties, type ReactNode, useCallback } from "react";
 import type { ResizeEdge } from "../Timeline";
 import type { UnsupportedType } from "../utils/unsupportedUtils";
-import { useHeadersContext } from "./useHeadersContext";
 
 export interface GetRootPropsArguments {
 	style?: CSSProperties | undefined;
@@ -16,6 +15,8 @@ export type GetRootProps = (
 ) => GetRootPropsReturnType;
 
 export interface SidebarHeaderBaseProps {
+	// Unused by the component, but used by `TimelineHeaders` to associate the
+	// header to the correct side.
 	variant?: ResizeEdge | undefined;
 }
 
@@ -74,7 +75,6 @@ export function SidebarHeader<THeaderData>(
 export function SidebarHeader<THeaderData>({
 	children: ChildrenComponent,
 	headerData,
-	variant,
 }: SidebarHeaderBaseProps & {
 	children?:
 		| SidebarHeaderChildWithoutData
@@ -82,20 +82,18 @@ export function SidebarHeader<THeaderData>({
 		| undefined;
 	headerData?: THeaderData;
 }): ReactNode {
-	const { leftSidebarWidth, rightSidebarWidth } = useHeadersContext();
-
 	const getRootProps: GetRootProps = useCallback(
 		(props) => ({
 			style: {
 				...props?.style,
-				width: variant === "right" ? rightSidebarWidth : leftSidebarWidth,
+				height: "100%",
 			},
 		}),
-		[leftSidebarWidth, rightSidebarWidth, variant],
+		[],
 	);
 
 	if (ChildrenComponent === undefined) {
-		return <div data-testid="sidebarHeader" {...getRootProps()} />;
+		return <div {...getRootProps()} />;
 	}
 
 	if (headerData === undefined) {

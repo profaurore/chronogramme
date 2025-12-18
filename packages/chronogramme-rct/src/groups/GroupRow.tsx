@@ -24,7 +24,6 @@ export const GroupRow = ({ children }: GroupRowProps): ReactNode => {
 		<div
 			className={className}
 			data-groupid={id}
-			data-testid="groupRow"
 			onClick={onClick}
 			onContextMenu={onContextMenu}
 			onDoubleClick={onDoubleClick}

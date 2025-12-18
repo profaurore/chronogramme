@@ -60,11 +60,7 @@ export function CustomDateHeader<THeaderData>({
 	}
 >): ReactNode {
 	return (
-		<div
-			data-testid="dateHeader"
-			className={className}
-			{...getRootProps({ style })}
-		>
+		<div className={className} {...getRootProps({ style })}>
 			{intervals.map((interval) => {
 				const intervalText = getLabelFormat(
 					[interval.startTime, interval.endTime],
