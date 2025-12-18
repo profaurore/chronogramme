@@ -1,13 +1,13 @@
-import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import type { ReactNode, SyntheticEvent } from "react";
 import { RowItemsContextProvider } from "../items/RowItemsContextProvider";
+import type { HorizontalClassNamesForGroup, RowRenderer } from "../Timeline";
 import type {
-	BaseGroup,
-	BaseItem,
-	HorizontalClassNamesForGroup,
-	RowRenderer,
-} from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+	RctToCoreGroup,
+} from "../utils/typeUtils";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 import { GroupRowContextProvider } from "./GroupRowContextProvider";
 
@@ -16,112 +16,36 @@ const getRowLayerRootProps = (): { style: Record<string, never> } => ({
 });
 
 interface RowProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 > {
-	group: RctToCoreGroup<TGroupId, TGroup>;
+	group: RctToCoreGroup<TKeys, TGroup>;
 	groupIndex: number;
 	horizontalLineClassNamesForGroup:
-		| HorizontalClassNamesForGroup<
-				TGroupId,
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TGroup
-		  >
+		| HorizontalClassNamesForGroup<TKeys, TGroup>
 		| undefined;
 	itemHeightRatio: number;
 	itemsWithInteractions: readonly Readonly<TItem>[];
 	onClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onContextMenu?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onDoubleClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
 	rowData: TRowData;
-	rowRenderer: RowRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem,
-		TRowData
-	>;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	rowRenderer: RowRenderer<TKeys, TGroup, TItem, TRowData>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const Row = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 >({
 	group,
@@ -135,56 +59,13 @@ export const Row = <
 	rowData,
 	rowRenderer: RowRendererComponent,
 	timeline,
-}: RowProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem,
-	TRowData
->): ReactNode => (
-	<GroupForHelpersContextProvider<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem
-	>
+}: RowProps<TKeys, TGroup, TItem, TRowData>): ReactNode => (
+	<GroupForHelpersContextProvider<TKeys, TGroup, TItem>
 		group={group}
 		index={groupIndex}
 		timeline={timeline}
 	>
-		<GroupRowContextProvider<
-			TGroupId,
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemId,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey,
-			TGroup,
-			TItem
-		>
+		<GroupRowContextProvider<TKeys, TGroup, TItem>
 			group={group}
 			horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
 			index={groupIndex}
@@ -194,21 +75,7 @@ export const Row = <
 			onDoubleClick={onDoubleClick}
 			timeline={timeline}
 		>
-			<RowItemsContextProvider<
-				TGroupId,
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TItemId,
-				TItemIdKey,
-				TItemGroupKey,
-				TItemTitleKey,
-				TItemDivTitleKey,
-				TItemTimeStartKey,
-				TItemTimeEndKey,
-				TGroup,
-				TItem
-			>
+			<RowItemsContextProvider<TKeys, TGroup, TItem>
 				index={groupIndex}
 				itemHeightRatio={itemHeightRatio}
 				timeline={timeline}

@@ -1,7 +1,11 @@
 import { ZERO } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
-import type { BaseGroup, BaseItem } from "../Timeline";
-import type { RctToCoreItem } from "../utils/typeUtils";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	RctToCoreItem,
+} from "../utils/typeUtils";
 import {
 	ItemForHelpersContext,
 	type ItemForHelpersContextValue,
@@ -9,92 +13,29 @@ import {
 import { useItemContext } from "./useItemContext";
 
 interface ItemForHelpersContextProviderProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	children?: ReactNode | undefined;
 	groupPosition: number;
-	item: RctToCoreItem<TGroupId, TItemId, TItem>;
+	item: RctToCoreItem<TKeys, TGroup, TItem>;
 	vOffsetInGroup: number;
 	vSize: number;
 }
 
 export const ItemForHelpersContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	children,
 	groupPosition,
 	item,
 	vOffsetInGroup: renderedVStartPos,
 	vSize: renderedVSize,
-}: ItemForHelpersContextProviderProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TItem
->): ReactNode => {
-	const { timeline } = useItemContext<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem
-	>();
+}: ItemForHelpersContextProviderProps<TKeys, TGroup, TItem>): ReactNode => {
+	const { timeline } = useItemContext<TKeys, TGroup, TItem>();
 
 	const endTime = item.endTime;
 	const startTime = item.startTime;
@@ -110,7 +51,7 @@ export const ItemForHelpersContextProvider = <
 	const renderedHSize = renderedHEndPos - renderedHStartPos;
 	const renderedVStartPosInGroup = groupPosition + renderedVStartPos;
 
-	const contextValue = useMemo<ItemForHelpersContextValue<TItemId>>(
+	const contextValue = useMemo<ItemForHelpersContextValue<TItem["id"]>>(
 		() => ({
 			id,
 			range,
@@ -137,7 +78,7 @@ export const ItemForHelpersContextProvider = <
 	// providers with generics.
 	return (
 		<ItemForHelpersContext.Provider
-			value={contextValue as unknown as ItemForHelpersContextValue<number>}
+			value={contextValue as unknown as ItemForHelpersContextValue<unknown>}
 		>
 			{children}
 		</ItemForHelpersContext.Provider>

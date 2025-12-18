@@ -1,112 +1,43 @@
-import {
-	EVEN_MULTIPLE,
-	type Timeline as HTMLTimeline,
-	ZERO,
-} from "@chronogramme/chronogramme";
+import { EVEN_MULTIPLE, ZERO } from "@chronogramme/chronogramme";
 import type { ReactNode } from "react";
 import { STYLE_SIZE_PRECISION } from "../constants";
-import type { BaseGroup, BaseItem, GroupRenderer } from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+import type { GroupRenderer } from "../Timeline";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+	RctToCoreGroup,
+} from "../utils/typeUtils";
 import { GroupForHelpersContextProvider } from "./GroupForHelpersContextProvider";
 
 interface GroupProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
+	TRowData,
 > {
-	group: RctToCoreGroup<TGroupId, TGroup>;
+	group: RctToCoreGroup<TKeys, TGroup>;
 	groupIndex: number;
-	groupRenderer: GroupRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>;
+	groupRenderer: GroupRenderer<TKeys, TGroup, TRowData>;
 	isRightSidebar?: boolean | undefined;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	rowData: TRowData;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const Group = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
+	TRowData,
 >({
 	group,
 	groupIndex,
 	groupRenderer: GroupRendererComponent,
 	isRightSidebar,
+	rowData,
 	timeline,
-}: GroupProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem
->): ReactNode => {
+}: GroupProps<TKeys, TGroup, TItem, TRowData>): ReactNode => {
 	const groupPosition = timeline.getGroupPosition(groupIndex);
 	const groupSize = timeline.getGroupSize(groupIndex);
 
@@ -126,21 +57,7 @@ export const Group = <
 				top: `${groupPosition.toFixed(STYLE_SIZE_PRECISION)}px`,
 			}}
 		>
-			<GroupForHelpersContextProvider<
-				TGroupId,
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TItemId,
-				TItemIdKey,
-				TItemGroupKey,
-				TItemTitleKey,
-				TItemDivTitleKey,
-				TItemTimeStartKey,
-				TItemTimeEndKey,
-				TGroup,
-				TItem
-			>
+			<GroupForHelpersContextProvider<TKeys, TGroup, TItem>
 				group={group}
 				index={groupIndex}
 				timeline={timeline}
@@ -148,6 +65,7 @@ export const Group = <
 				<GroupRendererComponent
 					group={group.originalGroup}
 					isRightSidebar={isRightSidebar}
+					rowData={rowData}
 				/>
 			</GroupForHelpersContextProvider>
 		</div>

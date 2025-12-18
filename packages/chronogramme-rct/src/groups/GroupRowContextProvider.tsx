@@ -1,4 +1,3 @@
-import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { EVEN_MULTIPLE, ZERO } from "@chronogramme/chronogramme";
 import {
 	type MouseEvent,
@@ -6,103 +5,44 @@ import {
 	type SyntheticEvent,
 	useMemo,
 } from "react";
+import type { HorizontalClassNamesForGroup } from "../Timeline";
 import type {
-	BaseGroup,
-	BaseItem,
-	HorizontalClassNamesForGroup,
-} from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+	RctToCoreGroup,
+} from "../utils/typeUtils";
 import { GroupRowContext, type GroupRowContextValue } from "./GroupRowContext";
 import { useGroupForHelpersContext } from "./useGroupForHelpersContext";
 
 interface GroupRowProviderProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	children?: ReactNode | undefined;
-	group: RctToCoreGroup<TGroupId, TGroup>;
+	group: RctToCoreGroup<TKeys, TGroup>;
 	horizontalLineClassNamesForGroup:
-		| HorizontalClassNamesForGroup<
-				TGroupId,
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TGroup
-		  >
+		| HorizontalClassNamesForGroup<TKeys, TGroup>
 		| undefined;
 	index: number;
 	onClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onContextMenu?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
 	onDoubleClick?:
-		| ((groupId: TGroupId, time: number, e: SyntheticEvent) => void)
+		| ((groupId: TGroup["id"], time: number, e: SyntheticEvent) => void)
 		| undefined;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const GroupRowContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	children,
 	group,
@@ -112,21 +52,7 @@ export const GroupRowContextProvider = <
 	onContextMenu,
 	onDoubleClick,
 	timeline,
-}: GroupRowProviderProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem
->): ReactNode => {
+}: GroupRowProviderProps<TKeys, TGroup, TItem>): ReactNode => {
 	const { position, size } = useGroupForHelpersContext();
 
 	const id = group.id;
@@ -136,7 +62,7 @@ export const GroupRowContextProvider = <
 		(index % EVEN_MULTIPLE === ZERO ? "rct-hl-even " : "rct-hl-odd ") +
 		horizontalLineClassNamesForGroup?.(originalGroup)?.join(" ");
 
-	const contextValue = useMemo<GroupRowContextValue<TGroupId>>(
+	const contextValue = useMemo<GroupRowContextValue<TGroup["id"]>>(
 		() => ({
 			className,
 			id,

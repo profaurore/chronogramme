@@ -1,10 +1,11 @@
-import {
-	HALF,
-	type Timeline as HTMLTimeline,
-} from "@chronogramme/chronogramme";
+import { HALF } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
-import type { BaseGroup, BaseItem } from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+} from "../utils/typeUtils";
 import {
 	buildUnsupportedPropertiesProxy,
 	UnsupportedFunctionError,
@@ -21,43 +22,12 @@ import {
 } from "./TimelineContext";
 
 interface HelpersProviderProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	children?: ReactNode | undefined;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 const UNSUPPORTED_GET_TIMELINE_STATE_PROPERTIES = [
@@ -72,51 +42,13 @@ const UNSUPPORTED_GET_TIMELINE_STATE_PROPERTIES = [
 const UNSUPPORTED_TIMELINE_CONTEXT_VALUE_PROPERTIES = ["showPeriod"] as const;
 
 export const TimelineContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	children,
 	timeline,
-}: HelpersProviderProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem
->): ReactNode => {
+}: HelpersProviderProps<TKeys, TGroup, TItem>): ReactNode => {
 	const visibleTimeEnd = timeline.hWindowMax;
 	const visibleTimeStart = timeline.hWindowMin;
 	const windowRange = timeline.hWindowRange;
@@ -133,28 +65,8 @@ export const TimelineContextProvider = <
 		timeline.hMax,
 	);
 
-	const contextValue = useMemo((): TimelineContextValue<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	> => {
-		const timelineState: TimelineState<
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey
-		> = buildUnsupportedPropertiesProxy(
+	const contextValue = useMemo((): TimelineContextValue<TKeys> => {
+		const timelineState: TimelineState<TKeys> = buildUnsupportedPropertiesProxy(
 			"TimelineState",
 			{
 				canvasTimeEnd,
@@ -194,19 +106,7 @@ export const TimelineContextProvider = <
 	// providers with generics.
 	return (
 		<TimelineContext.Provider
-			value={
-				contextValue as TimelineContextValue<
-					"id",
-					"title",
-					"rightTitle",
-					"id",
-					"group",
-					"title",
-					"title",
-					"start_time",
-					"end_time"
-				>
-			}
+			value={contextValue as TimelineContextValue<AnyKeys>}
 		>
 			{children}
 		</TimelineContext.Provider>

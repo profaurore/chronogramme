@@ -1,16 +1,12 @@
-import type {
-	DragState,
-	Timeline as HTMLTimeline,
-} from "@chronogramme/chronogramme";
-
+import type { DragState } from "@chronogramme/chronogramme";
 import { type Context, createContext, type SyntheticEvent } from "react";
+import type { ItemRenderer } from "../Timeline";
 import type {
-	BaseGroup,
-	BaseItem,
-	ItemRenderer,
-	TimelineKeys,
-} from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+} from "../utils/typeUtils";
 
 type ItemOnClick<TItemId> = (
 	itemId: TItemId,
@@ -39,130 +35,41 @@ type OnSelect<TItemId> = (
 type SetSelectedItemId<TItemId> = (itemId: TItemId) => void;
 
 export interface ItemContextVariable<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	canMove: boolean;
 	canResizeLeft: boolean;
 	canResizeRight: boolean;
 	canSelect: boolean;
 	itemDragState: DragState<undefined>;
-	itemRenderer: ItemRenderer<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem
-	>;
+	itemRenderer: ItemRenderer<TKeys, TGroup, TItem>;
 	itemResizeState: DragState<undefined>;
-	keys: TimelineKeys<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>;
+	keys: TKeys;
 	minResizeWidth: number;
-	onClick: ItemOnClick<TItemId> | undefined;
-	onContextMenu: OnContextMenu<TItemId> | undefined;
-	onDoubleClick: OnDoubleClick<TItemId> | undefined;
-	onSelect: OnSelect<TItemId> | undefined;
-	selected: TItemId[] | undefined;
-	selectedItemId: TItemId | undefined;
-	setSelectedItemId: SetSelectedItemId<TItemId>;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	onClick: ItemOnClick<TItem["id"]> | undefined;
+	onContextMenu: OnContextMenu<TItem["id"]> | undefined;
+	onDoubleClick: OnDoubleClick<TItem["id"]> | undefined;
+	onSelect: OnSelect<TItem["id"]> | undefined;
+	selected: TItem["id"][] | undefined;
+	selectedItemId: TItem["id"] | undefined;
+	setSelectedItemId: SetSelectedItemId<TItem["id"]>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const ItemContext: Context<
 	| ItemContextVariable<
-			number,
-			"id",
-			"title",
-			"rightTitle",
-			number,
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time",
-			BaseGroup<number, "id", "title", "rightTitle">,
-			BaseItem<
-				number,
-				number,
-				"id",
-				"group",
-				"title",
-				"title",
-				"start_time",
-				"end_time"
-			>
+			AnyKeys,
+			AnyGroup<AnyKeys>,
+			AnyItem<AnyKeys, AnyGroup<AnyKeys>>
 	  >
 	| undefined
 > = createContext<
 	| ItemContextVariable<
-			number,
-			"id",
-			"title",
-			"rightTitle",
-			number,
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time",
-			BaseGroup<number, "id", "title", "rightTitle">,
-			BaseItem<
-				number,
-				number,
-				"id",
-				"group",
-				"title",
-				"title",
-				"start_time",
-				"end_time"
-			>
+			AnyKeys,
+			AnyGroup<AnyKeys>,
+			AnyItem<AnyKeys, AnyGroup<AnyKeys>>
 	  >
 	| undefined
 >(undefined);

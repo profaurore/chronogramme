@@ -1,37 +1,13 @@
 import type { ReactNode } from "react";
 import { Item } from "../items/Item";
 import { ItemForHelpersContextProvider } from "../items/ItemForHelpersContextProvider";
-import type { BaseGroup, BaseItem } from "../Timeline";
+import type { AnyGroup, AnyItem, AnyKeys } from "../utils/typeUtils";
 import { useRowItemsContext } from "./useRowItemsContext";
 
 export const RowItems = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >(): ReactNode => {
 	const {
 		index: groupIndex,
@@ -39,21 +15,7 @@ export const RowItems = <
 		itemVSize,
 		position: groupPosition,
 		timeline,
-	} = useRowItemsContext<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem
-	>();
+	} = useRowItemsContext<TKeys, TGroup, TItem>();
 
 	const renderedItems: ReactNode[] = [];
 
@@ -70,42 +32,14 @@ export const RowItems = <
 
 			if (item !== undefined) {
 				renderedItems.push(
-					<ItemForHelpersContextProvider<
-						TGroupId,
-						TGroupIdKey,
-						TGroupTitleKey,
-						TGroupRightTitleKey,
-						TItemId,
-						TItemIdKey,
-						TItemGroupKey,
-						TItemTitleKey,
-						TItemDivTitleKey,
-						TItemTimeStartKey,
-						TItemTimeEndKey,
-						TGroup,
-						TItem
-					>
+					<ItemForHelpersContextProvider<TKeys, TGroup, TItem>
 						groupPosition={groupPosition}
 						item={item}
 						key={`item-${item.id}`}
 						vOffsetInGroup={vOffsetInGroup}
 						vSize={itemVSize}
 					>
-						<Item<
-							TGroupId,
-							TGroupIdKey,
-							TGroupTitleKey,
-							TGroupRightTitleKey,
-							TItemId,
-							TItemIdKey,
-							TItemGroupKey,
-							TItemTitleKey,
-							TItemDivTitleKey,
-							TItemTimeStartKey,
-							TItemTimeEndKey,
-							TGroup,
-							TItem
-						>
+						<Item<TKeys, TGroup, TItem>
 							item={item}
 							vOffsetInGroup={vOffsetInGroup}
 						/>

@@ -1,101 +1,35 @@
-import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
-import type { BaseGroup, BaseItem } from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+} from "../utils/typeUtils";
 import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
 interface HelpersProviderProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	children?: ReactNode | undefined;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const HelpersContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	children,
 	timeline,
-}: HelpersProviderProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem
->): ReactNode => {
-	const contextValue = useMemo<HelpersContextValue<TGroupId, TItemId>>(
+}: HelpersProviderProps<TKeys, TGroup, TItem>): ReactNode => {
+	const contextValue = useMemo<HelpersContextValue<TGroup["id"], TItem["id"]>>(
 		() => ({
 			getDateFromLeftOffsetPosition: timeline.getHValue,
 
-			getGroupDimensions: (groupId: TGroupId) => {
+			getGroupDimensions: (groupId: TGroup["id"]) => {
 				throw new UnsupportedPropertyValueError(
 					"getGroupDimensions() must be used via useHelpersContext() within the group renderer for the provided identifier",
 					"groupId",
@@ -103,7 +37,7 @@ export const HelpersContextProvider = <
 				);
 			},
 
-			getItemAbsoluteDimensions: (itemId: TItemId) => {
+			getItemAbsoluteDimensions: (itemId: TItem["id"]) => {
 				throw new UnsupportedPropertyValueError(
 					"getItemAbsoluteDimensions() must be used via useHelpersContext() within the item renderer for the provided identifier",
 					"itemId",
@@ -111,7 +45,7 @@ export const HelpersContextProvider = <
 				);
 			},
 
-			getItemDimensions: (itemId: TItemId) => {
+			getItemDimensions: (itemId: TItem["id"]) => {
 				throw new UnsupportedPropertyValueError(
 					"getItemDimensions() must be used via useHelpersContext() within the item renderer for the provided identifier",
 					"itemId",

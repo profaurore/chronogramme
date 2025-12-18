@@ -1,35 +1,11 @@
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
-import type { BaseGroup, BaseItem } from "../Timeline";
+import type { AnyGroup, AnyItem, AnyKeys } from "../utils/typeUtils";
 import { ItemContext, type ItemContextVariable } from "./ItemContext";
 
 export const ItemContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	canMove,
 	canResizeLeft,
@@ -49,40 +25,8 @@ export const ItemContextProvider = <
 	selectedItemId,
 	setSelectedItemId,
 	timeline,
-}: PropsWithChildren<
-	ItemContextVariable<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem
-	>
->): ReactNode => {
-	const contextValue = useMemo<
-		ItemContextVariable<
-			TGroupId,
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemId,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey,
-			TGroup,
-			TItem
-		>
-	>(
+}: PropsWithChildren<ItemContextVariable<TKeys, TGroup, TItem>>): ReactNode => {
+	const contextValue = useMemo<ItemContextVariable<TKeys, TGroup, TItem>>(
 		() => ({
 			canMove,
 			canResizeLeft,
@@ -129,28 +73,9 @@ export const ItemContextProvider = <
 		<ItemContext.Provider
 			value={
 				contextValue as unknown as ItemContextVariable<
-					number,
-					"id",
-					"title",
-					"rightTitle",
-					number,
-					"id",
-					"group",
-					"title",
-					"title",
-					"start_time",
-					"end_time",
-					BaseGroup<number, "id", "title", "rightTitle">,
-					BaseItem<
-						number,
-						number,
-						"id",
-						"group",
-						"title",
-						"title",
-						"start_time",
-						"end_time"
-					>
+					AnyKeys,
+					AnyGroup<AnyKeys>,
+					AnyItem<AnyKeys, AnyGroup<AnyKeys>>
 				>
 			}
 		>

@@ -1,7 +1,6 @@
 import {
 	DragMoveEventDetail,
 	DragState,
-	type Timeline as HTMLTimeline,
 	ScrollBoundsChangeEventDetail,
 	TIME_MAX,
 	TIME_MIN,
@@ -49,9 +48,11 @@ import {
 } from "./utils/dateUtils";
 import { getReactChildSecretKey, useRender } from "./utils/reactUtils";
 import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
 	FullRequired,
-	RctToCoreGroup,
-	RctToCoreItem,
 } from "./utils/typeUtils";
 import {
 	type UnsupportedType,
@@ -73,16 +74,7 @@ export type Id = UnsupportedType<
 	"Use the generic `TGroupId` and `TItemId` instead."
 >;
 
-export type BaseItem<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> = {
+export type BaseItem<TKeys extends AnyKeys, TGroupId, TItemId> = {
 	canMove?: boolean | undefined;
 	canResize?: ResizableEdges | undefined;
 	className?: string | undefined;
@@ -95,52 +87,39 @@ export type BaseItem<
 		"Used by `DefaultItemRenderer`, which is unsupported."
 	>;
 } & {
-	[K in TItemIdKey]: TItemId;
+	[K in TKeys["itemIdKey"]]: TItemId;
 } & {
-	[K in TItemTitleKey]?: ReactNode | undefined;
+	[K in TKeys["itemTitleKey"]]?: ReactNode | undefined;
 } & {
-	[K in TItemDivTitleKey]?: ReactNode | undefined;
+	[K in TKeys["itemDivTitleKey"]]?: ReactNode | undefined;
 } & {
-	[K in TItemGroupKey]: TGroupId;
+	[K in TKeys["itemGroupKey"]]: TGroupId;
 } & {
-	[K in TItemTimeStartKey]: EpochTimeStamp;
+	[K in TKeys["itemTimeStartKey"]]: EpochTimeStamp;
 } & {
-	[K in TItemTimeEndKey]: EpochTimeStamp;
+	[K in TKeys["itemTimeEndKey"]]: EpochTimeStamp;
 };
+
+export type DefaultItem<TGroupId, TItemId> = BaseItem<
+	typeof defaultKeys,
+	TGroupId,
+	TItemId
+>;
 
 /**
  * @deprecated Unsupported type from React Calendar Timeline's API. Use
  * `BaseItem` instead.
  */
 export type TimelineItemBase<
+	TKeys extends AnyKeys,
 	TGroupId,
 	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
 > = UnsupportedType<
-	BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	BaseItem<TKeys, TGroupId, TItemId>,
 	"Use `BaseItem` instead."
 >;
 
-export type BaseGroup<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-> = {
+export type BaseGroup<TKeys extends AnyKeys, TGroupId> = {
 	lineHeight?: number | undefined;
 
 	/**
@@ -152,42 +131,31 @@ export type BaseGroup<
 		"Create one group per item."
 	>;
 } & {
-	[K in TGroupIdKey]: TGroupId;
+	[K in TKeys["groupIdKey"]]: TGroupId;
 } & {
-	[K in TGroupTitleKey]?: string | undefined;
+	[K in TKeys["groupTitleKey"]]?: string | undefined;
 } & {
-	[K in TGroupRightTitleKey]?: string | undefined;
+	[K in TKeys["groupRightTitleKey"]]?: string | undefined;
 };
+
+export type DefaultGroup<TGroupId> = BaseGroup<typeof defaultKeys, TGroupId>;
 
 /**
  * @deprecated Unsupported type from React Calendar Timeline's API. Use
  * `BaseGroup` instead.
  */
 export type TimelineGroupBase<
+	TKeys extends AnyKeys,
 	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-> = UnsupportedType<
-	BaseGroup<TGroupId, TGroupIdKey, TGroupTitleKey, TGroupRightTitleKey>,
-	"Use `BaseGroup` instead."
->;
+> = UnsupportedType<BaseGroup<TKeys, TGroupId>, "Use `BaseGroup` instead.">;
 
 export type ResizeEdge = "left" | "right";
 
 export type ResizableEdges = false | ResizeEdge | "both";
 
 export type HorizontalClassNamesForGroup<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
 > = (group: TGroup) => string[];
 
 export type MoveValidator<TItemId> = (
@@ -326,33 +294,9 @@ export interface GetLayerRootPropsReturnType {
 export type GetLayerRootProps = () => GetLayerRootPropsReturnType;
 
 export interface RowRendererProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 > {
 	getLayerRootProps: GetLayerRootProps;
@@ -362,67 +306,20 @@ export interface RowRendererProps<
 }
 
 export type RowRenderer<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
-> = (
-	props: RowRendererProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem,
-		TRowData
-	>,
-) => ReactNode;
+> = (props: RowRendererProps<TKeys, TGroup, TItem, TRowData>) => ReactNode;
 
 export interface GroupRendererProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TRowData,
 > {
 	group: TGroup;
 	isRightSidebar?: boolean | undefined;
+	rowData?: TRowData;
 }
 
 /**
@@ -430,47 +327,19 @@ export interface GroupRendererProps<
  * `GroupRendererProps` instead.
  */
 export type ReactCalendarGroupRendererProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TRowData,
 > = UnsupportedType<
-	GroupRendererProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>,
+	GroupRendererProps<TKeys, TGroup, TRowData>,
 	"Use `GroupRendererProps` instead."
 >;
 
 export type GroupRenderer<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-> = (
-	props: GroupRendererProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>,
-) => ReactNode;
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TRowData,
+> = (props: GroupRendererProps<TKeys, TGroup, TRowData>) => ReactNode;
 
 export type GetItemProps = (
 	params: Pick<
@@ -567,29 +436,14 @@ export type ItemContext<TGroupId> = UnsupportedType<
 >;
 
 export interface ItemRendererProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	getItemProps: GetItemProps;
 	getResizeProps: ItemRendererGetResizeProps;
 	item: TItem;
-	itemContext: ItemRendererItemContext<TGroupId>;
+	itemContext: ItemRendererItemContext<TGroup["id"]>;
 	timelineContext: TimelineContext;
 }
 
@@ -598,73 +452,21 @@ export interface ItemRendererProps<
  * `ItemRendererProps` instead.
  */
 export type ReactCalendarItemRendererProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > = UnsupportedType<
-	ItemRendererProps<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem
-	>,
+	ItemRendererProps<TKeys, TGroup, TItem>,
 	"Use `ItemRendererProps` instead."
 >;
 
 export type ItemRenderer<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
-> = (
-	props: ItemRendererProps<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem
-	>,
-) => ReactNode;
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
+> = (props: ItemRendererProps<TKeys, TGroup, TItem>) => ReactNode;
 
-export interface TimelineKeys<
+export interface Keys<
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
@@ -686,27 +488,21 @@ export interface TimelineKeys<
 	itemTimeEndKey: TItemTimeEndKey;
 }
 
-export interface TimelineProps<
-	TGroupId,
+export type TimelineKeys<
 	TGroupIdKey extends string,
 	TGroupTitleKey extends string,
 	TGroupRightTitleKey extends string,
-	TItemId,
 	TItemIdKey extends string,
 	TItemGroupKey extends string,
 	TItemTitleKey extends string,
 	TItemDivTitleKey extends string,
 	TItemTimeStartKey extends string,
 	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
+> = UnsupportedType<
+	Keys<
 		TGroupIdKey,
 		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
+		TGroupRightTitleKey,
 		TItemIdKey,
 		TItemGroupKey,
 		TItemTitleKey,
@@ -714,6 +510,13 @@ export interface TimelineProps<
 		TItemTimeStartKey,
 		TItemTimeEndKey
 	>,
+	"Use `Keys` instead."
+>;
+
+export interface TimelineProps<
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 > {
 	/**
@@ -754,13 +557,7 @@ export interface TimelineProps<
 		"No alternative available."
 	>;
 	dragSnap?: number | undefined;
-	groupRenderer: GroupRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup
-	>;
+	groupRenderer: GroupRenderer<TKeys, TGroup, TRowData>;
 	groups: TGroup[];
 	headerHeight?: number | undefined;
 	/**
@@ -778,27 +575,11 @@ export interface TimelineProps<
 		"No alternative available."
 	>;
 	horizontalLineClassNamesForGroup?:
-		| HorizontalClassNamesForGroup<
-				TGroupId,
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TGroup
-		  >
+		| HorizontalClassNamesForGroup<TKeys, TGroup>
 		| undefined;
 	id?: string | undefined;
 	itemHeightRatio?: number | undefined;
-	itemRenderer: ItemRenderer<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem
-	>;
+	itemRenderer: ItemRenderer<TKeys, TGroup, TItem>;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
 	 * alternative is available.
@@ -808,19 +589,7 @@ export interface TimelineProps<
 		"No alternative available."
 	>;
 	items: TItem[];
-	keys?:
-		| TimelineKeys<
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TItemIdKey,
-				TItemGroupKey,
-				TItemTitleKey,
-				TItemDivTitleKey,
-				TItemTimeStartKey,
-				TItemTimeEndKey
-		  >
-		| undefined;
+	keys?: TKeys | undefined;
 	lineHeight?: number | undefined;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
@@ -834,23 +603,23 @@ export interface TimelineProps<
 	 */
 	minZoom?: UnsupportedType<number | undefined, "No alternative available.">;
 	moveResizeValidator?(
-		...args: Parameters<MoveValidator<TItemId>>
-	): ReturnType<MoveValidator<TItemId>>;
+		...args: Parameters<MoveValidator<TItem["id"]>>
+	): ReturnType<MoveValidator<TItem["id"]>>;
 	moveResizeValidator?(
-		...args: Parameters<ResizeValidator<TItemId>>
-	): ReturnType<ResizeValidator<TItemId>>;
+		...args: Parameters<ResizeValidator<TItem["id"]>>
+	): ReturnType<ResizeValidator<TItem["id"]>>;
 	onBoundsChange?: OnBoundsChange | undefined;
-	onCanvasClick?: OnCanvasClick<TGroupId> | undefined;
-	onCanvasContextMenu?: OnCanvasContextMenu<TGroupId> | undefined;
-	onCanvasDoubleClick?: OnCanvasDoubleClick<TGroupId> | undefined;
-	onItemClick?: OnItemClick<TItemId> | undefined;
-	onItemContextMenu?: OnItemContextMenu<TItemId> | undefined;
+	onCanvasClick?: OnCanvasClick<TGroup["id"]> | undefined;
+	onCanvasContextMenu?: OnCanvasContextMenu<TGroup["id"]> | undefined;
+	onCanvasDoubleClick?: OnCanvasDoubleClick<TGroup["id"]> | undefined;
+	onItemClick?: OnItemClick<TItem["id"]> | undefined;
+	onItemContextMenu?: OnItemContextMenu<TItem["id"]> | undefined;
 	onItemDeselect?: OnItemDeselect | undefined;
-	onItemDoubleClick?: OnItemDoubleClick<TItemId> | undefined;
-	onItemDrag?: OnItemDrag<TGroupId, TItemId> | undefined;
-	onItemMove?: OnItemMove<TGroupId, TItemId> | undefined;
-	onItemResize?: OnItemResize<TItemId> | undefined;
-	onItemSelect?: OnItemSelect<TItemId> | undefined;
+	onItemDoubleClick?: OnItemDoubleClick<TItem["id"]> | undefined;
+	onItemDrag?: OnItemDrag<TGroup["id"], TItem["id"]> | undefined;
+	onItemMove?: OnItemMove<TGroup["id"], TItem["id"]> | undefined;
+	onItemResize?: OnItemResize<TItem["id"]> | undefined;
+	onItemSelect?: OnItemSelect<TItem["id"]> | undefined;
 	onTimeChange?: OnTimeChange | undefined;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
@@ -867,22 +636,7 @@ export interface TimelineProps<
 	>;
 	rightSidebarWidth?: number | undefined;
 	rowData: TRowData;
-	rowRenderer: RowRenderer<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TGroup,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TItem,
-		TRowData
-	>;
+	rowRenderer: RowRenderer<TKeys, TGroup, TItem, TRowData>;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
 	 * alternative is available.
@@ -891,7 +645,7 @@ export interface TimelineProps<
 		Ref<HTMLDivElement> | undefined,
 		"No alternative available."
 	>;
-	selected?: TItemId[] | undefined;
+	selected?: TItem["id"][] | undefined;
 	sidebarWidth?: number | undefined;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. Create
@@ -929,51 +683,12 @@ export interface TimelineProps<
  * `TimelineProps` instead.
  */
 export type ReactCalendarTimelineProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 > = UnsupportedType<
-	TimelineProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem,
-		TRowData
-	>,
+	TimelineProps<TKeys, TGroup, TItem, TRowData>,
 	"Use `TimelineProps` instead."
 >;
 
@@ -996,33 +711,9 @@ const UNSUPPORTED_PROPERTIES = [
 ] as const;
 
 function RenderedTimeline<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 >({
 	canMove = true,
@@ -1066,52 +757,17 @@ function RenderedTimeline<
 	timelineRef,
 	visibleTimeEnd,
 	visibleTimeStart,
-}: Omit<
-	TimelineProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem,
-		TRowData
-	>,
-	"groups" | "items"
-> & {
+}: Omit<TimelineProps<TKeys, TGroup, TItem, TRowData>, "groups" | "items"> & {
 	itemsWithInteractions: readonly Readonly<TItem>[];
 	renderIndicator: number;
-	timelineRef: RefObject<InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	> | null>;
+	timelineRef: RefObject<CoreTimeline<TKeys, TGroup, TItem> | null>;
 }): ReactNode {
-	const [selectedItemId, setSelectedItemId] = useState<TItemId>();
+	const [selectedItemId, setSelectedItemId] = useState<TItem["id"]>();
 
 	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
 	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
 
-	const resolvedKeys = (keys ?? defaultKeys) as TimelineKeys<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>;
+	const resolvedKeys = (keys ?? defaultKeys) as TKeys;
 
 	useEffect(() => {
 		const timeline = timelineRef.current;
@@ -1352,7 +1008,7 @@ function RenderedTimeline<
 	}, [onTimeChange, timelineRef]);
 
 	const onRowClickHandler: (
-		groupId: TGroupId,
+		groupId: TGroup["id"],
 		time: number,
 		e: SyntheticEvent,
 	) => void = useCallback(
@@ -1427,71 +1083,30 @@ function RenderedTimeline<
 
 			if (group !== undefined) {
 				renderedLeftGroups?.push(
-					<Group<
-						TGroupId,
-						TGroupIdKey,
-						TGroupTitleKey,
-						TGroupRightTitleKey,
-						TItemId,
-						TItemIdKey,
-						TItemGroupKey,
-						TItemTitleKey,
-						TItemDivTitleKey,
-						TItemTimeStartKey,
-						TItemTimeEndKey,
-						TGroup,
-						TItem
-					>
+					<Group<TKeys, TGroup, TItem, TRowData>
 						group={group}
 						groupIndex={groupIndex}
 						groupRenderer={groupRenderer}
 						key={`group-${group.id}-left`}
+						rowData={rowData}
 						timeline={timeline}
 					/>,
 				);
 
 				renderedRightGroups?.push(
-					<Group<
-						TGroupId,
-						TGroupIdKey,
-						TGroupTitleKey,
-						TGroupRightTitleKey,
-						TItemId,
-						TItemIdKey,
-						TItemGroupKey,
-						TItemTitleKey,
-						TItemDivTitleKey,
-						TItemTimeStartKey,
-						TItemTimeEndKey,
-						TGroup,
-						TItem
-					>
+					<Group<TKeys, TGroup, TItem, TRowData>
 						group={group}
 						groupIndex={groupIndex}
 						groupRenderer={groupRenderer}
 						isRightSidebar={true}
 						key={`group-${group.id}-right`}
+						rowData={rowData}
 						timeline={timeline}
 					/>,
 				);
 
 				renderedGroupRows.push(
-					<Row<
-						TGroupId,
-						TGroupIdKey,
-						TGroupTitleKey,
-						TGroupRightTitleKey,
-						TItemId,
-						TItemIdKey,
-						TItemGroupKey,
-						TItemTitleKey,
-						TItemDivTitleKey,
-						TItemTimeStartKey,
-						TItemTimeEndKey,
-						TGroup,
-						TItem,
-						TRowData
-					>
+					<Row<TKeys, TGroup, TItem, TRowData>
 						group={group}
 						groupIndex={groupIndex}
 						horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
@@ -1585,38 +1200,8 @@ function RenderedTimeline<
 		>
 			{timeline !== null && (
 				<TimelineContextProvider timeline={timeline}>
-					<HelpersContextProvider<
-						TGroupId,
-						TGroupIdKey,
-						TGroupTitleKey,
-						TGroupRightTitleKey,
-						TItemId,
-						TItemIdKey,
-						TItemGroupKey,
-						TItemTitleKey,
-						TItemDivTitleKey,
-						TItemTimeStartKey,
-						TItemTimeEndKey,
-						TGroup,
-						TItem
-					>
-						timeline={timeline}
-					>
-						<HeadersContextProvider<
-							TGroupId,
-							TGroupIdKey,
-							TGroupTitleKey,
-							TGroupRightTitleKey,
-							TItemId,
-							TItemIdKey,
-							TItemGroupKey,
-							TItemTitleKey,
-							TItemDivTitleKey,
-							TItemTimeStartKey,
-							TItemTimeEndKey,
-							TGroup,
-							TItem
-						>
+					<HelpersContextProvider<TKeys, TGroup, TItem> timeline={timeline}>
+						<HeadersContextProvider<TKeys, TGroup, TItem>
 							leftSidebarWidth={sidebarWidth}
 							rightSidebarWidth={rightSidebarWidth}
 							showPeriod={showPeriod}
@@ -1638,21 +1223,7 @@ function RenderedTimeline<
 						)}
 
 						<div className="rct-horizontal-lines" slot="center">
-							<ItemContextProvider<
-								TGroupId,
-								TGroupIdKey,
-								TGroupTitleKey,
-								TGroupRightTitleKey,
-								TItemId,
-								TItemIdKey,
-								TItemGroupKey,
-								TItemTitleKey,
-								TItemDivTitleKey,
-								TItemTimeStartKey,
-								TItemTimeEndKey,
-								TGroup,
-								TItem
-							>
+							<ItemContextProvider<TKeys, TGroup, TItem>
 								canMove={canMove}
 								canResizeLeft={canResizeLeft}
 								canResizeRight={canResizeRight}
@@ -1696,80 +1267,21 @@ const MemoedRenderedTimeline = memo(
 ) as typeof RenderedTimeline;
 
 export const Timeline = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 	TRowData,
 >(
-	props: TimelineProps<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem,
-		TRowData
-	>,
+	props: TimelineProps<TKeys, TGroup, TItem, TRowData>,
 ): ReactNode => {
 	validateComponentProperties("Timeline", props, UNSUPPORTED_PROPERTIES);
 
 	const { groups, items, ...remainingProperties } = props;
 
-	const timelineRef =
-		useRef<
-			InstanceType<
-				typeof HTMLTimeline<
-					TGroupId,
-					RctToCoreGroup<TGroupId, TGroup>,
-					TItemId,
-					RctToCoreItem<TGroupId, TItemId, TItem>
-				>
-			>
-		>(null);
+	const timelineRef = useRef<CoreTimeline<TKeys, TGroup, TItem>>(null);
 
 	const resolvedKeys = (remainingProperties.keys ??
-		defaultKeys) as TimelineKeys<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>;
+		defaultKeys) as typeof defaultKeys;
 
 	useEffect(() => {
 		const timeline = timelineRef.current;
@@ -1777,7 +1289,9 @@ export const Timeline = <
 		if (timeline !== null) {
 			timeline.setGroups(
 				groups.map((group) => ({
-					id: group[resolvedKeys.groupIdKey],
+					id: (group as unknown as DefaultGroup<TGroup["id"]>)[
+						resolvedKeys.groupIdKey
+					],
 					lineSize: group.lineHeight,
 					originalGroup: group,
 				})),
@@ -1790,20 +1304,29 @@ export const Timeline = <
 
 		if (timeline !== null) {
 			timeline.setItems(
-				items.map((item) => ({
-					endTime: item[resolvedKeys.itemTimeEndKey],
-					groupId: item[resolvedKeys.itemGroupKey],
-					id: item[resolvedKeys.itemIdKey],
-					isDraggable: item.canMove,
-					isEndResizable:
-						item.canResize &&
-						(item.canResize === "right" || item.canResize === "both"),
-					isStartResizable:
-						item.canResize &&
-						(item.canResize === "left" || item.canResize === "both"),
-					originalItem: item,
-					startTime: item[resolvedKeys.itemTimeStartKey],
-				})),
+				items.map((item) => {
+					const typecastItem = item as unknown as DefaultItem<
+						TGroup["id"],
+						TItem["id"]
+					>;
+
+					return {
+						endTime: typecastItem[resolvedKeys.itemTimeEndKey],
+						groupId: (
+							item as unknown as DefaultItem<TGroup["id"], TItem["id"]>
+						)[resolvedKeys.itemGroupKey],
+						id: typecastItem[resolvedKeys.itemIdKey],
+						isDraggable: item.canMove,
+						isEndResizable:
+							item.canResize &&
+							(item.canResize === "right" || item.canResize === "both"),
+						isStartResizable:
+							item.canResize &&
+							(item.canResize === "left" || item.canResize === "both"),
+						originalItem: item,
+						startTime: typecastItem[resolvedKeys.itemTimeStartKey],
+					};
+				}),
 			);
 		}
 	}, [

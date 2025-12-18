@@ -5,6 +5,7 @@ import {
 	useMemo,
 } from "react";
 import {
+	type defaultKeys,
 	leftResizeStyle,
 	overridableStyles,
 	rightResizeStyle,
@@ -17,83 +18,38 @@ import {
 	selectedStyle,
 } from "../constants";
 import type {
-	BaseGroup,
-	BaseItem,
+	DefaultItem,
 	GetItemProps,
 	ItemRendererGetResizeProps,
 	ResizeEdge,
 } from "../Timeline";
 import { composeEvents } from "../utils/reactUtils";
-import type { RctToCoreItem } from "../utils/typeUtils";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	RctToCoreItem,
+} from "../utils/typeUtils";
 import { useItemContext } from "./useItemContext";
 import { useItemForHelpersContext } from "./useItemForHelpersContext";
 
 interface ItemProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
-	item: RctToCoreItem<TGroupId, TItemId, TItem>;
+	item: RctToCoreItem<TKeys, TGroup, TItem>;
 	vOffsetInGroup: number;
 }
 
 export const Item = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	item,
 	vOffsetInGroup,
-}: ItemProps<
-	TGroupId,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TItem
->): ReactNode => {
+}: ItemProps<TKeys, TGroup, TItem>): ReactNode => {
 	const {
 		canMove: timelineCanDrag,
 		canResizeLeft: timelineCanResizeLeft,
@@ -112,21 +68,7 @@ export const Item = <
 		selectedItemId,
 		setSelectedItemId,
 		timeline,
-	} = useItemContext<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey,
-		TGroup,
-		TItem
-	>();
+	} = useItemContext<TKeys, TGroup, TItem>();
 
 	const {
 		renderedHSize: width,
@@ -177,7 +119,9 @@ export const Item = <
 	const itemId = item.id;
 	const collisionLeft = item.startTime;
 	const collisionWidth = endTime - collisionLeft;
-	const title = originalItem[keys.itemTitleKey];
+	const title = (
+		originalItem as unknown as DefaultItem<TGroup["id"], TItem["id"]>
+	)[(keys as typeof defaultKeys).itemTitleKey];
 
 	const canvasTimeEnd = timeline.getHCanvasValueMax();
 	const canvasTimeStart = timeline.getHCanvasValueMin();

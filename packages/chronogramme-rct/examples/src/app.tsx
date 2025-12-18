@@ -25,10 +25,12 @@ import { RowItems } from "@chronogramme/chronogramme-rct/items/RowItems";
 import {
 	type BaseGroup,
 	type BaseItem,
+	type Keys as BaseKeys,
 	type GroupRenderer,
 	type ItemRenderer,
 	Timeline as RCTimeline,
 	type RowRenderer,
+	type TimelineProps,
 } from "@chronogramme/chronogramme-rct/Timeline";
 
 const timelineClass: LinariaClassName = css`
@@ -118,6 +120,20 @@ function datesFromStartDate(start: number): [number, number] {
 	];
 }
 
+type Keys = BaseKeys<
+	"id",
+	"title",
+	"rightTitle",
+	"id",
+	"group",
+	"title",
+	"title",
+	"start_time",
+	"end_time"
+>;
+type Item = BaseItem<Keys, number, number>;
+type Group = BaseGroup<Keys, number>;
+
 export function App(): ReactNode {
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
@@ -146,21 +162,8 @@ export function App(): ReactNode {
 		);
 	};
 
-	const [items, setItems] = useState<
-		BaseItem<
-			number,
-			number,
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time"
-		>[]
-	>([]);
-	const [groups, setGroups] = useState<
-		BaseGroup<number, "id", "title", "rightTitle">[]
-	>([]);
+	const [items, setItems] = useState<Item[]>([]);
+	const [groups, setGroups] = useState<Group[]>([]);
 
 	const onAddClickHandler =
 		(addCount: number): MouseEventHandler =>
@@ -214,31 +217,7 @@ export function App(): ReactNode {
 	const onItemMoveHandler = useCallback<
 		Exclude<
 			ComponentProps<
-				typeof RCTimeline<
-					number,
-					"id",
-					"title",
-					"rightTitle",
-					number,
-					"id",
-					"group",
-					"title",
-					"title",
-					"start_time",
-					"end_time",
-					BaseGroup<number, "id", "title", "rightTitle">,
-					BaseItem<
-						number,
-						number,
-						"id",
-						"group",
-						"title",
-						"title",
-						"start_time",
-						"end_time"
-					>,
-					undefined
-				>
+				typeof RCTimeline<Keys, Group, Item, undefined>
 			>["onItemMove"],
 			undefined
 		>
@@ -260,7 +239,10 @@ export function App(): ReactNode {
 	}, []);
 
 	const onItemResizeHandler = useCallback<
-		Exclude<ComponentProps<typeof RCTimeline>["onItemResize"], undefined>
+		Exclude<
+			TimelineProps<Keys, Group, Item, undefined>["onItemResize"],
+			undefined
+		>
 	>((itemId, endTimeOrStartTime, edge) => {
 		setItems((prev) =>
 			prev.map((item) => {
@@ -286,15 +268,7 @@ export function App(): ReactNode {
 		setWindow([newVisibleTimeStart, newVisibleTimeEnd]);
 	}, []);
 
-	const groupRenderer = useCallback<
-		GroupRenderer<
-			number,
-			"id",
-			"title",
-			"rightTitle",
-			BaseGroup<number, "id", "title", "rightTitle">
-		>
-	>(
+	const groupRenderer = useCallback<GroupRenderer<Keys, Group, undefined>>(
 		({ group }) => (
 			<div
 				style={{
@@ -306,33 +280,7 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const rowRenderer = useCallback<
-		RowRenderer<
-			number,
-			"id",
-			"title",
-			"rightTitle",
-			BaseGroup<number, "id", "title", "rightTitle">,
-			number,
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time",
-			BaseItem<
-				number,
-				number,
-				"id",
-				"group",
-				"title",
-				"title",
-				"start_time",
-				"end_time"
-			>,
-			undefined
-		>
-	>(
+	const rowRenderer = useCallback<RowRenderer<Keys, Group, Item, undefined>>(
 		({ group }) => (
 			<GroupRow>
 				<RowItems />
@@ -351,50 +299,33 @@ export function App(): ReactNode {
 		[],
 	);
 
-	const itemRenderer = useCallback<
-		ItemRenderer<
-			number,
-			number,
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time",
-			BaseItem<
-				number,
-				number,
-				"id",
-				"group",
-				"title",
-				"title",
-				"start_time",
-				"end_time"
-			>
-		>
-	>(({ getItemProps, getResizeProps, item }) => {
-		const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
+	const itemRenderer = useCallback<ItemRenderer<Keys, Group, Item>>(
+		({ getItemProps, getResizeProps, item }) => {
+			const { left: leftResizeProps, right: rightResizeProps } =
+				getResizeProps();
 
-		leftResizeProps.style.background = "#f00";
-		rightResizeProps.style.background = "#f00";
+			leftResizeProps.style.background = "#f00";
+			rightResizeProps.style.background = "#f00";
 
-		leftResizeProps.style.zIndex = -1;
-		rightResizeProps.style.zIndex = -1;
+			leftResizeProps.style.zIndex = -1;
+			rightResizeProps.style.zIndex = -1;
 
-		return (
-			<div
-				{...getItemProps({
-					style: { textAlign: "center", whiteSpace: "nowrap" },
-				})}
-			>
-				<div key="left" {...leftResizeProps} />
-				<span style={{ pointerEvents: "none" }}>
-					{item.group}-{item.id}
-				</span>
-				<div key="right" {...rightResizeProps} />
-			</div>
-		);
-	}, []);
+			return (
+				<div
+					{...getItemProps({
+						style: { textAlign: "center", whiteSpace: "nowrap" },
+					})}
+				>
+					<div key="left" {...leftResizeProps} />
+					<span style={{ pointerEvents: "none" }}>
+						{item.group}-{item.id}
+					</span>
+					<div key="right" {...rightResizeProps} />
+				</div>
+			);
+		},
+		[],
+	);
 
 	const moveResizeValidator = useCallback<
 		Exclude<ComponentProps<typeof RCTimeline>["moveResizeValidator"], undefined>
@@ -522,31 +453,7 @@ export function App(): ReactNode {
 				</div>
 			</div>
 
-			<RCTimeline<
-				number,
-				"id",
-				"title",
-				"rightTitle",
-				number,
-				"id",
-				"group",
-				"title",
-				"title",
-				"start_time",
-				"end_time",
-				BaseGroup<number, "id", "title", "rightTitle">,
-				BaseItem<
-					number,
-					number,
-					"id",
-					"group",
-					"title",
-					"title",
-					"start_time",
-					"end_time"
-				>,
-				undefined
-			>
+			<RCTimeline<Keys, Group, Item, undefined>
 				id={rctId}
 				canResize="both"
 				className={timelineClass}

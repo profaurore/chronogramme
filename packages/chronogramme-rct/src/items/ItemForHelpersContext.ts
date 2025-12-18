@@ -12,5 +12,5 @@ export interface ItemForHelpersContextValue<TItemId> {
 }
 
 export const ItemForHelpersContext: Context<
-	ItemForHelpersContextValue<number> | undefined
-> = createContext<ItemForHelpersContextValue<number> | undefined>(undefined);
+	ItemForHelpersContextValue<unknown> | undefined
+> = createContext<ItemForHelpersContextValue<unknown> | undefined>(undefined);

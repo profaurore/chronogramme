@@ -1,125 +1,43 @@
-import type { Timeline as HTMLTimeline } from "@chronogramme/chronogramme";
 import { HALF, UNIT } from "@chronogramme/chronogramme";
 import { type ReactNode, useMemo } from "react";
 import {
 	RowItemsContext,
 	type RowItemsContextValue,
 } from "../items/RowItemsContext";
-import type { BaseGroup, BaseItem } from "../Timeline";
-import type { RctToCoreGroup, RctToCoreItem } from "../utils/typeUtils";
+import type {
+	AnyGroup,
+	AnyItem,
+	AnyKeys,
+	CoreTimeline,
+} from "../utils/typeUtils";
 
 interface RowItemsContextProviderProps<
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 > {
 	children?: ReactNode | undefined;
 	index: number;
 	itemHeightRatio: number;
-	timeline: InstanceType<
-		typeof HTMLTimeline<
-			TGroupId,
-			RctToCoreGroup<TGroupId, TGroup>,
-			TItemId,
-			RctToCoreItem<TGroupId, TItemId, TItem>
-		>
-	>;
+	timeline: CoreTimeline<TKeys, TGroup, TItem>;
 }
 
 export const RowItemsContextProvider = <
-	TGroupId,
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemId,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-	TGroup extends BaseGroup<
-		TGroupId,
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey
-	>,
-	TItem extends BaseItem<
-		TGroupId,
-		TItemId,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>,
+	TKeys extends AnyKeys,
+	TGroup extends AnyGroup<TKeys>,
+	TItem extends AnyItem<TKeys, TGroup>,
 >({
 	children,
 	index,
 	itemHeightRatio,
 	timeline,
-}: RowItemsContextProviderProps<
-	TGroupId,
-	TGroupIdKey,
-	TGroupTitleKey,
-	TGroupRightTitleKey,
-	TItemId,
-	TItemIdKey,
-	TItemGroupKey,
-	TItemTitleKey,
-	TItemDivTitleKey,
-	TItemTimeStartKey,
-	TItemTimeEndKey,
-	TGroup,
-	TItem
->): ReactNode => {
+}: RowItemsContextProviderProps<TKeys, TGroup, TItem>): ReactNode => {
 	const position = timeline.getGroupPosition(index);
 	const lineSize = timeline.getGroupLineSize(index);
 	const itemVOffset = HALF * (UNIT - itemHeightRatio) * lineSize;
 	const itemVSize = itemHeightRatio * lineSize;
 
-	const contextValue = useMemo<
-		RowItemsContextValue<
-			TGroupId,
-			TGroupIdKey,
-			TGroupTitleKey,
-			TGroupRightTitleKey,
-			TItemId,
-			TItemIdKey,
-			TItemGroupKey,
-			TItemTitleKey,
-			TItemDivTitleKey,
-			TItemTimeStartKey,
-			TItemTimeEndKey,
-			TGroup,
-			TItem
-		>
-	>(
+	const contextValue = useMemo<RowItemsContextValue<TKeys, TGroup, TItem>>(
 		() => ({
 			index,
 			itemVOffset,
@@ -136,28 +54,9 @@ export const RowItemsContextProvider = <
 		<RowItemsContext.Provider
 			value={
 				contextValue as unknown as RowItemsContextValue<
-					number,
-					"id",
-					"title",
-					"rightTitle",
-					number,
-					"id",
-					"group",
-					"title",
-					"title",
-					"start_time",
-					"end_time",
-					BaseGroup<number, "id", "title", "rightTitle">,
-					BaseItem<
-						number,
-						number,
-						"id",
-						"group",
-						"title",
-						"title",
-						"start_time",
-						"end_time"
-					>
+					AnyKeys,
+					AnyGroup<AnyKeys>,
+					AnyItem<AnyKeys, AnyGroup<AnyKeys>>
 				>
 			}
 		>

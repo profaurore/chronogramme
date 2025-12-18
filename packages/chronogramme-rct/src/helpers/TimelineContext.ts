@@ -1,24 +1,14 @@
 import { type Context, createContext } from "react";
 import type { ShowPeriod } from "../headers/CustomHeader";
 import type { Unit } from "../headers/DateHeader";
-import type { TimelineKeys } from "../Timeline";
+import type { AnyKeys } from "../utils/typeUtils";
 import type { UnsupportedType } from "../utils/unsupportedUtils";
 import type {
 	GetDateFromLeftOffsetPosition,
 	GetLeftOffsetFromDate,
 } from "./HelpersContext";
 
-export interface TimelineState<
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> {
+export interface TimelineState<TKeys extends AnyKeys> {
 	canvasTimeStart: number;
 	canvasTimeEnd: number;
 
@@ -56,59 +46,14 @@ export interface TimelineState<
 	 * @deprecated Unsupported type from React Calendar Timeline's API. No
 	 * alternative available.
 	 */
-	keys: UnsupportedType<
-		Readonly<
-			TimelineKeys<
-				TGroupIdKey,
-				TGroupTitleKey,
-				TGroupRightTitleKey,
-				TItemIdKey,
-				TItemGroupKey,
-				TItemTitleKey,
-				TItemDivTitleKey,
-				TItemTimeStartKey,
-				TItemTimeEndKey
-			>
-		>,
-		"No alternative available."
-	>;
+	keys: UnsupportedType<Readonly<TKeys>, "No alternative available.">;
 }
 
-type GetTimelineState<
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> = () => Readonly<
-	TimelineState<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>
+type GetTimelineState<TKeys extends AnyKeys> = () => Readonly<
+	TimelineState<TKeys>
 >;
 
-export interface TimelineContextValue<
-	TGroupIdKey extends string,
-	TGroupTitleKey extends string,
-	TGroupRightTitleKey extends string,
-	TItemIdKey extends string,
-	TItemGroupKey extends string,
-	TItemTitleKey extends string,
-	TItemDivTitleKey extends string,
-	TItemTimeStartKey extends string,
-	TItemTimeEndKey extends string,
-> {
+export interface TimelineContextValue<TKeys extends AnyKeys> {
 	/**
 	 * @deprecated Unsupported type from React Calendar Timeline's API. Use
 	 * `useHelpersContext().getDateFromLeftOffsetPosition` instead.
@@ -127,17 +72,7 @@ export interface TimelineContextValue<
 		"Use `useHelpersContext().getLeftOffsetFromDate` instead."
 	>;
 
-	getTimelineState: GetTimelineState<
-		TGroupIdKey,
-		TGroupTitleKey,
-		TGroupRightTitleKey,
-		TItemIdKey,
-		TItemGroupKey,
-		TItemTitleKey,
-		TItemDivTitleKey,
-		TItemTimeStartKey,
-		TItemTimeEndKey
-	>;
+	getTimelineState: GetTimelineState<TKeys>;
 
 	/**
 	 * @deprecated Unsupported type from React Calendar Timeline's API. No
@@ -149,29 +84,5 @@ export interface TimelineContextValue<
 // Unfortunate type cast to handle the trickiness of creating context
 // providers with generics.
 export const TimelineContext: Context<
-	| TimelineContextValue<
-			"id",
-			"title",
-			"rightTitle",
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time"
-	  >
-	| undefined
-> = createContext<
-	| TimelineContextValue<
-			"id",
-			"title",
-			"rightTitle",
-			"id",
-			"group",
-			"title",
-			"title",
-			"start_time",
-			"end_time"
-	  >
-	| undefined
->(undefined);
+	TimelineContextValue<AnyKeys> | undefined
+> = createContext<TimelineContextValue<AnyKeys> | undefined>(undefined);
