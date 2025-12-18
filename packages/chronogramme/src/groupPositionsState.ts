@@ -60,6 +60,8 @@ export class GroupPositionsState<
 
 	#groups: readonly Readonly<TGroup>[];
 
+	#groupsFuture: readonly Readonly<TGroup>[];
+
 	#groupLineSets: (readonly (readonly Readonly<TItem>[])[])[];
 
 	readonly #groupOverdraw: number;
@@ -81,6 +83,8 @@ export class GroupPositionsState<
 	#itemGroupsSignalController: AbortController | undefined;
 
 	#items: readonly Readonly<TItem>[];
+
+	#itemsFuture: readonly Readonly<TItem>[];
 
 	#itemsDraggable: boolean;
 
@@ -111,9 +115,13 @@ export class GroupPositionsState<
 	public constructor() {
 		super();
 
+		const groups: TGroup[] = [];
+		const items: TItem[] = [];
+
 		this.#asyncProcessingSize = ASYNC_PROCESSING_SIZE_DEFAULT;
 		this.#lineSize = GROUP_LINE_SIZE_DEFAULT;
-		this.#groups = [];
+		this.#groups = groups;
+		this.#groupsFuture = groups;
 		this.#groupLineSets = [];
 		this.#groupOverdraw = GROUP_OVERDRAW_DEFAULT;
 		this.#groupPositions = [];
@@ -121,7 +129,8 @@ export class GroupPositionsState<
 		this.#groupPosWindowMax = ZERO;
 		this.#groupPosWindowMin = ZERO;
 		this.#itemGroups = [];
-		this.#items = [];
+		this.#items = items;
+		this.#itemsFuture = items;
 		this.#itemsDraggable = true;
 		this.#itemsEndResizable = true;
 		this.#itemsStartResizable = true;
@@ -375,28 +384,16 @@ export class GroupPositionsState<
 		itemWindowMin: number,
 		itemWindowMax: number,
 	): void {
-		const prevItemWindowMax = this.#itemWindowMax;
-		const prevItemWindowMin = this.#itemWindowMin;
-
 		this.#groupPosWindowMin = groupPosWindowMin;
 		this.#groupPosWindowMax = groupPosWindowMax;
 		this.#itemWindowMin = itemWindowMin;
 		this.#itemWindowMax = itemWindowMax;
 
-		if (
-			itemWindowMin !== prevItemWindowMin ||
-			itemWindowMax !== prevItemWindowMax
-		) {
-			this.clearItemCaches();
-		}
-
 		this.requestRender();
 	}
 
 	public setGroups(groups: readonly Readonly<TGroup>[]): void {
-		this.#groups = groups;
-
-		this.clearItemCaches();
+		this.#groupsFuture = groups;
 
 		void this.prepareItemGroups();
 	}
@@ -418,26 +415,7 @@ export class GroupPositionsState<
 	}
 
 	public setItems(items: readonly Readonly<TItem>[]): void {
-		this.#items = items;
-
-		const itemChangeState = this.#itemChangeState;
-
-		if (itemChangeState !== undefined) {
-			const changedItem = this.getItemById(itemChangeState.item.id);
-
-			if (changedItem !== undefined) {
-				const previousNewItem = itemChangeState.newItem;
-				const newItem = { ...changedItem };
-				newItem.startTime = previousNewItem.startTime;
-				newItem.endTime = previousNewItem.endTime;
-				newItem.groupId = previousNewItem.groupId;
-
-				itemChangeState.item = changedItem;
-				itemChangeState.newItem = newItem;
-			}
-		}
-
-		this.clearItemCaches();
+		this.#itemsFuture = items;
 
 		void this.prepareItemGroups();
 	}
@@ -936,12 +914,6 @@ export class GroupPositionsState<
 		}
 	}
 
-	private clearItemCaches(): void {
-		this.#groupLineSets.length = ZERO;
-		this.#groupPositions.length = ZERO;
-		this.#groupSizes.length = ZERO;
-	}
-
 	private getGroupByPosition(
 		position: number,
 		excludeChangingItem?: boolean | undefined,
@@ -1047,8 +1019,8 @@ export class GroupPositionsState<
 		const signal = signalController.signal;
 
 		const asyncProcessingSize = this.#asyncProcessingSize;
-		const groups = this.#groups;
-		const items = this.#items;
+		const groups = this.#groupsFuture;
+		const items = this.#itemsFuture;
 
 		await yieldToMain();
 
@@ -1092,7 +1064,30 @@ export class GroupPositionsState<
 			this.#itemGroupsSignalController = undefined;
 		}
 
-		this.clearItemCaches();
+		// Clear item caches
+		this.#groupLineSets.length = ZERO;
+		this.#groupPositions.length = ZERO;
+		this.#groupSizes.length = ZERO;
+
+		this.#groups = groups;
+		this.#items = items;
+
+		const itemChangeState = this.#itemChangeState;
+
+		if (itemChangeState !== undefined) {
+			const changedItem = this.getItemById(itemChangeState.item.id);
+
+			if (changedItem !== undefined) {
+				const previousNewItem = itemChangeState.newItem;
+				const newItem = { ...changedItem };
+				newItem.startTime = previousNewItem.startTime;
+				newItem.endTime = previousNewItem.endTime;
+				newItem.groupId = previousNewItem.groupId;
+
+				itemChangeState.item = changedItem;
+				itemChangeState.newItem = newItem;
+			}
+		}
 
 		this.requestRender();
 	}
