@@ -5,7 +5,10 @@ import type {
 	AnyKeys,
 	CoreTimeline,
 } from "../utils/typeUtils";
-import { UnsupportedPropertyValueError } from "../utils/unsupportedUtils";
+import {
+	UnsupportedPropertyValueError,
+	validateTime,
+} from "../utils/unsupportedUtils";
 import { HelpersContext, type HelpersContextValue } from "./HelpersContext";
 
 interface HelpersProviderProps<
@@ -54,7 +57,11 @@ export const HelpersContextProvider = <
 				);
 			},
 
-			getLeftOffsetFromDate: (date: EpochTimeStamp) => timeline.getHPos(date),
+			getLeftOffsetFromDate: (date: EpochTimeStamp) => {
+				validateTime("getLeftOffsetFromDate.date", date);
+
+				return timeline.getHPos(date);
+			},
 		}),
 		[timeline.getHPos, timeline.getHValue],
 	);

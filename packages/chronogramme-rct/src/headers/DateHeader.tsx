@@ -30,7 +30,7 @@ export type Unit =
 	| "year";
 
 export type LabelFormatFn = (
-	interval: [start: number, end: number],
+	interval: [start: EpochTimeStamp, end: EpochTimeStamp],
 	unit: Unit,
 	labelWidth: number,
 ) => string;
@@ -47,10 +47,10 @@ export type GetIntervalProps = (
 };
 
 export interface TimeInterval {
-	endTime: number;
+	endTime: EpochTimeStamp;
 	labelWidth: number;
 	left: number;
-	startTime: number;
+	startTime: EpochTimeStamp;
 }
 
 export interface IntervalContext {
@@ -140,7 +140,7 @@ export function DateHeader<THeaderData>({
 		() => ({
 			className,
 			getLabelFormat: (
-				interval: [number, number],
+				interval: [EpochTimeStamp, EpochTimeStamp],
 				labelUnit: Unit,
 				labelWidth: number,
 			) => {

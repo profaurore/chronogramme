@@ -57,11 +57,12 @@ import type {
 import {
 	type UnsupportedType,
 	validateComponentProperties,
+	validateTime,
 } from "./utils/unsupportedUtils";
 
 const defaultOnTimeChange: OnTimeChange = (
-	newVisibleTimeStart: number,
-	newVisibleTimeEnd: number,
+	newVisibleTimeStart: EpochTimeStamp,
+	newVisibleTimeEnd: EpochTimeStamp,
 	updateScrollCanvas: UpdateScrollCanvas,
 ): void => updateScrollCanvas(newVisibleTimeStart, newVisibleTimeEnd);
 
@@ -161,49 +162,49 @@ export type HorizontalClassNamesForGroup<
 export type MoveValidator<TItemId> = (
 	action: "move",
 	itemId: TItemId,
-	time: number,
-) => number;
+	time: EpochTimeStamp,
+) => EpochTimeStamp;
 
 export type ResizeValidator<TItemId> = (
 	action: "resize",
 	itemId: TItemId,
-	time: number,
+	time: EpochTimeStamp,
 	resizeEdge: ResizeEdge,
-) => number;
+) => EpochTimeStamp;
 
 export type OnBoundsChange = (
-	canvasTimeStart: number,
-	canvasTimeEnd: number,
+	canvasTimeStart: EpochTimeStamp,
+	canvasTimeEnd: EpochTimeStamp,
 ) => void;
 
 export type OnCanvasClick<TGroupId> = (
 	groupId: TGroupId,
-	time: number,
+	time: EpochTimeStamp,
 	e: SyntheticEvent,
 ) => void;
 
 export type OnCanvasContextMenu<TGroupId> = (
 	groupId: TGroupId,
-	time: number,
+	time: EpochTimeStamp,
 	e: SyntheticEvent,
 ) => void;
 
 export type OnCanvasDoubleClick<TGroupId> = (
 	groupId: TGroupId,
-	time: number,
+	time: EpochTimeStamp,
 	e: SyntheticEvent,
 ) => void;
 
 export type OnItemClick<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
-	time: number,
+	time: EpochTimeStamp,
 ) => void;
 
 export type OnItemContextMenu<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
-	time: number,
+	time: EpochTimeStamp,
 ) => void;
 
 export type OnItemDeselect = () => void;
@@ -211,20 +212,20 @@ export type OnItemDeselect = () => void;
 export type OnItemDoubleClick<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
-	time: number,
+	time: EpochTimeStamp,
 ) => void;
 
 export interface ItemMoveObject<TGroupId, TItemId> {
 	eventType: "move";
 	itemId: TItemId;
-	time: number;
+	time: EpochTimeStamp;
 	newGroupId: TGroupId;
 }
 
 export interface ItemResizeObject<TItemId> {
 	eventType: "resize";
 	itemId: TItemId;
-	time: number;
+	time: EpochTimeStamp;
 	edge: ResizeEdge;
 }
 
@@ -234,36 +235,39 @@ export type OnItemDrag<TGroupId, TItemId> = (
 
 export type OnItemMove<TGroupId, TItemId> = (
 	itemId: TItemId,
-	dragTime: number,
+	dragTime: EpochTimeStamp,
 	newGroupOrder: TGroupId,
 ) => void;
 
 export type OnItemResize<TItemId> = (
 	itemId: TItemId,
-	endTimeOrStartTime: number,
+	endTimeOrStartTime: EpochTimeStamp,
 	edge: ResizeEdge,
 ) => void;
 
 export type OnItemSelect<TItemId> = (
 	itemId: TItemId,
 	e: SyntheticEvent,
-	time: number,
+	time: EpochTimeStamp,
 ) => void;
 
-export type UpdateScrollCanvas = (start: number, end: number) => void;
+export type UpdateScrollCanvas = (
+	start: EpochTimeStamp,
+	end: EpochTimeStamp,
+) => void;
 
 export type OnTimeChange = (
-	newVisibleTimeStart: number,
-	newVisibleTimeEnd: number,
+	newVisibleTimeStart: EpochTimeStamp,
+	newVisibleTimeEnd: EpochTimeStamp,
 	updateScrollCanvas: UpdateScrollCanvas,
 ) => void;
 
 export interface TimelineContext {
-	canvasTimeEnd: number;
-	canvasTimeStart: number;
+	canvasTimeEnd: EpochTimeStamp;
+	canvasTimeStart: EpochTimeStamp;
 	timelineWidth: number;
-	visibleTimeEnd: number;
-	visibleTimeStart: number;
+	visibleTimeEnd: EpochTimeStamp;
+	visibleTimeStart: EpochTimeStamp;
 }
 
 export type OnZoom = (timelineContext: TimelineContext) => void;
@@ -274,8 +278,8 @@ export interface ResizeDetector {
 }
 
 export type VerticalLineClassNameForTime = (
-	startTime: number,
-	endTime: number,
+	startTime: EpochTimeStamp,
+	endTime: EpochTimeStamp,
 ) => string[];
 
 export interface TimeSteps {
@@ -414,11 +418,11 @@ export interface ItemRendererItemContext<TGroupId> {
 	dimensions: ItemDimensions;
 	dragging: boolean;
 	dragOffset: number | undefined;
-	dragTime: number | undefined;
+	dragTime: EpochTimeStamp | undefined;
 	newGroupId: TGroupId | undefined;
 	resizeEdge: ResizeEdge | undefined;
 	resizeOffset: number | undefined;
-	resizeTime: number | undefined;
+	resizeTime: EpochTimeStamp | undefined;
 	resizing: boolean;
 	selected: boolean;
 	title: ReactNode | undefined;
@@ -545,7 +549,7 @@ export interface TimelineProps<
 	 * alternative is available.
 	 */
 	defaultTimeEnd?: UnsupportedType<
-		number | undefined,
+		EpochTimeStamp | undefined,
 		"No alternative available."
 	>;
 	/**
@@ -553,7 +557,7 @@ export interface TimelineProps<
 	 * alternative is available.
 	 */
 	defaultTimeStart?: UnsupportedType<
-		number | undefined,
+		EpochTimeStamp | undefined,
 		"No alternative available."
 	>;
 	dragSnap?: number | undefined;
@@ -673,8 +677,8 @@ export interface TimelineProps<
 		"No alternative available."
 	>;
 	verticalLineClassNameForTime?: VerticalLineClassNameForTime | undefined;
-	visibleTimeEnd: number;
-	visibleTimeStart: number;
+	visibleTimeEnd: EpochTimeStamp;
+	visibleTimeStart: EpochTimeStamp;
 }
 
 /**
@@ -760,6 +764,9 @@ function RenderedTimeline<
 	renderIndicator: number;
 	timelineRef: RefObject<CoreTimeline<TKeys, TGroup, TItem> | null>;
 }): ReactNode {
+	validateTime("Timeline.visibleTimeStart", visibleTimeStart);
+	validateTime("Timeline.visibleTimeEnd", visibleTimeEnd);
+
 	const [selectedItemId, setSelectedItemId] = useState<TItem["id"]>();
 
 	// Set a non-zero height so that the header isn't completely removed.
@@ -787,6 +794,8 @@ function RenderedTimeline<
 							item.id,
 							startTime,
 						);
+
+						validateTime("moveResizeValidator()", validatedStartTime);
 
 						const delta = item.endTime - item.startTime;
 
@@ -1012,7 +1021,7 @@ function RenderedTimeline<
 
 	const onRowClickHandler: (
 		groupId: TGroup["id"],
-		time: number,
+		time: EpochTimeStamp,
 		e: SyntheticEvent,
 	) => void = useCallback(
 		(groupId, time, e) => {
@@ -1330,8 +1339,14 @@ export const Timeline = <
 						TItem["id"]
 					>;
 
+					const startTime = typecastItem[resolvedKeys.itemTimeStartKey];
+					const endTime = typecastItem[resolvedKeys.itemTimeEndKey];
+
+					validateTime(`item.${resolvedKeys.itemTimeEndKey}`, endTime);
+					validateTime(`item.${resolvedKeys.itemTimeStartKey}`, startTime);
+
 					return {
-						endTime: typecastItem[resolvedKeys.itemTimeEndKey],
+						endTime,
 						groupId: (
 							item as unknown as DefaultItem<TGroup["id"], TItem["id"]>
 						)[resolvedKeys.itemGroupKey],
@@ -1344,7 +1359,7 @@ export const Timeline = <
 							item.canResize &&
 							(item.canResize === "left" || item.canResize === "both"),
 						originalItem: item,
-						startTime: typecastItem[resolvedKeys.itemTimeStartKey],
+						startTime,
 					};
 				}),
 			);

@@ -15,7 +15,9 @@ export interface GroupDimensions {
 
 export type GetLeftOffsetFromDate = (date: EpochTimeStamp) => number;
 
-export type GetDateFromLeftOffsetPosition = (position: number) => number;
+export type GetDateFromLeftOffsetPosition = (
+	position: number,
+) => EpochTimeStamp;
 
 export type GetGroupDimensions<TGroupId> = (
 	groupId: TGroupId,

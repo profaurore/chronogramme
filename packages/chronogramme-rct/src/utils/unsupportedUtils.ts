@@ -79,3 +79,19 @@ export const validateComponentProperties: <
 		}
 	}
 };
+
+export const validateTime: (
+	valueName: string,
+	value: unknown,
+) => asserts value is EpochTimeStamp = (
+	valueName: string,
+	value: unknown,
+): asserts value is EpochTimeStamp => {
+	if (typeof value !== "number") {
+		throw new UnsupportedPropertyValueError(
+			"Use epoch timestamps instead.",
+			valueName,
+			value,
+		);
+	}
+};

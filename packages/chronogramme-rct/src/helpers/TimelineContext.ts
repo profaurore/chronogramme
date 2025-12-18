@@ -9,20 +9,23 @@ import type {
 } from "./HelpersContext";
 
 export interface TimelineState<TKeys extends AnyKeys> {
-	canvasTimeStart: number;
-	canvasTimeEnd: number;
+	canvasTimeStart: EpochTimeStamp;
+	canvasTimeEnd: EpochTimeStamp;
 
 	/**
 	 * @deprecated Unsupported type from React Calendar Timeline's API. No
 	 * alternative available.
 	 */
-	visibleTimeStart: UnsupportedType<number, "No alternative available.">;
+	visibleTimeStart: UnsupportedType<
+		EpochTimeStamp,
+		"No alternative available."
+	>;
 
 	/**
 	 * @deprecated Unsupported type from React Calendar Timeline's API. No
 	 * alternative available.
 	 */
-	visibleTimeEnd: UnsupportedType<number, "No alternative available.">;
+	visibleTimeEnd: UnsupportedType<EpochTimeStamp, "No alternative available.">;
 
 	/**
 	 * @deprecated Unsupported type from React Calendar Timeline's API. No
