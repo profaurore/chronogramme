@@ -33,6 +33,7 @@
 		"pre-commit-fix": "lefthook run pre-commit",
 		"pre-push": "lefthook run pre-push",
 		"prepare": "lefthook install",
+		"publish": "pnpm -r publish --access public",
 		"test": "vitest"
 	},
 	"devDependencies": {
