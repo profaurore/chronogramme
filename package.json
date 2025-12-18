@@ -19,7 +19,7 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@8",
+	"packageManager": "pnpm",
 	"scripts": {
 		"do-publish": "lefthook run prepublish && pnpm -r publish --access public",
 		"dry-publish": "lefthook run prepublish && pnpm -r publish --access public --dry-run",
