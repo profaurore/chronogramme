@@ -13,6 +13,7 @@ import {
 	useEffect,
 	useId,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import "./styles.css";
@@ -79,13 +80,26 @@ const headerClass: LinariaClassName = css`
 	margin-bottom:5px;
 `;
 
+const toggleClass: LinariaClassName = css`
+	align-items: center;
+	border: 1px solid #aaa;
+	cursor: pointer;
+	border-radius: 4px;
+	display: flex;
+	gap: 5px;
+	height: 100%;
+	padding-inline: 7px;
+`;
+
 const DAYS_IN_WEEK = 7;
+const MILLISECONDS_PER_SECOND = 1000;
 const MILLISECONDS_PER_DAY = 86_400_000;
 const MILLISECONDS_PER_WEEK = 604_800_000;
 const MILLISECONDS_PER_MONTH = 2_592_000_000;
 const MILLISECONDS_PER_YEAR = 31_536_000_000;
 const MILLISECONDS_PER_DECADE = 315_360_000_000;
 
+const FEW_ITEMS = 1000;
 const SOME_ITEMS = 50_000;
 const MANY_ITEMS = 250_000;
 
@@ -148,6 +162,8 @@ type Item = BaseItem<Keys, number, number | string>;
 type Group = BaseGroup<Keys, number>;
 
 export function App(): ReactNode {
+	const trickleIntervalRef = useRef<number>(null);
+
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
 	);
@@ -181,7 +197,7 @@ export function App(): ReactNode {
 	const [groups, setGroups] = useState<Group[]>([]);
 
 	const onAddClickHandler =
-		(addCount: number): MouseEventHandler =>
+		(addCount: number): (() => void) =>
 		(): void => {
 			setItems((prevItems) => {
 				const now = Date.now();
@@ -415,6 +431,24 @@ export function App(): ReactNode {
 		}
 	};
 
+	const onTrickleChangeHandler: ChangeEventHandler<HTMLInputElement> = (
+		event: ChangeEvent<HTMLInputElement>,
+	) => {
+		const trickleInterval = trickleIntervalRef.current;
+
+		if (trickleInterval !== null) {
+			window.clearInterval(trickleInterval);
+			trickleIntervalRef.current = null;
+		}
+
+		const addOne = onAddClickHandler(FEW_ITEMS);
+		if (event.target.checked) {
+			trickleIntervalRef.current = window.setInterval(() => {
+				addOne();
+			}, MILLISECONDS_PER_SECOND);
+		}
+	};
+
 	useEffect(() => {
 		const startOfToday = new Date();
 		startOfToday.setHours(0, 0, 0, 0);
@@ -457,6 +491,9 @@ export function App(): ReactNode {
 					<button onClick={onAddClickHandler(MANY_ITEMS)} type="button">
 						Add 250k items
 					</button>
+					<label className={toggleClass}>
+						<input type="checkbox" onChange={onTrickleChangeHandler} /> Trickle
+					</label>
 					<span>{Intl.NumberFormat("en").format(items.length)} items</span>
 				</div>
 

@@ -1312,7 +1312,7 @@ export const Timeline = <
 	const resolvedKeys = (remainingProperties.keys ??
 		defaultKeys) as typeof defaultKeys;
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const timeline = timelineRef.current;
 
 		if (timeline !== null) {
@@ -1328,7 +1328,7 @@ export const Timeline = <
 		}
 	}, [groups, resolvedKeys.groupIdKey]);
 
-	useMemo(() => {
+	useLayoutEffect(() => {
 		const timeline = timelineRef.current;
 
 		if (timeline !== null) {
