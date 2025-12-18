@@ -242,7 +242,6 @@ export const Item = <
 			onContextMenu: composeEvents(onContextMenuHandler, params.onContextMenu),
 			slot: "center",
 			style: {
-				...params.style,
 				...overridableStyles,
 				...(selected ? selectedStyle : {}),
 				...(selected && canMove ? selectedAndCanMove : {}),
@@ -254,6 +253,7 @@ export const Item = <
 				...(selected && canResizeRight && dragging
 					? selectedAndCanResizeRightAndDragRight
 					: {}),
+				...params.style,
 				position: "absolute",
 				boxSizing: "border-box",
 				slot: "center",
