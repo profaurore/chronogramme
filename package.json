@@ -32,6 +32,7 @@
 		"pre-commit-fix": "lefthook run pre-commit",
 		"pre-push": "lefthook run pre-push",
 		"prepare": "lefthook install",
+		"prepublishOnly": "lefthook run prepublish",
 		"test": "vitest"
 	},
 	"devDependencies": {
