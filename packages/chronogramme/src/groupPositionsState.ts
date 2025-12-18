@@ -826,7 +826,7 @@ export class GroupPositionsState<
 		signal: AbortSignal,
 	): Promise<Map<TGroupId, TItem[]> | undefined> {
 		const asyncProcessingSize = this.#asyncProcessingSize;
-		const items = this.#items;
+		const items = this.#itemsFuture;
 
 		const itemGroupsMap = new Map<TGroupId, TItem[]>();
 
@@ -1030,35 +1030,35 @@ export class GroupPositionsState<
 
 		if (groups.length === ZERO || items.length === ZERO) {
 			this.#itemGroups = [];
-			this.requestRender();
-			return;
-		}
+		} else {
+			const itemGroupsMap = await this.buildItemGroupsMap(signal);
 
-		const itemGroupsMap = await this.buildItemGroupsMap(signal);
-		if (itemGroupsMap === undefined) {
-			return;
-		}
+			// This occurs when the process is aborted.
+			if (itemGroupsMap === undefined) {
+				return;
+			}
 
-		const itemGroups: (readonly Readonly<TItem>[])[] = [];
+			const itemGroups: (readonly Readonly<TItem>[])[] = [];
 
-		for (const [groupIndex, group] of groups.entries()) {
-			itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
+			for (const [groupIndex, group] of groups.entries()) {
+				itemGroups[groupIndex] = itemGroupsMap.get(group.id) ?? [];
 
-			if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
-				// biome-ignore lint/performance/noAwaitInLoops: This is intentional to break up the processing of the list.
-				await yieldToMain();
+				if ((groupIndex + UNIT) % asyncProcessingSize === ZERO) {
+					// biome-ignore lint/performance/noAwaitInLoops: This is intentional to break up the processing of the list.
+					await yieldToMain();
 
-				if (signal.aborted) {
-					return;
+					if (signal.aborted) {
+						return;
+					}
 				}
 			}
-		}
 
-		if (signal.aborted) {
-			return;
-		}
+			if (signal.aborted) {
+				return;
+			}
 
-		this.#itemGroups = itemGroups;
+			this.#itemGroups = itemGroups;
+		}
 
 		if (this.#itemGroupsSignalController === signalController) {
 			this.#itemGroupsSignalController = undefined;
