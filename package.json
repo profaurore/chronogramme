@@ -21,6 +21,7 @@
 		"pnpm": ">=8"
 	},
 	"scripts": {
+		"do-publish": "lefthook run prepublish && pnpm -r publish --access public",
 		"dry-publish": "lefthook run prepublish && pnpm -r publish --access public --dry-run",
 		"fix": "pnpm fix:code && pnpm fix:css",
 		"fix:css": "stylelint --fix \"**/*\"",
@@ -33,7 +34,6 @@
 		"pre-commit-fix": "lefthook run pre-commit",
 		"pre-push": "lefthook run pre-push",
 		"prepare": "lefthook install",
-		"publish": "pnpm -r publish --access public",
 		"test": "vitest"
 	},
 	"devDependencies": {
