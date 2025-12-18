@@ -1,5 +1,7 @@
 import { css, type LinariaClassName } from "@linaria/core";
 import {
+	type ChangeEvent,
+	type ChangeEventHandler,
 	type ComponentProps,
 	type CSSProperties,
 	type EventHandler,
@@ -16,6 +18,7 @@ import {
 import "./styles.css";
 import {
 	EVEN_MULTIPLE,
+	HALF,
 	TIME_MAX,
 	TIME_MIN,
 	UNIT,
@@ -33,6 +36,7 @@ import {
 	type RowRenderer,
 	type TimelineProps,
 } from "@chronogramme/chronogramme-rct/Timeline";
+import { DOUBLE } from "../../../chronogramme/src/math";
 import { CustomMarker } from "../../src/markers/CustomMarker";
 import { TimelineMarkers } from "../../src/markers/TimelineMarkers";
 
@@ -85,8 +89,8 @@ const MILLISECONDS_PER_DECADE = 315_360_000_000;
 const SOME_ITEMS = 50_000;
 const MANY_ITEMS = 250_000;
 
-const EVEN_GROUP_ROW_HEIGHT = 10;
-const ODD_GROUP_ROW_HEIGHT = 20;
+const DEFAULT_GROUP_ROW_HEIGHT = 20;
+const EVEN_GROUP_ROW_HEIGHT = 15;
 
 const GROUP_COUNT = 1000;
 const ITEM_BASE_RANGE = 5_000_000_000;
@@ -123,6 +127,12 @@ function datesFromStartDate(start: number): [number, number] {
 	];
 }
 
+function getGroupHeight(index: number, factor: number): number | undefined {
+	return index % EVEN_MULTIPLE === ZERO
+		? factor * EVEN_GROUP_ROW_HEIGHT
+		: undefined;
+}
+
 type Keys = BaseKeys<
 	"id",
 	"title",
@@ -141,6 +151,8 @@ export function App(): ReactNode {
 	const [[windowStart, windowEnd], setWindow] = useState<[number, number]>(() =>
 		datesFromStartDate(Date.now()),
 	);
+
+	const [lineHeightFactor, setLineHeightFactor] = useState<number>(UNIT);
 
 	// Bug report: https://github.com/biomejs/biome/issues/3512
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
@@ -202,20 +214,26 @@ export function App(): ReactNode {
 		};
 
 	useEffect(() => {
-		const newGroups: typeof groups = [];
+		setGroups((prev) => {
+			if (prev.length === ZERO) {
+				const newGroups: typeof groups = [];
 
-		for (let i = ZERO; i < GROUP_COUNT; i += UNIT) {
-			newGroups.push({
-				id: i,
-				lineHeight:
-					i % EVEN_MULTIPLE === ZERO
-						? EVEN_GROUP_ROW_HEIGHT
-						: ODD_GROUP_ROW_HEIGHT,
-			});
-		}
+				for (let i = ZERO; i < GROUP_COUNT; i += UNIT) {
+					newGroups.push({
+						id: i,
+						lineHeight: getGroupHeight(i, lineHeightFactor),
+					});
+				}
 
-		setGroups(newGroups);
-	}, []);
+				return newGroups;
+			}
+
+			return prev.map((group, index) => ({
+				...group,
+				lineHeight: getGroupHeight(index, lineHeightFactor),
+			}));
+		});
+	}, [lineHeightFactor]);
 
 	const onItemMoveHandler = useCallback<
 		Exclude<
@@ -387,6 +405,16 @@ export function App(): ReactNode {
 		}
 	};
 
+	const onChangeRowHeightHandler: ChangeEventHandler<HTMLSelectElement> = (
+		event: ChangeEvent<HTMLSelectElement>,
+	) => {
+		const factor = Number.parseFloat(event.target.value);
+
+		if (Number.isFinite(factor) && factor > ZERO) {
+			setLineHeightFactor(factor);
+		}
+	};
+
 	useEffect(() => {
 		const startOfToday = new Date();
 		startOfToday.setHours(0, 0, 0, 0);
@@ -449,8 +477,8 @@ export function App(): ReactNode {
 					<input
 						onBlur={onSetZoomHandler}
 						onKeyUp={onSetZoomHandler}
-						placeholder="Days"
-						size={5}
+						placeholder="Set days"
+						size={6}
 						type="number"
 					/>
 					<button
@@ -486,6 +514,23 @@ export function App(): ReactNode {
 				</div>
 			</div>
 
+			<div className={buttonRowClass}>
+				<select onChange={onChangeRowHeightHandler}>
+					<option value={0.5} selected={lineHeightFactor === HALF}>
+						50%
+					</option>
+					<option value={1} selected={lineHeightFactor === UNIT}>
+						100%
+					</option>
+					<option value={2} selected={lineHeightFactor === DOUBLE}>
+						200%
+					</option>
+					<option value={4} selected={lineHeightFactor === DOUBLE * DOUBLE}>
+						400%
+					</option>
+				</select>
+			</div>
+
 			<RCTimeline<Keys, Group, Item, undefined>
 				id={rctId}
 				canResize="both"
@@ -494,6 +539,7 @@ export function App(): ReactNode {
 				groups={groups}
 				itemRenderer={itemRenderer}
 				items={items}
+				lineHeight={DEFAULT_GROUP_ROW_HEIGHT * lineHeightFactor}
 				moveResizeValidator={moveResizeValidator}
 				onItemMove={onItemMoveHandler}
 				onItemResize={onItemResizeHandler}

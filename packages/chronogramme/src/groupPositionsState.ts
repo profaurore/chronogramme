@@ -461,10 +461,14 @@ export class GroupPositionsState<
 
 		this.#groupPositions.length = ZERO;
 		this.#groupSizes.length = ZERO;
+
+		this.requestRender();
 	}
 
 	public setTimezoneOffset(timezoneOffset: number | undefined): void {
 		this.#timezoneOffset = timezoneOffset ?? ZERO;
+
+		this.requestRender();
 	}
 
 	public itemDragCancel(): void {

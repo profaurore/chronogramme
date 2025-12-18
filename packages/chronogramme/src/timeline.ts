@@ -342,7 +342,7 @@ export class Timeline<
 		super.connectedCallback();
 
 		this.#groupPositionsState.setLineSize(
-			parseFloatAttribute(this.getAttribute("row-height")),
+			parseFloatAttribute(this.getAttribute("line-size")),
 		);
 
 		this.updateScrollHeight();
