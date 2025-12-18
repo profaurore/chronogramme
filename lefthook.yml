@@ -31,3 +31,10 @@ checks:
       run: pnpm vitest run
     typescript:
       run: pnpm tsc --build
+
+prepublish:
+  commands:
+    checks:
+      run: pnpm lefthook run checks
+    packages-audit:
+      run: pnpm audit
