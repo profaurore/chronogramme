@@ -610,7 +610,7 @@ export class Scroller extends HTMLElement {
 		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
-		this.#hBarState.setEndExtrema(min, max);
+		this.#hBarState.setStartExtrema(min, max);
 		this.updateHBarDimensions();
 
 		updateScrollState();
@@ -735,7 +735,7 @@ export class Scroller extends HTMLElement {
 		const updateScrollState = this.setupUpdateScrollState();
 		const updateWindowSize = this.setupUpdateWindowSize();
 
-		this.#vBarState.setEndExtrema(min, max);
+		this.#vBarState.setStartExtrema(min, max);
 		this.updateVBarDimensions();
 
 		updateScrollState();

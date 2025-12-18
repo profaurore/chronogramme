@@ -9,6 +9,8 @@ import type {
 import type { ShowPeriod } from "./CustomHeader";
 import type { Unit } from "./DateHeader";
 
+type SetMaxHeight = (maxHeight: number) => void;
+
 export interface HeadersContextValue<
 	TKeys extends AnyKeys,
 	TGroup extends AnyGroup<TKeys>,
@@ -16,6 +18,7 @@ export interface HeadersContextValue<
 > {
 	leftSidebarWidth: number;
 	rightSidebarWidth: number;
+	setMaxHeight: SetMaxHeight;
 	showPeriod: ShowPeriod;
 	timeSteps: TimeSteps;
 	timeline: CoreTimeline<TKeys, TGroup, TItem>;

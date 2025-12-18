@@ -1,4 +1,4 @@
-import { UNIT, ZERO } from "@chronogramme/chronogramme";
+import { TIME_MAX, UNIT, ZERO } from "@chronogramme/chronogramme";
 import type { LabelFormatFn, Unit } from "../headers/DateHeader";
 
 const MILLISECONDS_PER_SECOND = 1000;
@@ -413,7 +413,8 @@ export function addUnitStep(unit: Unit, step: number, time: number): number {
 			break;
 	}
 
-	return date.getTime();
+	const result = date.getTime();
+	return Number.isNaN(result) ? TIME_MAX : result;
 }
 
 export const defaultLabelFormat: LabelFormatFn = function defaultLabelFormat(

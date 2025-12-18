@@ -10,6 +10,7 @@ export const HeadersContextProvider = <
 	children,
 	leftSidebarWidth,
 	rightSidebarWidth,
+	setMaxHeight,
 	showPeriod,
 	timeSteps,
 	timeline,
@@ -19,6 +20,7 @@ export const HeadersContextProvider = <
 		() => ({
 			leftSidebarWidth,
 			rightSidebarWidth,
+			setMaxHeight,
 			showPeriod,
 			timeSteps,
 			timeline,
@@ -27,6 +29,7 @@ export const HeadersContextProvider = <
 		[
 			leftSidebarWidth,
 			rightSidebarWidth,
+			setMaxHeight,
 			showPeriod,
 			timeSteps,
 			timeline,

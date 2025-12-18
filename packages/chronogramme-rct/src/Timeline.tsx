@@ -559,7 +559,6 @@ export interface TimelineProps<
 	dragSnap?: number | undefined;
 	groupRenderer: GroupRenderer<TKeys, TGroup, TRowData>;
 	groups: TGroup[];
-	headerHeight?: number | undefined;
 	/**
 	 * @deprecated Unsupported property from React Calendar Timeline's API. No
 	 * alternative is available.
@@ -723,7 +722,6 @@ function RenderedTimeline<
 	className,
 	dragSnap = MILLISECONDS_PER_FIFTEEN_MINUTES,
 	groupRenderer,
-	headerHeight = 60,
 	hideHeaders,
 	horizontalLineClassNamesForGroup,
 	id,
@@ -763,6 +761,11 @@ function RenderedTimeline<
 	timelineRef: RefObject<CoreTimeline<TKeys, TGroup, TItem> | null>;
 }): ReactNode {
 	const [selectedItemId, setSelectedItemId] = useState<TItem["id"]>();
+
+	// Set a non-zero height so that the header isn't completely removed.
+	const [maxHeaderHeight, setMaxHeaderHeight] = useState<number>(
+		Number.MIN_VALUE,
+	);
 
 	const itemDragStateRef = useRef(new DragState({ endOnDisconnect: false }));
 	const itemResizeStateRef = useRef(new DragState({ endOnDisconnect: false }));
@@ -1192,8 +1195,8 @@ function RenderedTimeline<
 			ref={timelineRef}
 			style={style}
 			timezone-offset={timezoneOffset}
-			v-start-extrema={[headerHeight, headerHeight]}
-			v-start-size={headerHeight}
+			v-start-extrema={[maxHeaderHeight, maxHeaderHeight]}
+			v-start-size={maxHeaderHeight}
 		>
 			{timeline !== null && (
 				<TimelineContextProvider timeline={timeline}>
@@ -1201,6 +1204,7 @@ function RenderedTimeline<
 						<HeadersContextProvider<TKeys, TGroup, TItem>
 							leftSidebarWidth={sidebarWidth}
 							rightSidebarWidth={rightSidebarWidth}
+							setMaxHeight={setMaxHeaderHeight}
 							showPeriod={showPeriod}
 							timeSteps={timeSteps}
 							timeline={timeline}
