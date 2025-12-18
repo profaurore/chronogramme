@@ -388,20 +388,31 @@ export function App(): ReactNode {
 	};
 
 	useEffect(() => {
-		const startOfDay = new Date();
-		startOfDay.setHours(0, 0, 0, 0);
+		const startOfToday = new Date();
+		startOfToday.setHours(0, 0, 0, 0);
 
-		const endOfDay = new Date(startOfDay);
-		endOfDay.setDate(endOfDay.getDate() + 1);
+		const endOfToday = new Date(startOfToday);
+		endOfToday.setDate(startOfToday.getDate() + 1);
+
+		const endOfTomorrow = new Date(endOfToday);
+		endOfTomorrow.setDate(endOfToday.getDate() + 1);
 
 		setItems([
 			{
 				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
-				end_time: endOfDay.getTime(),
+				end_time: endOfToday.getTime(),
 				group: 0,
 				id: "today",
 				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
-				start_time: startOfDay.getTime(),
+				start_time: startOfToday.getTime(),
+			},
+			{
+				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
+				end_time: endOfTomorrow.getTime(),
+				group: 0,
+				id: "tomorrow",
+				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
+				start_time: endOfToday.getTime(),
 			},
 		]);
 	}, []);

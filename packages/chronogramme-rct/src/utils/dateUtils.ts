@@ -16,22 +16,24 @@ const SUNDAY_DAY = 7;
 const MEDIUM_LABEL_WIDTH = 50;
 const MEDIUM_LONG_LABEL_WIDTH = 100;
 const LONG_LABEL_WIDTH = 150;
+const JANUARY_FOURTH = 4;
 
 // Adapted from: https://stackoverflow.com/a/6117889
 const weekOfYear = (time: number): number => {
 	const date = new Date(time);
 
-	// Copy date so don't modify original
+	// Strip time, force UTC
 	const d = new Date(
 		Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
 	);
 
-	// Set to nearest Thursday: current date + 4 - current day number
-	// Make Sunday's day number 7
+	// ISO: move to nearest Thursday
 	d.setUTCDate(d.getUTCDate() + THURSDAY_DAY - (d.getUTCDay() || SUNDAY_DAY));
 
-	// Get first day of year
-	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), ZERO, UNIT));
+	// ISO: week 1 is the week with Jan 4
+	const yearStart = new Date(
+		Date.UTC(d.getUTCFullYear(), ZERO, JANUARY_FOURTH),
+	);
 
 	// Calculate full weeks to nearest Thursday
 	const weekNo = Math.ceil(
@@ -191,26 +193,30 @@ export const MILLISECONDS_PER_MINUTE = 60_000;
 export const MILLISECONDS_PER_FIFTEEN_MINUTES = 900_000;
 export const MILLISECONDS_PER_HOUR = 3_600_000;
 
+const MONDAY_START_OFFSET = 6;
+
 export function startOfUnit(unit: Unit, time: number): number {
 	const date = new Date(time);
 
 	// biome-ignore lint/nursery/noUnnecessaryConditions: Biome bug - https://github.com/biomejs/biome/issues/8332
 	switch (unit) {
 		case "year": {
-			date.setMonth(0, 0);
+			date.setMonth(0, 1);
 			date.setHours(0, 0, 0, 0);
 			break;
 		}
 
 		case "month": {
-			date.setDate(0);
+			date.setDate(1);
 			date.setHours(0, 0, 0, 0);
 			break;
 		}
 
 		case "week": {
+			const day = (date.getDay() + MONDAY_START_OFFSET) % DAYS_PER_WEEK;
+
 			date.setHours(0, 0, 0, 0);
-			date.setDate(date.getDate() - date.getDay());
+			date.setDate(date.getDate() - day);
 			break;
 		}
 
@@ -241,6 +247,8 @@ export function startOfUnit(unit: Unit, time: number): number {
 	return date.getTime();
 }
 
+const MONDAY_MILLISECOND_OFFSET = 345_600_000;
+
 export function alignWithUnitStep(
 	unit: Unit,
 	step: number,
@@ -267,7 +275,7 @@ export function alignWithUnitStep(
 		// divisor of 12 so that the yearly cycle is maintained.
 		case "month": {
 			if (step >= MONTHS_PER_YEAR) {
-				const yearsStep = Math.round(step / MONTHS_PER_YEAR);
+				const yearsStep = Math.floor(step / MONTHS_PER_YEAR);
 				const year = date.getFullYear();
 				date.setFullYear(year - (year % yearsStep), 0, 1);
 				date.setHours(0, 0, 0, 0);
@@ -294,27 +302,59 @@ export function alignWithUnitStep(
 		}
 
 		case "week": {
-			date.setTime(time - (time % MILLISECONDS_PER_WEEK));
+			const timezoneOffset = date.getTimezoneOffset() * MILLISECONDS_PER_MINUTE;
+
+			date.setTime(
+				Math.floor(
+					(time - timezoneOffset - MONDAY_MILLISECOND_OFFSET) /
+						MILLISECONDS_PER_WEEK,
+				) *
+					MILLISECONDS_PER_WEEK +
+					MONDAY_MILLISECOND_OFFSET +
+					timezoneOffset,
+			);
 			break;
 		}
 
 		case "day": {
-			date.setTime(time - (time % MILLISECONDS_PER_DAY));
+			const timezoneOffset = date.getTimezoneOffset() * MILLISECONDS_PER_MINUTE;
+
+			date.setTime(
+				Math.floor((time - timezoneOffset) / MILLISECONDS_PER_DAY) *
+					MILLISECONDS_PER_DAY +
+					timezoneOffset,
+			);
 			break;
 		}
 
 		case "hour": {
-			date.setTime(time - (time % MILLISECONDS_PER_HOUR));
+			const timezoneOffset = date.getTimezoneOffset() * MILLISECONDS_PER_MINUTE;
+
+			date.setTime(
+				Math.floor((time - timezoneOffset) / MILLISECONDS_PER_HOUR) *
+					MILLISECONDS_PER_HOUR +
+					timezoneOffset,
+			);
 			break;
 		}
 
 		case "minute": {
-			date.setTime(time - (time % MILLISECONDS_PER_MINUTE));
+			const timezoneOffset = date.getTimezoneOffset() * MILLISECONDS_PER_MINUTE;
+
+			date.setTime(
+				Math.floor(time / MILLISECONDS_PER_MINUTE) * MILLISECONDS_PER_MINUTE +
+					timezoneOffset,
+			);
 			break;
 		}
 
 		case "second": {
-			date.setTime(time - (time % MILLISECONDS_PER_SECOND));
+			const timezoneOffset = date.getTimezoneOffset() * MILLISECONDS_PER_MINUTE;
+
+			date.setTime(
+				Math.floor(time / MILLISECONDS_PER_SECOND) * MILLISECONDS_PER_SECOND +
+					timezoneOffset,
+			);
 			break;
 		}
 
@@ -335,12 +375,12 @@ export function addUnitStep(unit: Unit, step: number, time: number): number {
 	// biome-ignore lint/nursery/noUnnecessaryConditions: Biome bug - https://github.com/biomejs/biome/issues/8332
 	switch (unit) {
 		case "year": {
-			date.setFullYear(date.getFullYear() + step * UNIT);
+			date.setFullYear(date.getFullYear() + step);
 			break;
 		}
 
 		case "month": {
-			date.setMonth(date.getMonth() + step * UNIT);
+			date.setMonth(date.getMonth() + step);
 			break;
 		}
 
@@ -350,22 +390,22 @@ export function addUnitStep(unit: Unit, step: number, time: number): number {
 		}
 
 		case "day": {
-			date.setDate(date.getDate() + step * UNIT);
+			date.setDate(date.getDate() + step);
 			break;
 		}
 
 		case "hour": {
-			date.setHours(date.getHours() + step * UNIT);
+			date.setHours(date.getHours() + step);
 			break;
 		}
 
 		case "minute": {
-			date.setMinutes(date.getMinutes() + step * UNIT);
+			date.setMinutes(date.getMinutes() + step);
 			break;
 		}
 
 		case "second": {
-			date.setSeconds(date.getSeconds() + step * UNIT);
+			date.setSeconds(date.getSeconds() + step);
 			break;
 		}
 
