@@ -17,9 +17,9 @@
 	"license": "SEE LICENSE IN LICENSE.md",
 	"type": "module",
 	"engines": {
-		"node": ">=24",
-		"pnpm": ">=8"
+		"node": ">=24"
 	},
+	"packageManager": "pnpm@8",
 	"scripts": {
 		"do-publish": "lefthook run prepublish && pnpm -r publish --access public",
 		"dry-publish": "lefthook run prepublish && pnpm -r publish --access public --dry-run",
