@@ -117,7 +117,7 @@ export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 					className={`rct-header-root ${className ?? ""}`}
 					ref={leftRef}
 					slot="corner-h-start-v-start"
-					style={{ height: "100%" }}
+					style={{ height: "100%", width: "100%" }}
 				>
 					{leftSidebarHeaders[0] ?? <SidebarHeader />}
 				</div>
@@ -125,7 +125,7 @@ export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 			<div
 				className={`rct-header-root ${className ?? ""}`}
 				ref={centerRef}
-				style={{ height: "100%" }}
+				style={{ height: "100%", width: "100%" }}
 				slot="bar-v-start"
 			>
 				<div
@@ -148,7 +148,7 @@ export const TimelineHeaders = (props: TimelineHeadersProps): ReactNode => {
 					className={`rct-header-root ${className ?? ""}`}
 					ref={rightRef}
 					slot="corner-h-end-v-start"
-					style={{ height: "100%" }}
+					style={{ height: "100%", width: "100%" }}
 				>
 					{rightSidebarHeaders[0] ?? <SidebarHeader variant="right" />}
 				</div>

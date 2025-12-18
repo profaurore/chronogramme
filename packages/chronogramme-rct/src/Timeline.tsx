@@ -1217,16 +1217,28 @@ function RenderedTimeline<
 							<div
 								className="rct-outer"
 								slot="bar-h-start"
-								style={{ height: "100%" }}
+								style={{ height: "100%", width: "100%" }}
 							>
-								<div className="rct-sidebar" style={{ height: "100%" }}>
-									<div style={{ height: "100%" }}>{renderedLeftGroups}</div>
+								<div
+									className="rct-sidebar"
+									style={{ height: "100%", width: "100%" }}
+								>
+									<div style={{ height: "100%", width: "100%" }}>
+										{renderedLeftGroups}
+									</div>
 								</div>
 							</div>
 						)}
 
-						<div className="rct-outer" slot="center" style={{ height: "100%" }}>
-							<div className="rct-scroll" style={{ height: "100%" }}>
+						<div
+							className="rct-outer"
+							slot="center"
+							style={{ height: "100%", width: "100%" }}
+						>
+							<div
+								className="rct-scroll"
+								style={{ height: "100%", width: "100%" }}
+							>
 								<div className="rct-horizontal-lines">
 									<ItemContextProvider<TKeys, TGroup, TItem>
 										canMove={canMove}
