@@ -78,7 +78,7 @@
 	],
 	"scripts": {
 		"build": "vite build && tsc --project ./tsconfig.json",
-		"prepublish": "pnpm build && publint"
+		"prepublishOnly": "pnpm build && publint"
 	},
 	"dependencies": {
 		"@chronogramme/chronogramme": "workspace:^"
