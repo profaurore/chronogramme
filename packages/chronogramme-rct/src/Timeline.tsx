@@ -1126,6 +1126,7 @@ function RenderedTimeline<
 	}
 
 	let renderedHeader: ReactNode | undefined;
+	let renderedMarkers: ReactNode | undefined;
 
 	if (children !== null) {
 		const headers: ReactNode[] = [];
@@ -1168,6 +1169,7 @@ function RenderedTimeline<
 		}
 
 		renderedHeader = headers[ZERO];
+		renderedMarkers = markers[ZERO];
 	}
 
 	renderedHeader ??= <TimelineHeaders />;
@@ -1244,6 +1246,7 @@ function RenderedTimeline<
 										{renderedGroupRows}
 									</ItemContextProvider>
 								</div>
+								{renderedMarkers}
 							</div>
 						</div>
 

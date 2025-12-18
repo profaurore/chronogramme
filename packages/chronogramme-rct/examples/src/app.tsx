@@ -1,6 +1,7 @@
 import { css, type LinariaClassName } from "@linaria/core";
 import {
 	type ComponentProps,
+	type CSSProperties,
 	type EventHandler,
 	type FocusEvent,
 	type KeyboardEvent,
@@ -32,6 +33,7 @@ import {
 	type RowRenderer,
 	type TimelineProps,
 } from "@chronogramme/chronogramme-rct/Timeline";
+import { CustomMarker } from "../../src/markers/CustomMarker";
 import { TimelineMarkers } from "../../src/markers/TimelineMarkers";
 
 const timelineClass: LinariaClassName = css`
@@ -132,7 +134,7 @@ type Keys = BaseKeys<
 	"start_time",
 	"end_time"
 >;
-type Item = BaseItem<Keys, number, number>;
+type Item = BaseItem<Keys, number, number | string>;
 type Group = BaseGroup<Keys, number>;
 
 export function App(): ReactNode {
@@ -385,6 +387,25 @@ export function App(): ReactNode {
 		}
 	};
 
+	useEffect(() => {
+		const startOfDay = new Date();
+		startOfDay.setHours(0, 0, 0, 0);
+
+		const endOfDay = new Date(startOfDay);
+		endOfDay.setDate(endOfDay.getDate() + 1);
+
+		setItems([
+			{
+				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
+				end_time: endOfDay.getTime(),
+				group: 0,
+				id: "today",
+				// biome-ignore lint/style/useNamingConvention: Original React Calendar Timeline API
+				start_time: startOfDay.getTime(),
+			},
+		]);
+	}, []);
+
 	const rctId = useId();
 
 	return (
@@ -471,7 +492,13 @@ export function App(): ReactNode {
 				visibleTimeEnd={windowEnd}
 				visibleTimeStart={windowStart}
 			>
-				<TimelineMarkers />
+				<TimelineMarkers>
+					<CustomMarker date={Date.now()}>
+						{({ styles }: { styles: CSSProperties }) => (
+							<div style={{ ...styles, backgroundColor: "gold" }} />
+						)}
+					</CustomMarker>
+				</TimelineMarkers>
 			</RCTimeline>
 		</>
 	);

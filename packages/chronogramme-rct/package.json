@@ -60,6 +60,10 @@
 			"types": "./dist/types/items/RowItems.d.ts",
 			"import": "./dist/items/RowItems.js"
 		},
+		"./markers/CustomMarker": {
+			"types": "./dist/types/markers/CustomMarker.d.ts",
+			"import": "./dist/markers/CustomMarker.js"
+		},
 		"./markers/TimelineMarkers": {
 			"types": "./dist/types/markers/TimelineMarkers.d.ts",
 			"import": "./dist/markers/TimelineMarkers.js"

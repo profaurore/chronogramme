@@ -27,7 +27,8 @@ export const HelpersContextProvider = <
 }: HelpersProviderProps<TKeys, TGroup, TItem>): ReactNode => {
 	const contextValue = useMemo<HelpersContextValue<TGroup["id"], TItem["id"]>>(
 		() => ({
-			getDateFromLeftOffsetPosition: timeline.getHValue,
+			getDateFromLeftOffsetPosition: (position: number) =>
+				timeline.getHValue(position),
 
 			getGroupDimensions: (groupId: TGroup["id"]) => {
 				throw new UnsupportedPropertyValueError(
@@ -53,7 +54,7 @@ export const HelpersContextProvider = <
 				);
 			},
 
-			getLeftOffsetFromDate: timeline.getHPos,
+			getLeftOffsetFromDate: (date: EpochTimeStamp) => timeline.getHPos(date),
 		}),
 		[timeline.getHPos, timeline.getHValue],
 	);

@@ -23,7 +23,7 @@ export function getReactChildSecretKey(child: unknown): string | undefined {
 		typeof child === "object" &&
 		"type" in child &&
 		child.type !== null &&
-		typeof child.type === "object" &&
+		typeof child.type === "function" &&
 		"secretKey" in child.type &&
 		typeof child.type.secretKey === "string"
 		? child.type.secretKey

@@ -115,3 +115,12 @@ export const nextTimeUnits = {
 export const STYLE_SIZE_PRECISION = 4;
 
 export const DEFAULT_HEADER_HEIGHT = 30;
+
+export const markerStyle = {
+	backgroundColor: "black",
+	bottom: 0,
+	pointerEvents: "none",
+	position: "absolute",
+	top: 0,
+	width: "2px",
+} as const;
