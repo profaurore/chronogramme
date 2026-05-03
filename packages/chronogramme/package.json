@@ -33,11 +33,11 @@
 		"prepublishOnly": "pnpm build && publint"
 	},
 	"devDependencies": {
-		"@types/node": "^24.10.1",
-		"lightningcss": "^1.30.2",
-		"publint": "^0.3.16",
+		"@types/node": "^24.12.2",
+		"lightningcss": "^1.32.0",
+		"publint": "^0.3.18",
 		"typescript": "^5.9.3",
-		"vite": "^7.2.4",
-		"vitest": "^4.0.13"
+		"vite": "^7.3.2",
+		"vitest": "^4.1.5"
 	}
 }
