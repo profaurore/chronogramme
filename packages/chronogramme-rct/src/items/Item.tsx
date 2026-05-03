@@ -111,9 +111,9 @@ export const Item = <
 	}
 
 	const selected =
-		selectedItemId !== undefined
-			? id === selectedItemId
-			: (selectedItems?.includes(id) ?? false);
+		selectedItemId === undefined
+			? (selectedItems?.includes(id) ?? false)
+			: id === selectedItemId;
 
 	const endTime = item.endTime;
 	const itemId = item.id;

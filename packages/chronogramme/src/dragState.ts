@@ -95,16 +95,16 @@ export class DragState<StateData = undefined> extends EventTarget {
 
 			this.#activeState = undefined;
 
-			if (event !== undefined) {
+			if (event === undefined) {
 				this.dispatchEvent(
-					new CustomEvent("end", {
-						detail: new DragEndEventDetail(target),
+					new CustomEvent("cancel", {
+						detail: new DragCancelEventDetail(target),
 					}),
 				);
 			} else {
 				this.dispatchEvent(
-					new CustomEvent("cancel", {
-						detail: new DragCancelEventDetail(target),
+					new CustomEvent("end", {
+						detail: new DragEndEventDetail(target),
 					}),
 				);
 			}

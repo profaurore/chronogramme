@@ -102,7 +102,7 @@ const formatOptions = {
 			const weekday = parts.find((p) => p.type === "weekday")?.value;
 			const day = parts.find((p) => p.type === "day")?.value;
 
-			return `${weekday?.substring(0, 2)} ${day}`;
+			return `${weekday?.slice(0, 2)} ${day}`;
 		},
 		short: (time: number) =>
 			new Intl.DateTimeFormat("en-us", { day: "numeric" }).format(time),

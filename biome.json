@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
 	"css": {
 		"formatter": {
 			"enabled": true
@@ -105,7 +105,9 @@
 				"useRegexLiterals": "error",
 				"useSimpleNumberKeys": "error",
 				"useSimplifiedLogicExpression": "error",
-				"useWhile": "error"
+				"useWhile": "error",
+				"noUselessCatchBinding": "error",
+				"noUselessUndefined": "off"
 			},
 			"correctness": {
 				"noChildrenProp": "error",
@@ -172,31 +174,22 @@
 				"useUniqueElementIds": "error",
 				"useValidForDirection": "error",
 				"useValidTypeof": "error",
-				"useYield": "error"
+				"useYield": "error",
+				"noNextAsyncClientComponent": "error",
+				"noUnresolvedImports": "off"
 			},
 			"nursery": {
 				"noContinue": "error",
-				"noDeprecatedImports": "error",
-				"noDuplicateDependencies": "error",
-				"noEmptySource": "error",
 				"noFloatingPromises": "error",
 				"noForIn": "error",
-				"noImportCycles": "error",
 				"noIncrementDecrement": "error",
 				"noMisusedPromises": "error",
-				"noNextAsyncClientComponent": "error",
 				"noParametersOnlyUsedInRecursion": "error",
-				"noReactForwardRef": "error",
 				"noShadow": "error",
 				"noSyncScripts": "error",
 				"noUnknownAttribute": "error",
 				"noUnnecessaryConditions": "error",
-				"noUnresolvedImports": "off",
-				"noUnusedExpressions": "error",
-				"noUselessCatchBinding": "error",
-				"noUselessUndefined": "off",
 				"useArraySortCompare": "error",
-				"useConsistentArrowReturn": "error",
 				"useExhaustiveSwitchCases": "error",
 				"useExplicitType": "error",
 				"useFind": "error",
@@ -305,7 +298,8 @@
 				"useThrowNewError": "error",
 				"useThrowOnlyError": "error",
 				"useTrimStartEnd": "error",
-				"useUnifiedTypeSignatures": "error"
+				"useUnifiedTypeSignatures": "error",
+				"useConsistentArrowReturn": "error"
 			},
 			"suspicious": {
 				"noAlert": "error",
@@ -402,7 +396,13 @@
 				"useNamespaceKeyword": "error",
 				"useNumberToFixedDigitsArgument": "error",
 				"useStaticResponseMethods": "error",
-				"useStrictMode": "error"
+				"useStrictMode": "error",
+				"noDeprecatedImports": "error",
+				"noDuplicateDependencies": "error",
+				"noEmptySource": "error",
+				"noImportCycles": "error",
+				"noReactForwardRef": "error",
+				"noUnusedExpressions": "error"
 			}
 		}
 	},

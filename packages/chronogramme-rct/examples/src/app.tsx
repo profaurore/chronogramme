@@ -170,8 +170,6 @@ export function App(): ReactNode {
 
 	const [lineHeightFactor, setLineHeightFactor] = useState<number>(UNIT);
 
-	// Bug report: https://github.com/biomejs/biome/issues/3512
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Biome bug
 	const windowString = useMemo(
 		() => formatDateRange(windowStart, windowEnd),
 		[windowEnd, windowStart],
